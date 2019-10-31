@@ -18,7 +18,7 @@ public class WhatsAppRestController {
     @Autowired
     private CatarinWhatsApp catarinWhatsApp;
 
-    @Secured("ROLE_SUPER_ADMIN")
+    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @GetMapping("/estadoWhats")
     public ResponseEntity<?> estadoWhats() {
         Map<String, Object> dados = new HashMap<>();
