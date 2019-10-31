@@ -17,7 +17,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -149,14 +148,6 @@ public class CatarinWhatsApp {
             scheduler.start();
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
-        }
-    }
-
-    @PreDestroy
-    public void destroy() {
-        driver.finalizar();
-        if (telaWhatsApp != null) {
-            telaWhatsApp.dispose();
         }
     }
 
