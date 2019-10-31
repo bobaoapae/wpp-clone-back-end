@@ -1,8 +1,11 @@
 package br.com.zapia.catarin.whatsApp;
 
 import br.com.zapia.catarin.payloads.Notification;
-import br.com.zapia.catarin.restControllers.NotificationRestController;
+import br.com.zapia.catarin.restControllers.WhatsAppRestController;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
 import modelo.*;
 import org.quartz.Scheduler;
@@ -10,6 +13,7 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -17,6 +21,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
@@ -30,7 +35,7 @@ import java.util.logging.Logger;
 public class CatarinWhatsApp {
 
     @Autowired
-    private NotificationRestController notificationRestController;
+    private WhatsAppRestController whatsAppRestController;
     @Autowired
     private ControleChatsAsync controleChatsAsync;
     private Logger logger;
@@ -39,6 +44,7 @@ public class CatarinWhatsApp {
     private ActionOnNeedQrCode onNeedQrCode;
     private ActionOnLowBattery onLowBaterry;
     private ActionOnErrorInDriver onErrorInDriver;
+    private ActionOnChangeEstadoDriver onChangeEstadoDriver;
     private Runnable onConnect;
     private Runnable onDisconnect;
     private ScheduledExecutorService executores = Executors.newScheduledThreadPool(5);
@@ -73,14 +79,37 @@ public class CatarinWhatsApp {
                 controleChatsAsync.addChat(chat);
             }
             driver.getFunctions().addListennerToNewChat(chat -> controleChatsAsync.addChat(chat));
-            driver.getFunctions().addListennerToNewChat(c -> {
-                enviarEventoWpp(TipoEventoWpp.NEW_CHAT, c.toJson());
-            });
+            driver.getFunctions().addListennerToNewChat(chat -> {
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
+                    ArrayNode msgsLists = objectMapper.createArrayNode();
+                    chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
+                    chatNode.put("picture", chat.getContact().getThumb());
+                    chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
+                    chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
+                    for (Message message : chat.getAllMessages()) {
+                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
+                        msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        msgsLists.add(msgNode);
+                    }
+                    chatNode.set("msgs", msgsLists);
+                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, objectMapper.writeValueAsString(chatNode));
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "OnNewChat", e);
+                }
+            }, true);
             driver.getFunctions().addListennerToNewMsg(new MessageObserverIncludeMe() {
-
                 @Override
                 public void onNewMsg(Message msg) {
-                    enviarEventoWpp(TipoEventoWpp.NEW_MSG, msg.toJson());
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(msg.toJson());
+                        msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
+                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, objectMapper.writeValueAsString(msgNode));
+                    } catch (IOException e) {
+                        logger.log(Level.SEVERE, "OnNewMsg", e);
+                    }
                 }
 
                 @Override
@@ -98,11 +127,15 @@ public class CatarinWhatsApp {
         onErrorInDriver = (e) -> {
             logger.log(Level.SEVERE, e.getMessage(), e);
         };
+        onChangeEstadoDriver = (e) -> {
+            System.out.println(e);
+            enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
+        };
         telaWhatsApp = new TelaWhatsApp();
         telaWhatsApp.setVisible(true);
-        this.driver = new WebWhatsDriver(telaWhatsApp.getPanel(), pathCacheWebWhats, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect);
+        this.driver = new WebWhatsDriver(telaWhatsApp.getPanel(), pathCacheWebWhats, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
         executores.scheduleWithFixedDelay(() -> {
-            notificationRestController.sendNotification(new Notification("none", ""));
+            whatsAppRestController.enviarNotificacao(new Notification("none", "ok"));
         }, 0, 20, TimeUnit.SECONDS);
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();
@@ -139,13 +172,44 @@ public class CatarinWhatsApp {
         }
     }
 
+    @Async
     public CompletionStage<?> enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
-        notificationRestController.sendNotification(new Notification(tipoEventoWpp.name().replace("_", "-"), dado));
+        whatsAppRestController.enviarNotificacao(new Notification(tipoEventoWpp.name().replace("_", "-"), dado));
+        if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                ObjectNode dados = objectMapper.createObjectNode();
+                Chat myChat = driver.getFunctions().getMyChat();
+                ObjectNode myChatNode = (ObjectNode) objectMapper.readTree(myChat.toJson());
+                myChatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(myChat.getContact().toJson()));
+                myChatNode.put("picture", myChat.getContact().getThumb());
+                myChatNode.put("type", myChat.getJsObject().getProperty("kind").asString().getValue());
+                myChatNode.put("noEarlierMsgs", myChat.noEarlierMsgs());
+                dados.putObject("self").setAll(myChatNode);
+                ArrayNode chatsNode = objectMapper.createArrayNode();
+                List<Chat> allChats = driver.getFunctions().getAllChats();
+                for (Chat chat : allChats) {
+                    ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
+                    ArrayNode msgsNode = objectMapper.createArrayNode();
+                    for (Message message : chat.getAllMessages()) {
+                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
+                        msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        msgsNode.add(msgNode);
+                    }
+                    chatNode.set("msgs", msgsNode);
+                    chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
+                    chatNode.put("picture", chat.getContact().getThumb());
+                    chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
+                    chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
+                    chatsNode.add(chatNode);
+                }
+                dados.putArray("chats").addAll(chatsNode);
+                enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados));
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "SendInit", e);
+            }
+        }
         return null;
-    }
-
-    public boolean possuiEmitters() {
-        return notificationRestController.possuiEmitters();
     }
 
     public enum TipoEventoWpp {
@@ -154,7 +218,9 @@ public class CatarinWhatsApp {
         NEW_MSG,
         NEW_MSG_V3,
         LOW_BATTERY,
-        NEED_QRCODE
+        NEED_QRCODE,
+        UPDATE_ESTADO,
+        INIT
     }
 
     private class TelaWhatsApp extends JFrame {
