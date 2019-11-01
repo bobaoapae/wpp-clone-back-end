@@ -15,27 +15,26 @@ public class CatarinApplication {
     private static final int MAX_PORT = 8000; // needs or uploaded from
 
     public static void main(String[] args) {
-        int availablePort;
-        for (availablePort = MIN_PORT; availablePort < MAX_PORT; availablePort++) {
-            if (available(availablePort)) {
-                break;
-            }
-        }
-        if (availablePort == MIN_PORT && !available(availablePort)) {
-            throw new IllegalArgumentException("Cant start container for port: " + availablePort);
-        }
-        System.out.println(availablePort);
         HashMap<String, Object> props = new HashMap<>();
-        props.put("server.port", availablePort);
+        props.put("server.port", findAvailablePort(MIN_PORT, MAX_PORT));
         SpringApplicationBuilder builder = new SpringApplicationBuilder(CatarinApplication.class);
         builder.headless(false).properties(props).run(args);
     }
 
+    public static int findAvailablePort(int minPort, int maxPort) {
+        int availablePort;
+        for (availablePort = minPort; availablePort < maxPort; availablePort++) {
+            if (available(availablePort)) {
+                break;
+            }
+        }
+        if (availablePort == minPort && !available(availablePort)) {
+            throw new IllegalArgumentException("Cant start container for port: " + availablePort);
+        }
+        return availablePort;
+    }
+
     public static boolean available(int port) {
-        System.out.println("TRY PORT " + port);
-        // if you have some range for denied ports you can also check it
-        // here just add proper checking and return
-        // false if port checked within that range
         ServerSocket ss = null;
         DatagramSocket ds = null;
         try {
@@ -44,21 +43,18 @@ public class CatarinApplication {
             ds = new DatagramSocket(port);
             ds.setReuseAddress(true);
             return true;
-        } catch (IOException e) {
+        } catch (IOException ignored) {
         } finally {
             if (ds != null) {
                 ds.close();
             }
-
             if (ss != null) {
                 try {
                     ss.close();
-                } catch (IOException e) {
-                    /* should not be thrown */
+                } catch (IOException ignored) {
                 }
             }
         }
-
         return false;
     }
 
