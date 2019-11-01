@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -80,8 +79,8 @@ public class CatarinWhatsApp {
             }
             driver.getFunctions().addListennerToNewChat(chat -> controleChatsAsync.addChat(chat));
             driver.getFunctions().addListennerToNewChat(chat -> {
-                ObjectMapper objectMapper = new ObjectMapper();
                 try {
+                    ObjectMapper objectMapper = new ObjectMapper();
                     ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
                     ArrayNode msgsLists = objectMapper.createArrayNode();
                     chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
@@ -104,8 +103,8 @@ public class CatarinWhatsApp {
             driver.getFunctions().addListennerToNewMsg(new MessageObserverIncludeMe() {
                 @Override
                 public void onNewMsg(Message msg) {
-                    ObjectMapper objectMapper = new ObjectMapper();
                     try {
+                        ObjectMapper objectMapper = new ObjectMapper();
                         ObjectNode msgNode = (ObjectNode) objectMapper.readTree(msg.toJson());
                         if (msg.getSender() != null) {
                             msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
@@ -132,7 +131,6 @@ public class CatarinWhatsApp {
             logger.log(Level.SEVERE, e.getMessage(), e);
         };
         onChangeEstadoDriver = (e) -> {
-            System.out.println(e);
             enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
         telaWhatsApp = new TelaWhatsApp();
@@ -177,7 +175,7 @@ public class CatarinWhatsApp {
     }
 
     @Async
-    public CompletionStage<?> enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
+    public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
         whatsAppRestController.enviarNotificacao(new Notification(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
             try {
@@ -215,7 +213,6 @@ public class CatarinWhatsApp {
                 logger.log(Level.SEVERE, "SendInit", e);
             }
         }
-        return null;
     }
 
     public enum TipoEventoWpp {
