@@ -112,23 +112,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.9" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:2.3" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:2.9.4" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:JxBrowserCrack:6.24.1" level="project" />
-    <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser-win32:6.24.1" level="project" />
-    <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser:6.24.1" level="project" />
-    <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser-win64:6.24.1" level="project" />
-    <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser-linux64:6.24.1" level="project" />
-    <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser-mac:6.24.1" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.tika:tika-core:1.21" level="project" />
-    <orderEntry type="library" name="Maven: org.threadly:threadly:5.38" level="project" />
-    <orderEntry type="library" name="Maven: com.googlecode.ez-vcard:ez-vcard:0.10.5" level="project" />
-    <orderEntry type="library" name="Maven: com.github.mangstadt:vinnie:2.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.11.3" level="project" />
-    <orderEntry type="library" name="Maven: org.freemarker:freemarker:2.3.28" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:utilitarios:1.1" level="project" />
-    <orderEntry type="library" name="Maven: info.debatty:java-string-similarity:1.2.1" level="project" />
-    <orderEntry type="library" name="Maven: net.jcip:jcip-annotations:1.0" level="project" />
+    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:2.4" level="project" />
     <orderEntry type="library" name="Maven: org.quartz-scheduler:quartz:2.3.1" level="project" />
     <orderEntry type="library" name="Maven: com.mchange:mchange-commons-java:0.2.15" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.26" level="project" />
