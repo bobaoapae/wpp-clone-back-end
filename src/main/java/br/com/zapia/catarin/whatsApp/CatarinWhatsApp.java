@@ -90,7 +90,9 @@ public class CatarinWhatsApp {
                     chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
                     for (Message message : chat.getAllMessages()) {
                         ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
-                        msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        if (message.getSender() != null) {
+                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        }
                         msgsLists.add(msgNode);
                     }
                     chatNode.set("msgs", msgsLists);
@@ -105,7 +107,9 @@ public class CatarinWhatsApp {
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         ObjectNode msgNode = (ObjectNode) objectMapper.readTree(msg.toJson());
-                        msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
+                        if (msg.getSender() != null) {
+                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
+                        }
                         enviarEventoWpp(TipoEventoWpp.NEW_MSG, objectMapper.writeValueAsString(msgNode));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnNewMsg", e);
@@ -193,7 +197,9 @@ public class CatarinWhatsApp {
                     ArrayNode msgsNode = objectMapper.createArrayNode();
                     for (Message message : chat.getAllMessages()) {
                         ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
-                        msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        if (message.getSender() != null) {
+                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        }
                         msgsNode.add(msgNode);
                     }
                     chatNode.set("msgs", msgsNode);
