@@ -4,8 +4,6 @@ import br.com.zapia.catarin.payloads.MediaMessageResponse;
 import br.com.zapia.catarin.payloads.Notification;
 import br.com.zapia.catarin.payloads.SendMessageRequest;
 import br.com.zapia.catarin.whatsApp.CatarinWhatsApp;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import modelo.Chat;
 import modelo.EstadoDriver;
 import modelo.MediaMessage;
@@ -29,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.logging.Level;
 
 @RestController
 @RequestMapping("/api/whatsApp")
@@ -166,19 +163,7 @@ public class WhatsAppRestController {
         if (chat == null) {
             return ResponseEntity.notFound().build();
         }
-        chat.loadEarlierMsgs(() -> {
-            ObjectMapper objectMapper = new ObjectMapper();
-            try {
-                ObjectNode objectNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-                objectNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
-                objectNode.put("picture", chat.getContact().getThumb());
-                objectNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
-                objectNode.put("noEarlierMsgs", chat.noEarlierMsgs());
-                catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.CHAT_UPDATE, objectMapper.writeValueAsString(objectNode));
-            } catch (IOException e) {
-                catarinWhatsApp.getLogger().log(Level.SEVERE, "LoadEarly", e);
-            }
-        });
+        chat.loadEarlierMsgs(null);
         return ResponseEntity.ok().build();
     }
 }

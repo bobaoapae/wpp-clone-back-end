@@ -100,6 +100,28 @@ public class CatarinWhatsApp {
                     logger.log(Level.SEVERE, "OnNewChat", e);
                 }
             }, true);
+            driver.getFunctions().addListennerToUpdateChat(chat -> {
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
+                    ArrayNode msgsLists = objectMapper.createArrayNode();
+                    chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
+                    chatNode.put("picture", chat.getContact().getThumb());
+                    chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
+                    chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
+                    for (Message message : chat.getAllMessages()) {
+                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
+                        if (message.getSender() != null) {
+                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                        }
+                        msgsLists.add(msgNode);
+                    }
+                    chatNode.set("msgs", msgsLists);
+                    enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, objectMapper.writeValueAsString(chatNode));
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "OnNewChat", e);
+                }
+            });
             driver.getFunctions().addListennerToNewMsg(new MessageObserverIncludeMe() {
                 @Override
                 public void onNewMsg(Message msg) {
@@ -109,6 +131,7 @@ public class CatarinWhatsApp {
                         if (msg.getSender() != null) {
                             msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
                         }
+                        msgNode.put("unreadCount", msg.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
                         enviarEventoWpp(TipoEventoWpp.NEW_MSG, objectMapper.writeValueAsString(msgNode));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnNewMsg", e);
@@ -118,6 +141,28 @@ public class CatarinWhatsApp {
                 @Override
                 public void onNewStatusV3(Message msg) {
                     enviarEventoWpp(TipoEventoWpp.NEW_MSG_V3, msg.toJson());
+                }
+            });
+
+            driver.getFunctions().addListennerToChangeMsg(new MessageObserverIncludeMe() {
+                @Override
+                public void onNewMsg(Message msg) {
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(msg.toJson());
+                        if (msg.getSender() != null) {
+                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
+                        }
+                        msgNode.put("unreadCount", msg.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
+                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, objectMapper.writeValueAsString(msgNode));
+                    } catch (IOException e) {
+                        logger.log(Level.SEVERE, "OnNewMsg", e);
+                    }
+                }
+
+                @Override
+                public void onNewStatusV3(Message msg) {
+                    enviarEventoWpp(TipoEventoWpp.UPDATE_MSG_V3, msg.toJson());
                 }
             });
         };
@@ -220,6 +265,8 @@ public class CatarinWhatsApp {
         NEW_CHAT,
         NEW_MSG,
         NEW_MSG_V3,
+        UPDATE_MSG,
+        UPDATE_MSG_V3,
         LOW_BATTERY,
         NEED_QRCODE,
         UPDATE_ESTADO,
