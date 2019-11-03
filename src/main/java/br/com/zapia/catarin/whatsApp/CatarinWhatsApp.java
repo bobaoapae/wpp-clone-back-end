@@ -9,13 +9,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
 import modelo.*;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -25,14 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
@@ -56,7 +51,6 @@ public class CatarinWhatsApp {
     private ActionOnChangeEstadoDriver onChangeEstadoDriver;
     private Runnable onConnect;
     private Runnable onDisconnect;
-    private ScheduledExecutorService executores = Executors.newScheduledThreadPool(5);
     private Scheduler scheduler;
     private TelaWhatsApp telaWhatsApp;
     @Value("${pathCacheWebWhats}")
@@ -149,9 +143,6 @@ public class CatarinWhatsApp {
         telaWhatsApp = new TelaWhatsApp();
         telaWhatsApp.setVisible(true);
         this.driver = new WebWhatsDriver(telaWhatsApp.getPanel(), pathCacheWebWhats, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
-        executores.scheduleWithFixedDelay(() -> {
-            whatsAppRestController.enviarNotificacao(new Notification("none", "ok"));
-        }, 0, 20, TimeUnit.SECONDS);
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();
         properties.put("org.quartz.scheduler.instanceName", "Catarin");
@@ -164,6 +155,11 @@ public class CatarinWhatsApp {
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+    }
+
+    @Scheduled(fixedDelay = 1000L)
+    public void enviarNotificacaoParaTestarConexao() {
+        whatsAppRestController.enviarNotificacao(new Notification("ping", System.currentTimeMillis()));
     }
 
     public WebWhatsDriver getDriver() {
@@ -209,7 +205,7 @@ public class CatarinWhatsApp {
                 });
                 Util.pegarResultadosFutures(futures).forEach(chatsNode::add);
                 dados.putArray("chats").addAll(chatsNode);
-                enviarEventoWpp(TipoEventoWpp.INIT, new String(new Base64().encode(zip(objectMapper.writeValueAsString(dados)))));
+                enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))));
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "SendInit", e);
             }
