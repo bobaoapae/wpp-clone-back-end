@@ -53,6 +53,7 @@ public class CatarinWhatsApp {
     private Runnable onDisconnect;
     private Scheduler scheduler;
     private TelaWhatsApp telaWhatsApp;
+    private List<Runnable> runAfterInit;
     @Value("${pathCacheWebWhats}")
     private String pathCacheWebWhats;
     @Value("${pathLogs}")
@@ -77,6 +78,7 @@ public class CatarinWhatsApp {
         }
         System.setProperty("jxbrowser.chromium.dir", pathBinarios);
         logger = Logger.getLogger(CatarinWhatsApp.class.getName());
+        runAfterInit = new ArrayList<>();
         onConnect = () -> {
             for (Chat chat : driver.getFunctions().getAllNewChats()) {
                 controleChatsAsync.addChat(chat);
@@ -210,6 +212,14 @@ public class CatarinWhatsApp {
                 logger.log(Level.SEVERE, "SendInit", e);
             }
         }
+        if (tipoEventoWpp == TipoEventoWpp.INIT) {
+            runAfterInit.forEach(Runnable::run);
+            runAfterInit.clear();
+        }
+    }
+
+    public void runAfterInit(Runnable runnable) {
+        runAfterInit.add(runnable);
     }
 
     public byte[] zip(final String str) {

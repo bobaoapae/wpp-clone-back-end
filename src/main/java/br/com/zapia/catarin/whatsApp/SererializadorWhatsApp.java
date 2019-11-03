@@ -7,8 +7,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import modelo.Chat;
 import modelo.Message;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +24,9 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class SererializadorWhatsApp implements ApplicationContextAware {
 
+    @Lazy
+    @Autowired
+    private CatarinWhatsApp catarinWhatsApp;
     private ObjectMapper objectMapper;
     private ApplicationContext applicationContext;
     private SererializadorWhatsApp sererializadorWhatsApp;
@@ -52,6 +57,17 @@ public class SererializadorWhatsApp implements ApplicationContextAware {
         chatNode.put("picture", chat.getContact().getThumb());
         chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
         chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
+        if (chat.getAllMessages().size() < 5 && !chat.noEarlierMsgs()) {
+            chat.loadEarlierMsgs(() -> {
+                catarinWhatsApp.runAfterInit(() -> {
+                    try {
+                        catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(getSererializadorWhatsApp().serializarChat(chat)));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+            });
+        }
         return CompletableFuture.completedFuture(chatNode);
     }
 
@@ -60,6 +76,9 @@ public class SererializadorWhatsApp implements ApplicationContextAware {
         ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
         if (message.getSender() != null) {
             msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+        }
+        if (message.getChat() != null) {
+            msgNode.put("unreadCount", message.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
         }
         return CompletableFuture.completedFuture(msgNode);
     }
