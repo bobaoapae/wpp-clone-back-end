@@ -2,12 +2,14 @@ package br.com.zapia.catarin.whatsApp;
 
 import br.com.zapia.catarin.payloads.Notification;
 import br.com.zapia.catarin.restControllers.WhatsAppRestController;
+import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
 import modelo.*;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +21,21 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.swing.*;
 import java.awt.*;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPOutputStream;
 
 @Component
 @Scope("singleton")
@@ -37,6 +45,8 @@ public class CatarinWhatsApp {
     private WhatsAppRestController whatsAppRestController;
     @Autowired
     private ControleChatsAsync controleChatsAsync;
+    @Autowired
+    private SererializadorWhatsApp sererializadorWhatsApp;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
     private WebWhatsDriver driver;
@@ -80,44 +90,14 @@ public class CatarinWhatsApp {
             driver.getFunctions().addListennerToNewChat(chat -> controleChatsAsync.addChat(chat));
             driver.getFunctions().addListennerToNewChat(chat -> {
                 try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-                    ArrayNode msgsLists = objectMapper.createArrayNode();
-                    chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
-                    chatNode.put("picture", chat.getContact().getThumb());
-                    chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
-                    chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
-                    for (Message message : chat.getAllMessages()) {
-                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
-                        if (message.getSender() != null) {
-                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
-                        }
-                        msgsLists.add(msgNode);
-                    }
-                    chatNode.set("msgs", msgsLists);
-                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, objectMapper.writeValueAsString(chatNode));
+                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadosFutures(sererializadorWhatsApp.serializarChat(chat)));
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "OnNewChat", e);
                 }
             }, true);
             driver.getFunctions().addListennerToUpdateChat(chat -> {
                 try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-                    ArrayNode msgsLists = objectMapper.createArrayNode();
-                    chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
-                    chatNode.put("picture", chat.getContact().getThumb());
-                    chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
-                    chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
-                    for (Message message : chat.getAllMessages()) {
-                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
-                        if (message.getSender() != null) {
-                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
-                        }
-                        msgsLists.add(msgNode);
-                    }
-                    chatNode.set("msgs", msgsLists);
-                    enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, objectMapper.writeValueAsString(chatNode));
+                    enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadosFutures(sererializadorWhatsApp.serializarChat(chat)));
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "OnNewChat", e);
                 }
@@ -126,13 +106,7 @@ public class CatarinWhatsApp {
                 @Override
                 public void onNewMsg(Message msg) {
                     try {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(msg.toJson());
-                        if (msg.getSender() != null) {
-                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
-                        }
-                        msgNode.put("unreadCount", msg.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
-                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, objectMapper.writeValueAsString(msgNode));
+                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadosFutures(sererializadorWhatsApp.serializarMsg(msg)));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnNewMsg", e);
                     }
@@ -148,13 +122,7 @@ public class CatarinWhatsApp {
                 @Override
                 public void onNewMsg(Message msg) {
                     try {
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(msg.toJson());
-                        if (msg.getSender() != null) {
-                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(msg.getSender().toJson()));
-                        }
-                        msgNode.put("unreadCount", msg.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
-                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, objectMapper.writeValueAsString(msgNode));
+                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadosFutures(sererializadorWhatsApp.serializarMsg(msg)));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnNewMsg", e);
                     }
@@ -219,44 +187,47 @@ public class CatarinWhatsApp {
         }
     }
 
-    @Async
+    @Async("threadPoolTaskExecutor")
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
         whatsAppRestController.enviarNotificacao(new Notification(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 ObjectNode dados = objectMapper.createObjectNode();
-                Chat myChat = driver.getFunctions().getMyChat();
-                ObjectNode myChatNode = (ObjectNode) objectMapper.readTree(myChat.toJson());
-                myChatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(myChat.getContact().toJson()));
-                myChatNode.put("picture", myChat.getContact().getThumb());
-                myChatNode.put("type", myChat.getJsObject().getProperty("kind").asString().getValue());
-                myChatNode.put("noEarlierMsgs", myChat.noEarlierMsgs());
-                dados.putObject("self").setAll(myChatNode);
+                dados.putObject("self").setAll(Util.pegarResultadoFuture(sererializadorWhatsApp.serializarChat(driver.getFunctions().getMyChat())));
                 ArrayNode chatsNode = objectMapper.createArrayNode();
-                List<Chat> allChats = driver.getFunctions().getAllChats();
-                for (Chat chat : allChats) {
-                    ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-                    ArrayNode msgsNode = objectMapper.createArrayNode();
-                    for (Message message : chat.getAllMessages()) {
-                        ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
-                        if (message.getSender() != null) {
-                            msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
+                List<CompletableFuture<ObjectNode>> futures = new ArrayList<>();
+                Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 5);
+                partition.forEach(chats -> {
+                    chats.forEach(chat -> {
+                        try {
+                            futures.add(sererializadorWhatsApp.serializarChat(chat));
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                        msgsNode.add(msgNode);
-                    }
-                    chatNode.set("msgs", msgsNode);
-                    chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
-                    chatNode.put("picture", chat.getContact().getThumb());
-                    chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
-                    chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
-                    chatsNode.add(chatNode);
-                }
+                    });
+                });
+                Util.pegarResultadosFutures(futures).forEach(chatsNode::add);
                 dados.putArray("chats").addAll(chatsNode);
-                enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados));
+                enviarEventoWpp(TipoEventoWpp.INIT, new String(new Base64().encode(zip(objectMapper.writeValueAsString(dados)))));
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "SendInit", e);
             }
+        }
+    }
+
+    public byte[] zip(final String str) {
+        if ((str == null) || (str.length() == 0)) {
+            throw new IllegalArgumentException("Cannot zip null or empty string");
+        }
+
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
+            }
+            return byteArrayOutputStream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to zip content", e);
         }
     }
 

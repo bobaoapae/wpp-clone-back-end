@@ -2,12 +2,17 @@ package br.com.zapia.catarin;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.util.HashMap;
 
+@EnableAsync
 @SpringBootApplication
 public class CatarinApplication {
 
@@ -19,6 +24,16 @@ public class CatarinApplication {
         props.put("server.port", findAvailablePort(MIN_PORT, MAX_PORT));
         SpringApplicationBuilder builder = new SpringApplicationBuilder(CatarinApplication.class);
         builder.headless(false).properties(props).run(args);
+    }
+
+    @Bean("threadPoolTaskExecutor")
+    public TaskExecutor getAsyncExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(80);
+        executor.setMaxPoolSize(1000);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setThreadNamePrefix("Catarin-Async-");
+        return executor;
     }
 
     public static int findAvailablePort(int minPort, int maxPort) {

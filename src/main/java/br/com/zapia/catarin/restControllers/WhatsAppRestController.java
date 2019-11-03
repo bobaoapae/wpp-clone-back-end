@@ -9,6 +9,7 @@ import modelo.EstadoDriver;
 import modelo.MediaMessage;
 import modelo.Message;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -32,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequestMapping("/api/whatsApp")
 public class WhatsAppRestController {
 
+    @Lazy
     @Autowired
     private CatarinWhatsApp catarinWhatsApp;
 
@@ -57,7 +59,7 @@ public class WhatsAppRestController {
         return emitter;
     }
 
-    @Async
+    @Async("threadPoolTaskExecutor")
     public void enviarNotificacao(Notification notification) {
         List<SseEmitter> deadEmitters = new ArrayList<>();
         for (SseEmitter sseEmitter : this.emittersWhatsApp) {
