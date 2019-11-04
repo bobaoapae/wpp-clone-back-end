@@ -90,6 +90,9 @@
     <orderEntry type="library" name="Maven: org.springframework.security:spring-security-config:5.1.5.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.security:spring-security-core:5.1.5.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.security:spring-security-web:5.1.5.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-websocket:2.1.6.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-messaging:5.1.8.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.springframework:spring-websocket:5.1.8.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.postgresql:postgresql:42.2.6" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.springframework.boot:spring-boot-devtools:2.1.6.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot:2.1.6.RELEASE" level="project" />
@@ -119,8 +122,8 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.9" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:2.6" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:2.9.7" level="project" />
+    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:2.9" level="project" />
+    <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:3.0" level="project" />
     <orderEntry type="library" name="Maven: br.com.zapia:JxBrowserCrack:6.24.1" level="project" />
     <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser-win32:6.24.1" level="project" />
     <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser:6.24.1" level="project" />

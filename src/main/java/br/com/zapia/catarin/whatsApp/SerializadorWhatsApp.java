@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import modelo.Chat;
+import modelo.MediaMessage;
 import modelo.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -13,8 +14,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,25 +33,25 @@ public class SerializadorWhatsApp {
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) throws IOException {
         ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-        ArrayNode msgsNode = objectMapper.createArrayNode();
-        List<CompletableFuture<ObjectNode>> futures = new ArrayList<>();
-        Collection<List<Message>> partition = Util.partition(chat.getAllMessages(), 5);
-        partition.forEach(messages -> {
-            messages.forEach(message -> {
-                try {
-                    futures.add(serializadorWhatsApp.serializarMsg(message));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        });
-        Util.pegarResultadosFutures(futures).forEach(msgsNode::add);
-        chatNode.set("msgs", msgsNode);
+        chatNode.set("msgs", Util.pegarResultadoFuture(serializarMsg(chat.getAllMessages())));
         chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
         chatNode.put("picture", chat.getContact().getThumb());
         chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
         chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
         return CompletableFuture.completedFuture(chatNode);
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public CompletableFuture<ArrayNode> serializarChat(List<Chat> chats) {
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        chats.forEach(chat -> {
+            try {
+                arrayNode.add(Util.pegarResultadoFuture(serializarChat(chat)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        return CompletableFuture.completedFuture(arrayNode);
     }
 
     @Async("threadPoolTaskExecutor")
@@ -64,6 +63,25 @@ public class SerializadorWhatsApp {
         if (message.getChat() != null) {
             msgNode.put("unreadCount", message.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
         }
+        if (message instanceof MediaMessage) {
+            msgNode.put("filename", ((MediaMessage) message).getFileName());
+            if (message.getJsObject().hasProperty("pageCount") && message.getJsObject().getProperty("pageCount").isNumber()) {
+                msgNode.put("pageCount", message.getJsObject().getProperty("pageCount").asNumber().getValue());
+            }
+        }
         return CompletableFuture.completedFuture(msgNode);
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public CompletableFuture<ArrayNode> serializarMsg(List<Message> messages) {
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        messages.forEach(message -> {
+            try {
+                arrayNode.add(Util.pegarResultadoFuture(serializarMsg(message)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        return CompletableFuture.completedFuture(arrayNode);
     }
 }

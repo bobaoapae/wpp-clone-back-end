@@ -1,9 +1,8 @@
 package br.com.zapia.catarin.whatsApp;
 
-import br.com.zapia.catarin.payloads.Notification;
-import br.com.zapia.catarin.restControllers.WhatsAppRestController;
 import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
+import br.com.zapia.catarin.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -13,10 +12,13 @@ import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
@@ -37,11 +39,13 @@ import java.util.zip.GZIPOutputStream;
 public class CatarinWhatsApp {
 
     @Autowired
-    private WhatsAppRestController whatsAppRestController;
-    @Autowired
     private ControleChatsAsync controleChatsAsync;
     @Autowired
     private SerializadorWhatsApp serializadorWhatsApp;
+    @Lazy
+    @Autowired
+    private CatarinWhatsApp catarinWhatsApp;
+    private List<WebSocketSession> sessions;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
     private WebWhatsDriver driver;
@@ -78,6 +82,7 @@ public class CatarinWhatsApp {
         }
         System.setProperty("jxbrowser.chromium.dir", pathBinarios);
         logger = Logger.getLogger(CatarinWhatsApp.class.getName());
+        sessions = Collections.synchronizedList(new ArrayList<>());
         runAfterInit = new ArrayList<>();
         onConnect = () -> {
             for (Chat chat : driver.getFunctions().getAllNewChats()) {
@@ -86,14 +91,14 @@ public class CatarinWhatsApp {
             driver.getFunctions().addListennerToNewChat(chat -> controleChatsAsync.addChat(chat));
             driver.getFunctions().addListennerToNewChat(chat -> {
                 try {
-                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadosFutures(serializadorWhatsApp.serializarChat(chat)));
+                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "OnNewChat", e);
                 }
             }, true);
             driver.getFunctions().addListennerToUpdateChat(chat -> {
                 try {
-                    enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadosFutures(serializadorWhatsApp.serializarChat(chat)));
+                    enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "OnNewChat", e);
                 }
@@ -102,7 +107,7 @@ public class CatarinWhatsApp {
                 @Override
                 public void onNewMsg(Message msg) {
                     try {
-                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadosFutures(serializadorWhatsApp.serializarMsg(msg)));
+                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnNewMsg", e);
                     }
@@ -118,7 +123,7 @@ public class CatarinWhatsApp {
                 @Override
                 public void onNewMsg(Message msg) {
                     try {
-                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadosFutures(serializadorWhatsApp.serializarMsg(msg)));
+                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnNewMsg", e);
                     }
@@ -159,9 +164,43 @@ public class CatarinWhatsApp {
         }
     }
 
-    @Scheduled(fixedDelay = 1000L)
+    @Scheduled(fixedDelay = 6000L)
     public void enviarNotificacaoParaTestarConexao() {
-        whatsAppRestController.enviarNotificacao(new Notification("ping", System.currentTimeMillis()));
+        broadcastParaWs(new WsMessage("ping", System.currentTimeMillis()));
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public void broadcastParaWs(WsMessage message) {
+        getSessions().stream().filter(webSocketSession -> webSocketSession.isOpen()).forEach(webSocketSession -> {
+            try {
+                catarinWhatsApp.enviarParaWs(webSocketSession, message);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public void enviarParaWs(WebSocketSession ws, WsMessage message) throws IOException {
+        if (ws.isOpen()) {
+            ws.sendMessage(new TextMessage(message.toString()));
+        }
+    }
+
+    public void adicionarSession(WebSocketSession ws) {
+        synchronized (sessions) {
+            sessions.add(ws);
+        }
+    }
+
+    public void removerSession(WebSocketSession ws) {
+        synchronized (sessions) {
+            sessions.remove(ws);
+        }
+    }
+
+    public List<WebSocketSession> getSessions() {
+        return new ArrayList<>(sessions);
     }
 
     public WebWhatsDriver getDriver() {
@@ -187,27 +226,21 @@ public class CatarinWhatsApp {
 
     @Async("threadPoolTaskExecutor")
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
-        whatsAppRestController.enviarNotificacao(new Notification(tipoEventoWpp.name().replace("_", "-"), dado));
+        catarinWhatsApp.broadcastParaWs(new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 ObjectNode dados = objectMapper.createObjectNode();
                 dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(driver.getFunctions().getMyChat())));
                 ArrayNode chatsNode = objectMapper.createArrayNode();
-                List<CompletableFuture<ObjectNode>> futures = new ArrayList<>();
+                List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
                 Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 5);
                 partition.forEach(chats -> {
-                    chats.forEach(chat -> {
-                        try {
-                            futures.add(serializadorWhatsApp.serializarChat(chat));
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    futures.add(serializadorWhatsApp.serializarChat(chats));
                 });
-                Util.pegarResultadosFutures(futures).forEach(chatsNode::add);
+                Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
                 dados.putArray("chats").addAll(chatsNode);
-                enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))));
+                catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))));
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "SendInit", e);
             }

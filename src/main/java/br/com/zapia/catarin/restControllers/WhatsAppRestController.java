@@ -1,7 +1,6 @@
 package br.com.zapia.catarin.restControllers;
 
 import br.com.zapia.catarin.payloads.MediaMessageResponse;
-import br.com.zapia.catarin.payloads.Notification;
 import br.com.zapia.catarin.payloads.SendMessageRequest;
 import br.com.zapia.catarin.whatsApp.CatarinWhatsApp;
 import modelo.Chat;
@@ -12,10 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.validation.Valid;
 import java.io.File;
@@ -24,10 +21,7 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @RestController
 @RequestMapping("/api/whatsApp")
@@ -36,46 +30,6 @@ public class WhatsAppRestController {
     @Lazy
     @Autowired
     private CatarinWhatsApp catarinWhatsApp;
-
-    private final CopyOnWriteArrayList<SseEmitter> emittersWhatsApp = new CopyOnWriteArrayList<>();
-
-
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
-    @GetMapping("/events")
-    public SseEmitter eventos() {
-        SseEmitter emitter = new SseEmitter(600000L);
-        this.emittersWhatsApp.add(emitter);
-
-        emitter.onCompletion(() -> this.emittersWhatsApp.remove(emitter));
-        emitter.onTimeout(() -> {
-            emitter.complete();
-            this.emittersWhatsApp.remove(emitter);
-        });
-        emitter.onError(throwable -> {
-            emitter.complete();
-            this.emittersWhatsApp.remove(emitter);
-        });
-        catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.UPDATE_ESTADO, catarinWhatsApp.getDriver().getEstadoDriver().name());
-        return emitter;
-    }
-
-    @Async("threadPoolTaskExecutor")
-    public void enviarNotificacao(Notification notification) {
-        List<SseEmitter> deadEmitters = new ArrayList<>();
-        for (SseEmitter sseEmitter : this.emittersWhatsApp) {
-            try {
-                SseEmitter.SseEventBuilder event = SseEmitter.event();
-                event.reconnectTime(500L);
-                event.id(String.valueOf(event.hashCode()));
-                event.name(notification.getType().toLowerCase());
-                event.data(notification.getDado());
-                sseEmitter.send(event);
-            } catch (Exception e) {
-                deadEmitters.add(sseEmitter);
-            }
-        }
-        this.emittersWhatsApp.removeAll(deadEmitters);
-    }
 
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @PostMapping("/sendMessage")
@@ -121,7 +75,10 @@ public class WhatsAppRestController {
         }
         Message message = catarinWhatsApp.getDriver().getFunctions().getMessageById(id);
         if (message instanceof MediaMessage) {
-            File file = ((MediaMessage) message).downloadMedia();
+            File file = ((MediaMessage) message).downloadMedia(5);
+            if (file == null) {
+                file = ((MediaMessage) message).downloadMedia(20);
+            }
             String contentType = Files.probeContentType(file.toPath());
             byte[] data = Files.readAllBytes(file.toPath());
             String base64str = Base64.getEncoder().encodeToString(data);
