@@ -48,8 +48,8 @@ public class AuthenticationRestController {
         return ResponseEntity.ok(loginResponse);
     }
 
-    @GetMapping("/loadTesteData")
-    public ResponseEntity<?> loadTesteData() {
+    @GetMapping("/loadInitialData")
+    public ResponseEntity<?> loadInitialData() {
         for (Usuario usuario : usuariosService.listar()) {
             usuariosService.remover(usuario);
         }
@@ -63,6 +63,12 @@ public class AuthenticationRestController {
         usuario.setLogin("joao");
         usuario.setSenha("joao0123@");
         usuario.setNome("João Vitor Borges");
+        usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_SUPER_ADMIN"));
+        usuariosService.salvar(usuario);
+        usuario = new Usuario();
+        usuario.setLogin("catarin");
+        usuario.setSenha("CatarinCertificados7852@");
+        usuario.setNome("Catarin");
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_SUPER_ADMIN"));
         usuariosService.salvar(usuario);
         return ResponseEntity.ok().build();
