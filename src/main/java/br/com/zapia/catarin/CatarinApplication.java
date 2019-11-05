@@ -60,6 +60,11 @@ public class CatarinApplication {
         if (availablePort == minPort && !available(availablePort)) {
             throw new IllegalArgumentException("Cant start container for port: " + availablePort);
         }
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         return availablePort;
     }
 

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
 import modelo.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,6 +144,7 @@ public class CatarinWhatsApp {
         };
         onErrorInDriver = (e) -> {
             logger.log(Level.SEVERE, e.getMessage(), e);
+            catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
         };
         onChangeEstadoDriver = (e) -> {
             enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
@@ -231,16 +233,22 @@ public class CatarinWhatsApp {
             try {
                 ObjectMapper objectMapper = new ObjectMapper();
                 ObjectNode dados = objectMapper.createObjectNode();
-                dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(driver.getFunctions().getMyChat())));
-                ArrayNode chatsNode = objectMapper.createArrayNode();
-                List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
-                Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 5);
-                partition.forEach(chats -> {
-                    futures.add(serializadorWhatsApp.serializarChat(chats));
-                });
-                Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
-                dados.putArray("chats").addAll(chatsNode);
-                catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))));
+                Chat myChat = driver.getFunctions().getMyChat();
+                if (myChat == null) {
+                    driver.reiniciar();
+                    catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.ERROR, "Falha ao buscar o myChat");
+                } else {
+                    dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat)));
+                    ArrayNode chatsNode = objectMapper.createArrayNode();
+                    List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
+                    Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 5);
+                    partition.forEach(chats -> {
+                        futures.add(serializadorWhatsApp.serializarChat(chats));
+                    });
+                    Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
+                    dados.putArray("chats").addAll(chatsNode);
+                    catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))));
+                }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "SendInit", e);
             }
@@ -280,6 +288,7 @@ public class CatarinWhatsApp {
         LOW_BATTERY,
         NEED_QRCODE,
         UPDATE_ESTADO,
+        ERROR,
         INIT
     }
 
