@@ -9,6 +9,7 @@ import modelo.MediaMessage;
 import modelo.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
@@ -68,8 +69,8 @@ public class WhatsAppRestController {
     }
 
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
-    @GetMapping("/mediaMessage/{id}")
-    public ResponseEntity<?> mediaMessage(@PathVariable("id") String id) throws IOException {
+    @GetMapping("/mediaMessage/{id}/{forceDownload}")
+    public ResponseEntity<?> mediaMessage(@PathVariable("id") String id, @PathVariable("forceDownload") boolean forceDownload) throws IOException {
         if (catarinWhatsApp.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -81,18 +82,25 @@ public class WhatsAppRestController {
             }
             String contentType = Files.probeContentType(file.toPath());
             byte[] data = Files.readAllBytes(file.toPath());
-            String base64str = Base64.getEncoder().encodeToString(data);
-            StringBuilder sb = new StringBuilder();
-            sb.append("data:");
-            sb.append(contentType);
-            sb.append(";base64,");
-            sb.append(base64str);
             String fileName = ((MediaMessage) message).getFileName();
             if (fileName.isEmpty()) {
                 fileName = file.getName();
             }
-            MediaMessageResponse mediaMessageResponse = new MediaMessageResponse(fileName, sb.toString());
-            return ResponseEntity.ok(mediaMessageResponse);
+            if (!forceDownload) {
+                String base64str = Base64.getEncoder().encodeToString(data);
+                StringBuilder sb = new StringBuilder();
+                sb.append("data:");
+                sb.append(contentType);
+                sb.append(";base64,");
+                sb.append(base64str);
+                MediaMessageResponse mediaMessageResponse = new MediaMessageResponse(fileName, sb.toString());
+                return ResponseEntity.ok(mediaMessageResponse);
+            } else {
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Content-disposition", "attachment;filename=\"" + fileName + "\"");
+                ResponseEntity<byte[]> responseEntity = new ResponseEntity(data, headers, HttpStatus.OK);
+                return responseEntity;
+            }
         } else {
             return ResponseEntity.badRequest().build();
         }
