@@ -99,16 +99,17 @@ public class CatarinWhatsApp {
                 try {
                     enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
                 } catch (IOException e) {
-                    logger.log(Level.SEVERE, "OnNewChat", e);
+                    logger.log(Level.SEVERE, "OnUpdateChat", e);
                 }
             });
             driver.getFunctions().addListennerToNewMsg(new MessageObserverIncludeMe() {
                 @Override
                 public void onNewMsg(Message msg) {
                     try {
+                        System.out.println("newMsg");
                         enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
                     } catch (IOException e) {
-                        logger.log(Level.SEVERE, "OnNewMsg", e);
+                        logger.log(Level.SEVERE, "OnUpdateChat", e);
                     }
                 }
 
@@ -206,7 +207,9 @@ public class CatarinWhatsApp {
                     dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat)));
                     ArrayNode chatsNode = objectMapper.createArrayNode();
                     List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
-                    Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 5);
+                    List<Chat> allChats = driver.getFunctions().getAllChats();
+                    int partitionSize = allChats.size() < 50 ? allChats.size() : allChats.size() / 50;
+                    Collection<List<Chat>> partition = Util.partition(allChats, partitionSize);
                     partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
                     Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
                     dados.putArray("chats").addAll(chatsNode);

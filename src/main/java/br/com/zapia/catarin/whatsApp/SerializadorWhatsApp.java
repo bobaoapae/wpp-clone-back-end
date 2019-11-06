@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,7 +35,16 @@ public class SerializadorWhatsApp {
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) throws IOException {
         ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-        chatNode.set("msgs", Util.pegarResultadoFuture(serializarMsg(chat.getAllMessages())));
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        List<Message> allMessages = chat.getAllMessages();
+        int partitionSize = allMessages.size() < 10 ? allMessages.size() : allMessages.size() / 10;
+        Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
+        List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
+        partition.forEach(messages -> {
+            futures.add(serializadorWhatsApp.serializarMsg(messages));
+        });
+        Util.pegarResultadosFutures(futures).forEach(arrayNode::addAll);
+        chatNode.set("msgs", arrayNode);
         chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
         chatNode.put("picture", chat.getContact().getThumb());
         chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
@@ -59,9 +70,6 @@ public class SerializadorWhatsApp {
         ObjectNode msgNode = (ObjectNode) objectMapper.readTree(message.toJson());
         if (message.getSender() != null) {
             msgNode.putObject("sender").setAll((ObjectNode) objectMapper.readTree(message.getSender().toJson()));
-        }
-        if (message.getChat() != null) {
-            msgNode.put("unreadCount", message.getChat().getJsObject().getProperty("unreadCount").asNumber().getValue());
         }
         if (message instanceof MediaMessage) {
             msgNode.put("filename", ((MediaMessage) message).getFileName());

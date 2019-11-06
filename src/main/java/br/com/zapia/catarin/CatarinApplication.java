@@ -25,7 +25,7 @@ public class CatarinApplication {
     @Bean("threadPoolTaskExecutor")
     public TaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(30);
+        executor.setCorePoolSize(1000);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setThreadNamePrefix("Catarin-Async-");
         return executor;

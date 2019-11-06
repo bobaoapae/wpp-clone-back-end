@@ -2,7 +2,9 @@ package br.com.zapia.catarin.restControllers;
 
 import br.com.zapia.catarin.payloads.MediaMessageResponse;
 import br.com.zapia.catarin.payloads.SendMessageRequest;
+import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.CatarinWhatsApp;
+import br.com.zapia.catarin.whatsApp.SerializadorWhatsApp;
 import modelo.Chat;
 import modelo.EstadoDriver;
 import modelo.MediaMessage;
@@ -31,6 +33,8 @@ public class WhatsAppRestController {
     @Lazy
     @Autowired
     private CatarinWhatsApp catarinWhatsApp;
+    @Autowired
+    private SerializadorWhatsApp serializadorWhatsApp;
 
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @PostMapping("/sendMessage")
@@ -130,7 +134,13 @@ public class WhatsAppRestController {
         if (chat == null) {
             return ResponseEntity.notFound().build();
         }
-        chat.loadEarlierMsgs(null);
+        chat.loadEarlierMsgs(() -> {
+            try {
+                catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         return ResponseEntity.ok().build();
     }
 }
