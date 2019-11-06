@@ -23,7 +23,6 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         super.afterConnectionEstablished(session);
         catarinWhatsApp.adicionarSession(session);
-        catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.UPDATE_ESTADO, catarinWhatsApp.getDriver().getEstadoDriver().name());
     }
 
     @Override

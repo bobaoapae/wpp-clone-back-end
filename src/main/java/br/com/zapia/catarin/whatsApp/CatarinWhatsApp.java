@@ -58,7 +58,6 @@ public class CatarinWhatsApp {
     private Runnable onDisconnect;
     private Scheduler scheduler;
     private TelaWhatsApp telaWhatsApp;
-    private List<Runnable> runAfterInit;
     @Value("${pathCacheWebWhats}")
     private String pathCacheWebWhats;
     @Value("${pathLogs}")
@@ -84,7 +83,6 @@ public class CatarinWhatsApp {
         System.setProperty("jxbrowser.chromium.dir", pathBinarios);
         logger = Logger.getLogger(CatarinWhatsApp.class.getName());
         sessions = Collections.synchronizedList(new ArrayList<>());
-        runAfterInit = new ArrayList<>();
         onConnect = () -> {
             for (Chat chat : driver.getFunctions().getAllNewChats()) {
                 controleChatsAsync.addChat(chat);
@@ -174,47 +172,50 @@ public class CatarinWhatsApp {
     @Async("threadPoolTaskExecutor")
     public void broadcastParaWs(WsMessage message) {
         getSessions().stream().filter(webSocketSession -> webSocketSession.isOpen()).forEach(webSocketSession -> {
-            try {
-                catarinWhatsApp.enviarParaWs(webSocketSession, message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            catarinWhatsApp.enviarParaWs(webSocketSession, message);
         });
     }
 
     @Async("threadPoolTaskExecutor")
-    public void enviarParaWs(WebSocketSession ws, WsMessage message) throws IOException {
+    public void enviarParaWs(WebSocketSession ws, WsMessage message) {
         if (ws.isOpen()) {
-            ws.sendMessage(new TextMessage(message.toString()));
+            try {
+                ws.sendMessage(new TextMessage(message.toString()));
+            } catch (IOException e) {
+                logger.log(Level.SEVERE, "EnviarParaWs", e);
+            }
         }
     }
 
-    public void adicionarSession(WebSocketSession ws) {
-        synchronized (sessions) {
-            sessions.add(ws);
+    @Async("threadPoolTaskExecutor")
+    public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
+        getSessions().forEach(webSocketSession -> catarinWhatsApp.enviarEventoWpp(tipoEventoWpp, dado, webSocketSession));
+    }
+
+    @Async("threadPoolTaskExecutor")
+    public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
+        catarinWhatsApp.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
+        if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
+            try {
+                ObjectMapper objectMapper = new ObjectMapper();
+                ObjectNode dados = objectMapper.createObjectNode();
+                Chat myChat = driver.getFunctions().getMyChat();
+                if (myChat == null) {
+                    driver.reiniciar();
+                } else {
+                    dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat)));
+                    ArrayNode chatsNode = objectMapper.createArrayNode();
+                    List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
+                    Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 10);
+                    partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
+                    Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
+                    dados.putArray("chats").addAll(chatsNode);
+                    catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))), ws);
+                }
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "SendInit", e);
+            }
         }
-    }
-
-    public void removerSession(WebSocketSession ws) {
-        synchronized (sessions) {
-            sessions.remove(ws);
-        }
-    }
-
-    public List<WebSocketSession> getSessions() {
-        return new ArrayList<>(sessions);
-    }
-
-    public WebWhatsDriver getDriver() {
-        return driver;
-    }
-
-    public Logger getLogger() {
-        return logger;
-    }
-
-    public void logout() {
-        driver.getFunctions().logout();
     }
 
     public void enviarMesagemParaTecnico(String msg) {
@@ -224,43 +225,6 @@ public class CatarinWhatsApp {
             c.sendMessage(mensagem);
             c.setArchive(true);
         }
-    }
-
-    @Async("threadPoolTaskExecutor")
-    public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
-        catarinWhatsApp.broadcastParaWs(new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
-        if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
-            try {
-                ObjectMapper objectMapper = new ObjectMapper();
-                ObjectNode dados = objectMapper.createObjectNode();
-                Chat myChat = driver.getFunctions().getMyChat();
-                if (myChat == null) {
-                    driver.reiniciar();
-                    catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.ERROR, "Falha ao buscar o myChat");
-                } else {
-                    dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat)));
-                    ArrayNode chatsNode = objectMapper.createArrayNode();
-                    List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
-                    Collection<List<Chat>> partition = Util.partition(driver.getFunctions().getAllChats(), 5);
-                    partition.forEach(chats -> {
-                        futures.add(serializadorWhatsApp.serializarChat(chats));
-                    });
-                    Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
-                    dados.putArray("chats").addAll(chatsNode);
-                    catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))));
-                }
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "SendInit", e);
-            }
-        }
-        if (tipoEventoWpp == TipoEventoWpp.INIT) {
-            runAfterInit.forEach(Runnable::run);
-            runAfterInit.clear();
-        }
-    }
-
-    public void runAfterInit(Runnable runnable) {
-        runAfterInit.add(runnable);
     }
 
     public byte[] zip(final String str) {
@@ -276,6 +240,35 @@ public class CatarinWhatsApp {
         } catch (IOException e) {
             throw new RuntimeException("Failed to zip content", e);
         }
+    }
+
+    public void logout() {
+        driver.getFunctions().logout();
+    }
+
+    public void adicionarSession(WebSocketSession ws) {
+        synchronized (sessions) {
+            sessions.add(ws);
+        }
+        catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.UPDATE_ESTADO, catarinWhatsApp.getDriver().getEstadoDriver().name(), ws);
+    }
+
+    public void removerSession(WebSocketSession ws) {
+        synchronized (sessions) {
+            sessions.remove(ws);
+        }
+    }
+
+    public List<WebSocketSession> getSessions() {
+        return Collections.unmodifiableList(sessions);
+    }
+
+    public WebWhatsDriver getDriver() {
+        return driver;
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
     public enum TipoEventoWpp {

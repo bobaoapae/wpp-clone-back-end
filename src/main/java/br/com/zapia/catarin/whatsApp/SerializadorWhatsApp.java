@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -33,11 +35,22 @@ public class SerializadorWhatsApp {
     @Async("threadPoolTaskExecutor")
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) throws IOException {
         ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
-        chatNode.set("msgs", Util.pegarResultadoFuture(serializarMsg(chat.getAllMessages())));
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        Collection<List<Message>> partition = Util.partition(chat.getAllMessages(), 2);
+        List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
+        partition.forEach(messages -> {
+            futures.add(serializadorWhatsApp.serializarMsg(messages));
+        });
+        Util.pegarResultadosFutures(futures).forEach(arrayNode::addAll);
+        chatNode.set("msgs", arrayNode);
         chatNode.putObject("contact").setAll((ObjectNode) objectMapper.readTree(chat.getContact().toJson()));
         chatNode.put("picture", chat.getContact().getThumb());
         chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
         chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
+        if (chat.getAllMessages().size() <= 5 && !chat.noEarlierMsgs()) {
+            chat.loadEarlierMsgs(() -> {
+            });
+        }
         return CompletableFuture.completedFuture(chatNode);
     }
 

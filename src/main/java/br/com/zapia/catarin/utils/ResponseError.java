@@ -2,10 +2,10 @@ package br.com.zapia.catarin.utils;
 
 import java.io.Serializable;
 
-public class RequestBodyInfo implements Serializable {
+public class ResponseError implements Serializable {
     private String msg;
 
-    public RequestBodyInfo(Exception e) {
+    public ResponseError(Exception e) {
         Throwable cause = e;
         do {
             cause = cause.getCause();
@@ -16,7 +16,7 @@ public class RequestBodyInfo implements Serializable {
         }
     }
 
-    public RequestBodyInfo(String msg) {
+    public ResponseError(String msg) {
         this.msg = msg;
     }
 
