@@ -47,10 +47,6 @@ public class SerializadorWhatsApp {
         chatNode.put("picture", chat.getContact().getThumb());
         chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
         chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
-        if (chat.getAllMessages().size() <= 5 && !chat.noEarlierMsgs()) {
-            chat.loadEarlierMsgs(() -> {
-            });
-        }
         return CompletableFuture.completedFuture(chatNode);
     }
 
