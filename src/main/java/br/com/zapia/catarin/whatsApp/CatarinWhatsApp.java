@@ -106,7 +106,6 @@ public class CatarinWhatsApp {
                 @Override
                 public void onNewMsg(Message msg) {
                     try {
-                        System.out.println("newMsg");
                         enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
                     } catch (IOException e) {
                         logger.log(Level.SEVERE, "OnUpdateChat", e);
