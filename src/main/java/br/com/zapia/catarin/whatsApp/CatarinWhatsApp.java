@@ -145,7 +145,7 @@ public class CatarinWhatsApp {
             catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
         };
         onChangeEstadoDriver = (e) -> {
-            catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
+            enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
         telaWhatsApp = new TelaWhatsApp();
         telaWhatsApp.setVisible(true);
@@ -207,7 +207,7 @@ public class CatarinWhatsApp {
                     ArrayNode chatsNode = objectMapper.createArrayNode();
                     List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
                     List<Chat> allChats = driver.getFunctions().getAllChats();
-                    int partitionSize = allChats.size() < 10 ? allChats.size() : allChats.size() / 10;
+                    int partitionSize = allChats.size() < 50 ? allChats.size() : allChats.size() / 50;
                     Collection<List<Chat>> partition = Util.partition(allChats, partitionSize);
                     partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
                     Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
