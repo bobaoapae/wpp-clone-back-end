@@ -37,7 +37,7 @@ public class SerializadorWhatsApp {
         ObjectNode chatNode = (ObjectNode) objectMapper.readTree(chat.toJson());
         ArrayNode arrayNode = objectMapper.createArrayNode();
         List<Message> allMessages = chat.getAllMessages();
-        int partitionSize = allMessages.size() < 10 ? allMessages.size() : allMessages.size() / 10;
+        int partitionSize = allMessages.size() < 5 ? allMessages.size() : allMessages.size() / 5;
         Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
         List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
         partition.forEach(messages -> {
