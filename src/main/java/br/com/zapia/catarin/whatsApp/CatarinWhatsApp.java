@@ -207,8 +207,7 @@ public class CatarinWhatsApp {
                     ArrayNode chatsNode = objectMapper.createArrayNode();
                     List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
                     List<Chat> allChats = driver.getFunctions().getAllChats();
-                    int partitionSize = allChats.size() < 50 ? allChats.size() : allChats.size() / 50;
-                    Collection<List<Chat>> partition = Util.partition(allChats, partitionSize);
+                    Collection<List<Chat>> partition = Util.partition(allChats, 2);
                     partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
                     Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
                     dados.putArray("chats").addAll(chatsNode);
