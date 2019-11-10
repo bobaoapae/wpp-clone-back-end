@@ -7,9 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
+import org.threadly.concurrent.collections.ConcurrentArrayList;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -22,45 +21,39 @@ public class ControleChatsAsync {
     private ApplicationContext applicationContext;
 
     private ControleChatsAsync() {
-        this.chats = Collections.synchronizedList(new ArrayList<>());
+        this.chats = new ConcurrentArrayList<>();
     }
 
     public ChatBotCatarinSpring addChat(Chat chat) {
-        synchronized (chats) {
-            try {
-                if (chat instanceof UserChat) {
-                    ChatBotCatarinSpring bean = applicationContext.getBean(ChatBotCatarinSpring.class);
-                    bean.inicializarChatBotCatarin(chat, true);
-                    chats.add(bean);
-                    return bean;
-                }
-            } catch (Exception ex) {
-                chat.getDriver().onError(ex);
+        try {
+            if (chat instanceof UserChat) {
+                ChatBotCatarinSpring bean = applicationContext.getBean(ChatBotCatarinSpring.class);
+                bean.inicializarChatBotCatarin(chat, true);
+                chats.add(bean);
+                return bean;
             }
-            return null;
+        } catch (Exception ex) {
+            chat.getDriver().onError(ex);
         }
+        return null;
     }
 
     public ChatBotCatarinSpring getChatAsyncByChat(Chat chat) {
-        synchronized (chats) {
-            for (ChatBotCatarinSpring chatt : chats) {
-                if (chatt.getChatBotCatarin().getChat().equals(chat)) {
-                    return chatt;
-                }
+        for (ChatBotCatarinSpring chatt : chats) {
+            if (chatt.getChatBotCatarin().getChat().equals(chat)) {
+                return chatt;
             }
         }
         return addChat(chat);
     }
 
     public ChatBotCatarinSpring getChatAsyncByChat(String chatid) {
-        synchronized (chats) {
-            for (ChatBotCatarinSpring chatt : chats) {
-                if (chatt.getChatBotCatarin().getChat().getId().equals(chatid)) {
-                    return chatt;
-                }
+        for (ChatBotCatarinSpring chatt : chats) {
+            if (chatt.getChatBotCatarin().getChat().getId().equals(chatid)) {
+                return chatt;
             }
-            return null;
         }
+        return null;
     }
 
     public List<ChatBotCatarinSpring> getChats() {

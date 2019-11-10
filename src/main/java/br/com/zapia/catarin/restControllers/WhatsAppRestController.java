@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/api/whatsApp")
@@ -137,7 +138,7 @@ public class WhatsAppRestController {
         chat.loadEarlierMsgs(() -> {
             try {
                 catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            } catch (IOException e) {
+            } catch (ExecutionException e) {
                 e.printStackTrace();
             }
         });
