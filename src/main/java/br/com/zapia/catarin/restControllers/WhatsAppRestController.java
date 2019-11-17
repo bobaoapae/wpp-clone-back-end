@@ -3,18 +3,18 @@ package br.com.zapia.catarin.restControllers;
 import br.com.zapia.catarin.payloads.MediaMessageResponse;
 import br.com.zapia.catarin.payloads.SendMessageRequest;
 import br.com.zapia.catarin.utils.Util;
-import br.com.zapia.catarin.whatsApp.CatarinWhatsApp;
 import br.com.zapia.catarin.whatsApp.SerializadorWhatsApp;
+import br.com.zapia.catarin.whatsApp.WhatsAppClone;
 import modelo.Chat;
 import modelo.EstadoDriver;
 import modelo.MediaMessage;
 import modelo.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -27,17 +27,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.concurrent.ExecutionException;
 
+@Scope("usuario")
 @RestController
 @RequestMapping("/api/whatsApp")
 public class WhatsAppRestController {
 
     @Lazy
     @Autowired
-    private CatarinWhatsApp catarinWhatsApp;
+    private WhatsAppClone whatsAppClone;
     @Autowired
     private SerializadorWhatsApp serializadorWhatsApp;
 
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @PostMapping("/sendMessage")
     public ResponseEntity<?> enviarMenssagem(@Valid @ModelAttribute SendMessageRequest sendMessageRequest) {
         if (sendMessageRequest.getChatId() == null || sendMessageRequest.getChatId().isEmpty()) {
@@ -55,10 +55,10 @@ public class WhatsAppRestController {
         String hoje = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy"));
         String amanha = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy"));
         String msg = sendMessageRequest.getMessage().replaceAll("\\{estabelecimento}", "Catarin").replaceAll("\\{saudacao}", saudacao).replaceAll("\\{hoje}", hoje).replaceAll("\\{amanha}", amanha);
-        if (catarinWhatsApp.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
+        if (whatsAppClone.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        Chat chat = catarinWhatsApp.getDriver().getFunctions().getChatById(sendMessageRequest.getChatId());
+        Chat chat = whatsAppClone.getDriver().getFunctions().getChatById(sendMessageRequest.getChatId());
         if (chat != null) {
             if (sendMessageRequest.getMedia() == null || sendMessageRequest.getMedia().isEmpty()) {
                 chat.sendMessage(msg);
@@ -73,13 +73,12 @@ public class WhatsAppRestController {
         }
     }
 
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @GetMapping("/mediaMessage/{id}/{forceDownload}")
     public ResponseEntity<?> mediaMessage(@PathVariable("id") String id, @PathVariable("forceDownload") boolean forceDownload) throws IOException {
-        if (catarinWhatsApp.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
+        if (whatsAppClone.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        Message message = catarinWhatsApp.getDriver().getFunctions().getMessageById(id);
+        Message message = whatsAppClone.getDriver().getFunctions().getMessageById(id);
         if (message instanceof MediaMessage) {
             File file = ((MediaMessage) message).downloadMedia(5);
             if (file == null) {
@@ -111,13 +110,12 @@ public class WhatsAppRestController {
         }
     }
 
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @PostMapping("/sendSeenChat/{id}")
     public ResponseEntity<?> marcarChatComoVisto(@PathVariable("id") String id) {
-        if (catarinWhatsApp.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
+        if (whatsAppClone.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        Chat chat = catarinWhatsApp.getDriver().getFunctions().getChatById(id);
+        Chat chat = whatsAppClone.getDriver().getFunctions().getChatById(id);
         if (chat == null) {
             return ResponseEntity.notFound().build();
         }
@@ -125,23 +123,28 @@ public class WhatsAppRestController {
         return ResponseEntity.ok().build();
     }
 
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_OPERADOR"})
     @PostMapping("/loadEarly/{id}")
     public ResponseEntity<?> carregarMensagensAntigas(@PathVariable("id") String id) {
-        if (catarinWhatsApp.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
+        if (whatsAppClone.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        Chat chat = catarinWhatsApp.getDriver().getFunctions().getChatById(id);
+        Chat chat = whatsAppClone.getDriver().getFunctions().getChatById(id);
         if (chat == null) {
             return ResponseEntity.notFound().build();
         }
         chat.loadEarlierMsgs(() -> {
             try {
-                catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
+                whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
         });
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> deslogar() {
+        whatsAppClone.logout();
         return ResponseEntity.ok().build();
     }
 }

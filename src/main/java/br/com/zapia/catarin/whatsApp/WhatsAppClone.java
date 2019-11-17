@@ -1,5 +1,6 @@
 package br.com.zapia.catarin.whatsApp;
 
+import br.com.zapia.catarin.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.catarin.ws.WsMessage;
@@ -20,6 +21,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
+import org.threadly.concurrent.collections.ConcurrentArrayList;
 
 import javax.annotation.PostConstruct;
 import javax.swing.*;
@@ -34,19 +37,22 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 @Component
-@Scope("singleton")
-public class CatarinWhatsApp {
+@Scope("usuario")
+public class WhatsAppClone {
 
+    @Autowired
+    private UsuarioPrincipalAutoWired usuarioPrincipalAutoWired;
     @Autowired
     private ControleChatsAsync controleChatsAsync;
     @Autowired
     private SerializadorWhatsApp serializadorWhatsApp;
     @Lazy
     @Autowired
-    private CatarinWhatsApp catarinWhatsApp;
+    private WhatsAppClone whatsAppClone;
     private List<WebSocketSession> sessions;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
@@ -69,11 +75,11 @@ public class CatarinWhatsApp {
 
     @PostConstruct
     public void init() throws IOException {
-        File file = new File(pathCacheWebWhats);
+        File file = new File(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid());
         if (!file.exists()) {
             file.mkdir();
         }
-        file = new File(pathLogs);
+        file = new File(pathLogs + usuarioPrincipalAutoWired.getUsuario().getUuid());
         if (!file.exists()) {
             file.mkdir();
         }
@@ -82,8 +88,8 @@ public class CatarinWhatsApp {
             file.mkdir();
         }
         System.setProperty("jxbrowser.chromium.dir", pathBinarios);
-        logger = Logger.getLogger(CatarinWhatsApp.class.getName());
-        sessions = Collections.synchronizedList(new ArrayList<>());
+        logger = Logger.getLogger(WhatsAppClone.class.getName());
+        sessions = new ConcurrentArrayList<>();
         onConnect = () -> {
             for (Chat chat : driver.getFunctions().getAllNewChats()) {
                 controleChatsAsync.addChat(chat);
@@ -136,24 +142,24 @@ public class CatarinWhatsApp {
             });
         };
         onLowBaterry = (e) -> {
-            catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
         };
         onNeedQrCode = (e) -> {
-            catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
         };
         onErrorInDriver = (e) -> {
             logger.log(Level.SEVERE, e.getMessage(), e);
-            catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
         };
         onChangeEstadoDriver = (e) -> {
-            catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
         telaWhatsApp = new TelaWhatsApp();
         telaWhatsApp.setVisible(true);
-        this.driver = new WebWhatsDriver(telaWhatsApp.getPanel(), pathCacheWebWhats, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+        this.driver = new WebWhatsDriver(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();
-        properties.put("org.quartz.scheduler.instanceName", "Catarin");
+        properties.put("org.quartz.scheduler.instanceName", "WppWebClone" + usuarioPrincipalAutoWired.getUsuario().getUuid());
         properties.put("org.quartz.scheduler.instanceId", "AUTO");
         properties.put("org.quartz.threadPool.threadCount", "2");
         try {
@@ -170,14 +176,14 @@ public class CatarinWhatsApp {
         broadcastParaWs(new WsMessage("ping", System.currentTimeMillis()));
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public void broadcastParaWs(WsMessage message) {
         getSessions().stream().filter(WebSocketSession::isOpen).forEach(webSocketSession -> {
-            catarinWhatsApp.enviarParaWs(webSocketSession, message);
+            whatsAppClone.enviarParaWs(webSocketSession, message);
         });
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public void enviarParaWs(WebSocketSession ws, WsMessage message) {
         if (ws.isOpen()) {
             try {
@@ -188,20 +194,20 @@ public class CatarinWhatsApp {
         }
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
-        getSessions().forEach(webSocketSession -> catarinWhatsApp.enviarEventoWpp(tipoEventoWpp, dado, webSocketSession));
+        getSessions().forEach(webSocketSession -> whatsAppClone.enviarEventoWpp(tipoEventoWpp, dado, webSocketSession));
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
-        catarinWhatsApp.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
+        whatsAppClone.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
-            catarinWhatsApp.sendInit(ws);
+            whatsAppClone.sendInit(ws);
         }
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public void sendInit(WebSocketSession ws) {
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -219,7 +225,7 @@ public class CatarinWhatsApp {
                 partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
                 Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
                 dados.putArray("chats").addAll(chatsNode);
-                catarinWhatsApp.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))), ws);
+                whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))), ws);
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SendInit", e);
@@ -250,21 +256,23 @@ public class CatarinWhatsApp {
         }
     }
 
-    public void logout() {
+    @Async
+    public CompletableFuture<Void> logout() {
         driver.getFunctions().logout();
+        return CompletableFuture.completedFuture(null);
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        synchronized (sessions) {
-            sessions.add(ws);
-        }
-        catarinWhatsApp.enviarEventoWpp(CatarinWhatsApp.TipoEventoWpp.UPDATE_ESTADO, catarinWhatsApp.getDriver().getEstadoDriver().name(), ws);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 5000, 5 * 1024 * 1024);
+        sessions.add(ws);
+        whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getEstadoDriver().name(), ws);
     }
 
     public void removerSession(WebSocketSession ws) {
-        synchronized (sessions) {
-            sessions.remove(ws);
-        }
+        sessions.removeAll(sessions.stream().filter(webSocketSession -> {
+            ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = (ConcurrentWebSocketSessionDecorator) webSocketSession;
+            return concurrentWebSocketSessionDecorator.getDelegate().equals(ws);
+        }).collect(Collectors.toList()));
     }
 
     public List<WebSocketSession> getSessions() {
@@ -298,7 +306,7 @@ public class CatarinWhatsApp {
         private JPanel panel;
 
         public TelaWhatsApp() {
-            this.setTitle("Catarin");
+            this.setTitle(usuarioPrincipalAutoWired.getUsuario().getNome() + " - " + usuarioPrincipalAutoWired.getUsuario().getLogin());
             this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             this.setExtendedState(JFrame.MAXIMIZED_BOTH);
             this.getContentPane().setLayout(new BorderLayout());

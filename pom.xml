@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>br.com.zapia</groupId>
-    <artifactId>sistema-catarin</artifactId>
+    <artifactId>wpp-clone</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>sistema-catarin</name>
-    <description>Sistema Catarin</description>
+    <name>wpp-clone</name>
+    <description>Clone WhatsApp Web</description>
 
     <properties>
         <java.version>13</java.version>
@@ -82,11 +82,16 @@
             <artifactId>jjwt</artifactId>
             <version>0.9.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>2.3.5</version>
+        </dependency>
 
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>BotWhatsApp</artifactId>
-            <version>3.5</version>
+            <version>3.6</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>

@@ -82,7 +82,7 @@ public class SerializadorWhatsApp {
                         });
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) throws ExecutionException {
         ObjectNode chatNode = cacheChats.get(chat);
         ArrayNode arrayNode = objectMapper.createArrayNode();
@@ -99,7 +99,7 @@ public class SerializadorWhatsApp {
         return CompletableFuture.completedFuture(chatNode);
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public CompletableFuture<ArrayNode> serializarChat(List<Chat> chats) {
         ArrayNode arrayNode = objectMapper.createArrayNode();
         chats.forEach(chat -> {
@@ -112,12 +112,12 @@ public class SerializadorWhatsApp {
         return CompletableFuture.completedFuture(arrayNode);
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public CompletableFuture<ObjectNode> serializarMsg(Message message) throws ExecutionException {
         return CompletableFuture.completedFuture(cacheMsgs.get(message));
     }
 
-    @Async("threadPoolTaskExecutor")
+    @Async
     public CompletableFuture<ArrayNode> serializarMsg(List<Message> messages) {
         ArrayNode arrayNode = objectMapper.createArrayNode();
         messages.forEach(message -> {

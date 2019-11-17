@@ -12,7 +12,7 @@ import org.threadly.concurrent.collections.ConcurrentArrayList;
 import java.util.List;
 
 @Controller
-@Scope("singleton")
+@Scope("usuario")
 public class ControleChatsAsync {
 
 

@@ -1,8 +1,8 @@
 package br.com.zapia.catarin.ws;
 
-import br.com.zapia.catarin.whatsApp.CatarinWhatsApp;
+import br.com.zapia.catarin.whatsApp.WhatsAppClone;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
@@ -10,9 +10,8 @@ import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 @Service
 public class WhatsAppWebSocket extends BinaryWebSocketHandler {
 
-    @Lazy
     @Autowired
-    private CatarinWhatsApp catarinWhatsApp;
+    private ApplicationContext applicationContext;
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
@@ -22,7 +21,7 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         super.afterConnectionEstablished(session);
-        catarinWhatsApp.adicionarSession(session);
+        getCatarinWhatsApp().adicionarSession(session);
     }
 
     @Override
@@ -48,7 +47,11 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         super.afterConnectionClosed(session, status);
-        catarinWhatsApp.removerSession(session);
+        getCatarinWhatsApp().removerSession(session);
+    }
+
+    private WhatsAppClone getCatarinWhatsApp() {
+        return applicationContext.getBean(WhatsAppClone.class);
     }
 
     @Override

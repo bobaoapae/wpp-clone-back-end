@@ -1,16 +1,9 @@
 package br.com.zapia.catarin.modelo;
 
 import br.com.zapia.catarin.listenners.PasswordUsuariosListenner;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
 
-@JsonIdentityInfo(
-        generator = ObjectIdGenerators.PropertyGenerator.class,
-        property = "uuid")
 @Entity
 @EntityListeners(PasswordUsuariosListenner.class)
 public class Usuario extends Entidade {
@@ -19,13 +12,10 @@ public class Usuario extends Entidade {
     private String nome;
     @Column(unique = true, nullable = false)
     private String login;
-    @JsonIgnore
     @Column(nullable = false)
     private String senha;
-    @JsonManagedReference
     @ManyToOne
     private Permissao permissao;
-    @JsonIgnore
     @Transient
     private boolean updateSenha;
 
