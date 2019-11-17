@@ -41,6 +41,7 @@ public class SerializadorWhatsApp {
         this.objectMapper = new ObjectMapper();
         cache = CacheBuilder.newBuilder()
                 .maximumSize(10000)
+                .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.DAYS)
                 .build(
                         new CacheLoader<>() {
@@ -50,6 +51,7 @@ public class SerializadorWhatsApp {
                         });
         cacheChats = CacheBuilder.newBuilder()
                 .maximumSize(10000)
+                .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
                         new CacheLoader<>() {
@@ -63,6 +65,7 @@ public class SerializadorWhatsApp {
                         });
         cacheMsgs = CacheBuilder.newBuilder()
                 .maximumSize(100000)
+                .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
                         new CacheLoader<>() {
@@ -86,6 +89,7 @@ public class SerializadorWhatsApp {
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) throws ExecutionException {
         ObjectNode chatNode = cacheChats.get(chat);
         ArrayNode arrayNode = objectMapper.createArrayNode();
+        System.out.println("Serializando Chat");
         List<Message> allMessages = chat.getAllMessages();
         int partitionSize = allMessages.size() < 20 ? allMessages.size() : allMessages.size() / 20;
         Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
@@ -114,6 +118,7 @@ public class SerializadorWhatsApp {
 
     @Async
     public CompletableFuture<ObjectNode> serializarMsg(Message message) throws ExecutionException {
+        System.out.println("Serializando Msg");
         return CompletableFuture.completedFuture(cacheMsgs.get(message));
     }
 
