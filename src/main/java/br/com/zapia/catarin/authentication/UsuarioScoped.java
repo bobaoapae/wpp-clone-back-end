@@ -5,16 +5,24 @@ import org.springframework.beans.factory.config.Scope;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class UsuarioScoped implements Scope {
 
     private final Map<String, Object> scopes = new HashMap<>();
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
 
     @Override
     public Object get(String s, ObjectFactory<?> objectFactory) {
-        if (!scopes.containsKey(getConversationId() + s)) {
-            scopes.put(getConversationId() + s, objectFactory.getObject());
+        try {
+            readWriteLock.writeLock().lock();
+            if (!scopes.containsKey(getConversationId() + s)) {
+                scopes.put(getConversationId() + s, objectFactory.getObject());
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
         }
         return scopes.get(getConversationId() + s);
     }
