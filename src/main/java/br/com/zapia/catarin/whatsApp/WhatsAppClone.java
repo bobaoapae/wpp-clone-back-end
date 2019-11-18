@@ -220,7 +220,7 @@ public class WhatsAppClone {
                 ArrayNode chatsNode = objectMapper.createArrayNode();
                 List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
                 List<Chat> allChats = driver.getFunctions().getAllChats();
-                int partitionSize = allChats.size() < 20 ? allChats.size() : allChats.size() / 20;
+                int partitionSize = allChats.size() < 50 ? allChats.size() : allChats.size() / 50;
                 Collection<List<Chat>> partition = Util.partition(allChats, partitionSize);
                 partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
                 Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
