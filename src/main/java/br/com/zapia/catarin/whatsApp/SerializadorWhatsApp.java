@@ -13,6 +13,7 @@ import modelo.Message;
 import modelo.WhatsappObjectWithId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+@Scope("usuario")
 @Service
 public class SerializadorWhatsApp {
 
@@ -112,7 +114,8 @@ public class SerializadorWhatsApp {
         }
         ArrayNode arrayNode = objectMapper.createArrayNode();
         List<Message> allMessages = chat.getAllMessages();
-        Collection<List<Message>> partition = Util.partition(allMessages, 2);
+        int partitionSize = allMessages.size() < 20 ? allMessages.size() : allMessages.size() / 20;
+        Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
         List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
         partition.forEach(messages -> {
             futures.add(serializadorWhatsApp.serializarMsg(messages));
