@@ -13,11 +13,13 @@ import modelo.Message;
 import modelo.WhatsappObjectWithId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+@Scope("usuario")
 @Service
 public class SerializadorWhatsApp {
 
@@ -41,6 +44,7 @@ public class SerializadorWhatsApp {
         this.objectMapper = new ObjectMapper();
         cache = CacheBuilder.newBuilder()
                 .maximumSize(10000)
+                .refreshAfterWrite(Duration.ofDays(1))
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.DAYS)
                 .build(
@@ -51,12 +55,19 @@ public class SerializadorWhatsApp {
                         });
         cacheChats = CacheBuilder.newBuilder()
                 .maximumSize(10000)
+                .refreshAfterWrite(Duration.ofHours(10))
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
                         new CacheLoader<>() {
                             public ObjectNode load(Chat chat) throws ExecutionException {
-                                ObjectNode chatNode = cache.get(chat);
+                                ObjectNode chatNode;
+                                try {
+                                    chatNode = cache.get(chat);
+                                } catch (IllegalStateException e) {
+                                    cache.refresh(chat);
+                                    chatNode = cache.get(chat);
+                                }
                                 chatNode.putObject("contact").setAll(cache.get(chat.getContact()));
                                 chatNode.put("picture", chat.getContact().getThumb());
                                 chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
@@ -65,12 +76,19 @@ public class SerializadorWhatsApp {
                         });
         cacheMsgs = CacheBuilder.newBuilder()
                 .maximumSize(100000)
+                .refreshAfterWrite(Duration.ofHours(10))
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
                         new CacheLoader<>() {
                             public ObjectNode load(Message message) throws ExecutionException {
-                                ObjectNode msgNode = cache.get(message);
+                                ObjectNode msgNode;
+                                try {
+                                    msgNode = cache.get(message);
+                                } catch (IllegalStateException e) {
+                                    cache.refresh(message);
+                                    msgNode = cache.get(message);
+                                }
                                 if (message.getSender() != null) {
                                     msgNode.putObject("sender").setAll(cache.get(message.getSender()));
                                 }
@@ -87,9 +105,14 @@ public class SerializadorWhatsApp {
 
     @Async
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) throws ExecutionException {
-        ObjectNode chatNode = cacheChats.get(chat);
+        ObjectNode chatNode;
+        try {
+            chatNode = cacheChats.get(chat);
+        } catch (IllegalStateException e) {
+            cacheChats.refresh(chat);
+            chatNode = cacheChats.get(chat);
+        }
         ArrayNode arrayNode = objectMapper.createArrayNode();
-        System.out.println("Serializando Chat");
         List<Message> allMessages = chat.getAllMessages();
         int partitionSize = allMessages.size() < 20 ? allMessages.size() : allMessages.size() / 20;
         Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
@@ -118,8 +141,14 @@ public class SerializadorWhatsApp {
 
     @Async
     public CompletableFuture<ObjectNode> serializarMsg(Message message) throws ExecutionException {
-        System.out.println("Serializando Msg");
-        return CompletableFuture.completedFuture(cacheMsgs.get(message));
+        ObjectNode objectNode;
+        try {
+            objectNode = cacheMsgs.get(message);
+        } catch (IllegalStateException e) {
+            cacheMsgs.refresh(message);
+            objectNode = cacheMsgs.get(message);
+        }
+        return CompletableFuture.completedFuture(objectNode);
     }
 
     @Async
