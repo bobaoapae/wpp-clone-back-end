@@ -47,7 +47,6 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         super.afterConnectionClosed(session, status);
-        getCatarinWhatsApp().removerSession(session);
     }
 
     private WhatsAppClone getCatarinWhatsApp() {

@@ -40,6 +40,9 @@ public class WhatsAppRestController {
 
     @PostMapping("/sendMessage")
     public ResponseEntity<?> enviarMenssagem(@Valid @ModelAttribute SendMessageRequest sendMessageRequest) {
+        if (whatsAppClone.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         if (sendMessageRequest.getChatId() == null || sendMessageRequest.getChatId().isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
@@ -55,9 +58,6 @@ public class WhatsAppRestController {
         String hoje = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy"));
         String amanha = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy"));
         String msg = sendMessageRequest.getMessage().replaceAll("\\{estabelecimento}", "Catarin").replaceAll("\\{saudacao}", saudacao).replaceAll("\\{hoje}", hoje).replaceAll("\\{amanha}", amanha);
-        if (whatsAppClone.getDriver().getEstadoDriver() != EstadoDriver.LOGGED) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
         Chat chat = whatsAppClone.getDriver().getFunctions().getChatById(sendMessageRequest.getChatId());
         if (chat != null) {
             if (sendMessageRequest.getMedia() == null || sendMessageRequest.getMedia().isEmpty()) {
@@ -83,6 +83,9 @@ public class WhatsAppRestController {
             File file = ((MediaMessage) message).downloadMedia(5);
             if (file == null) {
                 file = ((MediaMessage) message).downloadMedia(20);
+            }
+            if (file == null) {
+                return ResponseEntity.notFound().build();
             }
             String contentType = Files.probeContentType(file.toPath());
             byte[] data = Files.readAllBytes(file.toPath());
