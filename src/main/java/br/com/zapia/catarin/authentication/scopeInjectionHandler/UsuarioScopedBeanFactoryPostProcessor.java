@@ -1,4 +1,4 @@
-package br.com.zapia.catarin.authentication;
+package br.com.zapia.catarin.authentication.scopeInjectionHandler;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;

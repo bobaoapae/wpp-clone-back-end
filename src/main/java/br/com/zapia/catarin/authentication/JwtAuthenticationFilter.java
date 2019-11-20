@@ -1,5 +1,6 @@
 package br.com.zapia.catarin.authentication;
 
+import br.com.zapia.catarin.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.catarin.modelo.Usuario;
 import br.com.zapia.catarin.servicos.UsuariosService;
 import org.apache.commons.lang3.ArrayUtils;

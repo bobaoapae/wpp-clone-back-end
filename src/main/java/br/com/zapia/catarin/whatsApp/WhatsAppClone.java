@@ -53,6 +53,8 @@ public class WhatsAppClone {
     @Lazy
     @Autowired
     private WhatsAppClone whatsAppClone;
+    @Autowired
+    private WebWhatsDriverSpring webWhatsDriverSpring;
     private List<WebSocketSession> sessions;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
@@ -156,7 +158,7 @@ public class WhatsAppClone {
         };
         telaWhatsApp = new TelaWhatsApp();
         telaWhatsApp.setVisible(true);
-        this.driver = new WebWhatsDriver(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+        this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();
         properties.put("org.quartz.scheduler.instanceName", "WppWebClone" + usuarioPrincipalAutoWired.getUsuario().getUuid());

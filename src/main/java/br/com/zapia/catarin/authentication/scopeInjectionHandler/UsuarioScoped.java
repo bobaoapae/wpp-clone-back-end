@@ -1,16 +1,16 @@
-package br.com.zapia.catarin.authentication;
+package br.com.zapia.catarin.authentication.scopeInjectionHandler;
 
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.config.Scope;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class UsuarioScoped implements Scope {
 
-    private final Map<String, Object> scopes = new HashMap<>();
+    private final Map<String, Object> scopes = new ConcurrentHashMap<>();
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
 
