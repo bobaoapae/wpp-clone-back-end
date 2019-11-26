@@ -194,7 +194,7 @@ public class WhatsAppClone {
                 logger.log(Level.SEVERE, "EnviarParaWs", e);
             }
         } else {
-            sessions.remove(ws);
+            removerSession(ws);
         }
     }
 
@@ -273,10 +273,14 @@ public class WhatsAppClone {
     }
 
     public void removerSession(WebSocketSession ws) {
-        sessions.removeAll(sessions.stream().filter(webSocketSession -> {
-            ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = (ConcurrentWebSocketSessionDecorator) webSocketSession;
-            return concurrentWebSocketSessionDecorator.getDelegate().equals(ws);
-        }).collect(Collectors.toList()));
+        if (ws instanceof ConcurrentWebSocketSessionDecorator) {
+            sessions.removeAll(sessions.stream().filter(webSocketSession -> {
+                ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = (ConcurrentWebSocketSessionDecorator) webSocketSession;
+                return concurrentWebSocketSessionDecorator.getDelegate().equals(ws);
+            }).collect(Collectors.toList()));
+        } else {
+            sessions.remove(ws);
+        }
     }
 
     public List<WebSocketSession> getSessions() {
