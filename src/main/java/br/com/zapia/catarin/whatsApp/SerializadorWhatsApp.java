@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,8 +42,7 @@ public class SerializadorWhatsApp {
     public void init() {
         this.objectMapper = new ObjectMapper();
         cache = CacheBuilder.newBuilder()
-                .maximumSize(10000)
-                .refreshAfterWrite(Duration.ofDays(1))
+                .maximumSize(1000)
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.DAYS)
                 .build(
@@ -54,8 +52,7 @@ public class SerializadorWhatsApp {
                             }
                         });
         cacheChats = CacheBuilder.newBuilder()
-                .maximumSize(10000)
-                .refreshAfterWrite(Duration.ofHours(10))
+                .maximumSize(200)
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
@@ -75,8 +72,7 @@ public class SerializadorWhatsApp {
                             }
                         });
         cacheMsgs = CacheBuilder.newBuilder()
-                .maximumSize(100000)
-                .refreshAfterWrite(Duration.ofHours(10))
+                .maximumSize(2000)
                 .concurrencyLevel(Runtime.getRuntime().availableProcessors() * 2)
                 .expireAfterWrite(1, TimeUnit.HOURS)
                 .build(
@@ -114,7 +110,8 @@ public class SerializadorWhatsApp {
         }
         ArrayNode arrayNode = objectMapper.createArrayNode();
         List<Message> allMessages = chat.getAllMessages();
-        Collection<List<Message>> partition = Util.partition(allMessages, 2);
+        int partitionSize = allMessages.size() < Runtime.getRuntime().availableProcessors() ? allMessages.size() : allMessages.size() / Runtime.getRuntime().availableProcessors();
+        Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
         List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
         partition.forEach(messages -> {
             futures.add(serializadorWhatsApp.serializarMsg(messages));

@@ -224,11 +224,12 @@ public class WhatsAppClone {
                 ArrayNode chatsNode = objectMapper.createArrayNode();
                 List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
                 List<Chat> allChats = driver.getFunctions().getAllChats();
-                Collection<List<Chat>> partition = Util.partition(allChats, 5);
+                int partitionSize = allChats.size() < Runtime.getRuntime().availableProcessors() ? allChats.size() : allChats.size() / Runtime.getRuntime().availableProcessors();
+                Collection<List<Chat>> partition = Util.partition(allChats, partitionSize);
                 partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
                 Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
                 dados.putArray("chats").addAll(chatsNode);
-                whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, new String(Base64.getEncoder().encode(zip(objectMapper.writeValueAsString(dados)))), ws);
+                whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "SendInit", e);
