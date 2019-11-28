@@ -62,7 +62,7 @@ public class SerializadorWhatsApp {
                                 try {
                                     chatNode = cache.get(chat);
                                 } catch (IllegalStateException e) {
-                                    cache.refresh(chat);
+                                    cache.invalidate(chat);
                                     chatNode = cache.get(chat);
                                 }
                                 chatNode.putObject("contact").setAll(cache.get(chat.getContact()));
@@ -82,7 +82,7 @@ public class SerializadorWhatsApp {
                                 try {
                                     msgNode = cache.get(message);
                                 } catch (IllegalStateException e) {
-                                    cache.refresh(message);
+                                    cache.invalidate(message);
                                     msgNode = cache.get(message);
                                 }
                                 if (message.getSender() != null) {
@@ -105,7 +105,7 @@ public class SerializadorWhatsApp {
         try {
             chatNode = cacheChats.get(chat);
         } catch (IllegalStateException e) {
-            cacheChats.refresh(chat);
+            cacheChats.invalidate(chat);
             chatNode = cacheChats.get(chat);
         }
         ArrayNode arrayNode = objectMapper.createArrayNode();
@@ -141,7 +141,7 @@ public class SerializadorWhatsApp {
         try {
             objectNode = cacheMsgs.get(message);
         } catch (IllegalStateException e) {
-            cacheMsgs.refresh(message);
+            cacheMsgs.invalidate(message);
             objectNode = cacheMsgs.get(message);
         }
         return CompletableFuture.completedFuture(objectNode);
