@@ -1,13 +1,23 @@
 package br.com.zapia.catarin.authentication;
 
+import br.com.zapia.catarin.authentication.scopeInjectionHandler.UsuarioScopedContext;
+import br.com.zapia.catarin.modelo.Usuario;
+import br.com.zapia.catarin.servicos.UsuariosService;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
@@ -15,6 +25,9 @@ import java.util.UUID;
 public class JwtTokenProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+
+    @Autowired
+    private UsuariosService usuariosService;
 
     public String generateToken(Authentication authentication) {
 
@@ -28,6 +41,24 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public void validateRequest(HttpServletRequest request) {
+        try {
+            String jwt = getJwtFromRequest(request);
+            if (StringUtils.hasText(jwt) && validateToken(jwt)) {
+                UUID uuid = getUserUUIDFromJWT(jwt);
+                Usuario userDetails = usuariosService.buscar(uuid);
+                if (userDetails != null) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, Arrays.asList(userDetails.getPermissao()));
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    UsuarioScopedContext.setUsuario(userDetails);
+                }
+            }
+        } catch (Exception ex) {
+            logger.error("Could not set user authentication in security context", ex);
+        }
+    }
+
     public UUID getUserUUIDFromJWT(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey("Zapia845689!@#$")
@@ -35,6 +66,20 @@ public class JwtTokenProvider {
                 .getBody();
 
         return UUID.fromString(claims.getSubject());
+    }
+
+    public String getJwtFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken == null || bearerToken.isEmpty()) {
+            String token = request.getParameter("token");
+            if (token != null && !token.isEmpty()) {
+                return token;
+            }
+        }
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     public boolean validateToken(String authToken) {
