@@ -273,7 +273,7 @@ public class WhatsAppClone {
     }
 
     public void removerSession(WebSocketSession ws) {
-        if (ws instanceof ConcurrentWebSocketSessionDecorator) {
+        if (!(ws instanceof ConcurrentWebSocketSessionDecorator)) {
             sessions.removeAll(sessions.stream().filter(webSocketSession -> {
                 ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = (ConcurrentWebSocketSessionDecorator) webSocketSession;
                 return concurrentWebSocketSessionDecorator.getDelegate().equals(ws);
