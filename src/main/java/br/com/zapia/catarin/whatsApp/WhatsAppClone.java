@@ -267,7 +267,7 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 5000, 5 * 1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 15000, 10 * 1024 * 1024);
         sessions.add(ws);
         whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getEstadoDriver().name(), ws);
     }
