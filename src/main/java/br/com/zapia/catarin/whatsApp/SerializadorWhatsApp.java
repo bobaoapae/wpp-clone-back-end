@@ -94,7 +94,7 @@ public class SerializadorWhatsApp {
                                         msgNode.put("pageCount", message.getJsObject().getProperty("pageCount").asNumber().getValue());
                                     }
                                 }
-                                msgNode.remove(Arrays.asList("from", "to", "self", "invis", "clientUrl", "directPath", "filehash", "uploadhash", "mediaKey", "mediaKeyTimestamp"));
+                                msgNode.remove(Arrays.asList("self", "invis", "clientUrl", "directPath", "filehash", "uploadhash", "mediaKey", "mediaKeyTimestamp"));
                                 return msgNode;
                             }
                         });
