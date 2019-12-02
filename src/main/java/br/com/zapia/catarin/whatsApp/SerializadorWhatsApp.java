@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -66,8 +67,10 @@ public class SerializadorWhatsApp {
                                     chatNode = cache.get(chat);
                                 }
                                 chatNode.putObject("contact").setAll(cache.get(chat.getContact()));
+                                ((ObjectNode) chatNode.get("contact")).remove("type");
                                 chatNode.put("picture", chat.getContact().getThumb());
                                 chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
+                                chatNode.remove(Arrays.asList("lastReceivedKey", "pendingMsgs"));
                                 return chatNode;
                             }
                         });
@@ -94,6 +97,7 @@ public class SerializadorWhatsApp {
                                         msgNode.put("pageCount", message.getJsObject().getProperty("pageCount").asNumber().getValue());
                                     }
                                 }
+                                msgNode.remove(Arrays.asList("from", "to", "self", "invis", "clientUrl", "directPath", "filehash", "uploadhash", "mediaKey", "mediaKeyTimestamp"));
                                 return msgNode;
                             }
                         });
