@@ -7,10 +7,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import modelo.Chat;
-import modelo.MediaMessage;
-import modelo.Message;
-import modelo.WhatsappObjectWithId;
+import modelo.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
@@ -67,9 +64,9 @@ public class SerializadorWhatsApp {
                                     chatNode = cache.get(chat);
                                 }
                                 chatNode.putObject("contact").setAll(cache.get(chat.getContact()));
-                                ((ObjectNode) chatNode.get("contact")).remove("type");
                                 chatNode.put("picture", chat.getContact().getThumb());
                                 chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
+                                ((ObjectNode) chatNode.get("contact")).remove("type");
                                 chatNode.remove(Arrays.asList("lastReceivedKey", "pendingMsgs"));
                                 return chatNode;
                             }
@@ -88,7 +85,7 @@ public class SerializadorWhatsApp {
                                     cache.invalidate(message);
                                     msgNode = cache.get(message);
                                 }
-                                if (message.getSender() != null) {
+                                if (message.getSender() != null && (message.getChat() instanceof GroupChat)) {
                                     msgNode.putObject("sender").setAll(cache.get(message.getSender()));
                                 }
                                 if (message instanceof MediaMessage) {
