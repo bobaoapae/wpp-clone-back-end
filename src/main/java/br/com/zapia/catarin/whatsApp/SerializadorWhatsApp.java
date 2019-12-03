@@ -120,6 +120,8 @@ public class SerializadorWhatsApp {
         Util.pegarResultadosFutures(futures).forEach(arrayNode::addAll);
         chatNode.set("msgs", arrayNode);
         chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
+        chatNode.put("isVisible", chat.isVisible());
+        chatNode.put("unreadCount", (Double) utils.Util.convertJSValue(chat.getJsObject().getProperty("unreadCount")));
         return CompletableFuture.completedFuture(chatNode);
     }
 
@@ -145,6 +147,7 @@ public class SerializadorWhatsApp {
             cacheMsgs.invalidate(message);
             objectNode = cacheMsgs.get(message);
         }
+        objectNode.put("ack", (Double) utils.Util.convertJSValue(message.getJsObject().getProperty("ack")));
         return CompletableFuture.completedFuture(objectNode);
     }
 
