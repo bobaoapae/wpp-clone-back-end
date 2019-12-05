@@ -7,6 +7,7 @@ import org.springframework.beans.factory.config.Scope;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UsuarioScoped implements Scope {
@@ -14,36 +15,33 @@ public class UsuarioScoped implements Scope {
     private static final Logger log = Logger.getLogger(Usuario.class.getName());
 
     private final Map<String, Object> scopes = new ConcurrentHashMap<>();
-    private final ReentrantLock readWriteLock = new ReentrantLock();
+    private final static ReentrantLock lock = new ReentrantLock();
 
 
     @Override
     public Object get(String s, ObjectFactory<?> objectFactory) {
         try {
             log.info("UsuarioScoped -> get");
-            readWriteLock.lock();
-            log.info("UsuarioScoped -> lock");
-            if (!scopes.containsKey(getConversationId() + s)) {
+            if (!scopes.containsKey(getConversationId() + s) && lock.tryLock()) {
+                log.info("UsuarioScoped -> create");
+                log.info("UsuarioScoped -> lock");
                 scopes.put(getConversationId() + s, objectFactory.getObject());
             }
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "UsuarioScoped", e);
+            throw new IllegalStateException();
         } finally {
-            readWriteLock.unlock();
-            log.info("UsuarioScoped -> unlock");
+            if (lock.isLocked()) {
+                lock.unlock();
+                log.info("UsuarioScoped -> unlock");
+            }
         }
         return scopes.get(getConversationId() + s);
     }
 
     @Override
     public Object remove(String s) {
-        try {
-            log.info("UsuarioScoped -> remove");
-            readWriteLock.lock();
-            log.info("UsuarioScoped -> lock");
-            return scopes.remove(getConversationId() + s);
-        } finally {
-            readWriteLock.unlock();
-            log.info("UsuarioScoped -> unlock");
-        }
+        return scopes.remove(getConversationId() + s);
     }
 
     @Override
