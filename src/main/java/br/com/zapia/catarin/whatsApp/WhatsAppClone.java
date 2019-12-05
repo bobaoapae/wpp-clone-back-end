@@ -100,14 +100,14 @@ public class WhatsAppClone {
             driver.getFunctions().addListennerToNewChat(chat -> {
                 try {
                     enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-                } catch (ExecutionException e) {
+                } catch (ExecutionException | IOException e) {
                     logger.log(Level.SEVERE, "OnNewChat", e);
                 }
             }, true);
             driver.getFunctions().addListennerToUpdateChat(chat -> {
                 try {
                     enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-                } catch (ExecutionException e) {
+                } catch (ExecutionException | IOException e) {
                     logger.log(Level.SEVERE, "OnUpdateChat", e);
                 }
             });
@@ -116,7 +116,7 @@ public class WhatsAppClone {
                 public void onNewMsg(Message msg) {
                     try {
                         enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
-                    } catch (ExecutionException e) {
+                    } catch (ExecutionException | IOException e) {
                         logger.log(Level.SEVERE, "OnUpdateChat", e);
                     }
                 }
@@ -132,7 +132,7 @@ public class WhatsAppClone {
                 public void onNewMsg(Message msg) {
                     try {
                         enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
-                    } catch (ExecutionException e) {
+                    } catch (ExecutionException | IOException e) {
                         logger.log(Level.SEVERE, "OnUpdateMsg", e);
                     }
                 }
