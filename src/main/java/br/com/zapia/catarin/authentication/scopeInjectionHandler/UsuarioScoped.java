@@ -22,26 +22,35 @@ public class UsuarioScoped implements Scope {
     public Object get(String s, ObjectFactory<?> objectFactory) {
         try {
             log.info("UsuarioScoped -> get");
-            if (!scopes.containsKey(getConversationId() + s) && lock.tryLock()) {
-                log.info("UsuarioScoped -> create");
-                log.info("UsuarioScoped -> lock");
+            lock.lock();
+            log.info("UsuarioScoped -> lock");
+            if (!scopes.containsKey(getConversationId() + s)) {
                 scopes.put(getConversationId() + s, objectFactory.getObject());
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, "UsuarioScoped", e);
             throw new IllegalStateException();
         } finally {
-            if (lock.isLocked()) {
-                lock.unlock();
-                log.info("UsuarioScoped -> unlock");
-            }
+            lock.unlock();
+            log.info("UsuarioScoped -> unlock");
         }
         return scopes.get(getConversationId() + s);
     }
 
     @Override
     public Object remove(String s) {
-        return scopes.remove(getConversationId() + s);
+        try {
+            log.info("UsuarioScoped -> remove");
+            lock.lock();
+            log.info("UsuarioScoped -> lock");
+            return scopes.remove(getConversationId() + s);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "UsuarioScoped", e);
+        } finally {
+            lock.unlock();
+            log.info("UsuarioScoped -> unlock");
+        }
+        return null;
     }
 
     @Override

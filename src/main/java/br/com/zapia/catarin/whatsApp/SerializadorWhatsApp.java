@@ -4,16 +4,19 @@ import br.com.zapia.catarin.utils.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import modelo.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
+import modelo.Chat;
+import modelo.GroupChat;
+import modelo.Message;
+import modelo.WhatsappObject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -25,9 +28,6 @@ public class SerializadorWhatsApp {
 
     private ObjectMapper objectMapper;
     private Logger log = Logger.getLogger(SerializadorWhatsApp.class.getName());
-    @Lazy
-    @Autowired
-    private SerializadorWhatsApp serializadorWhatsApp;
 
     @PostConstruct
     public void init() {
@@ -42,16 +42,18 @@ public class SerializadorWhatsApp {
         chatNode.put("type", chat.getJsObject().getProperty("kind").asString().getValue());
         ((ObjectNode) chatNode.get("contact")).remove("type");
         chatNode.remove(Arrays.asList("lastReceivedKey", "pendingMsgs"));
-        ArrayNode arrayNode = objectMapper.createArrayNode();
-        List<Message> allMessages = chat.getAllMessages();
-        int partitionSize = allMessages.size() < Runtime.getRuntime().availableProcessors() ? allMessages.size() : allMessages.size() / Runtime.getRuntime().availableProcessors();
-        Collection<List<Message>> partition = Util.partition(allMessages, partitionSize);
-        List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
-        partition.forEach(messages -> {
-            futures.add(serializadorWhatsApp.serializarMsg(messages));
-        });
-        Util.pegarResultadosFutures(futures).forEach(arrayNode::addAll);
-        chatNode.set("msgs", arrayNode);
+        if (chat instanceof GroupChat) {
+            ArrayNode arrayNode = objectMapper.createArrayNode();
+            List<Message> allMessages = chat.getAllMessages();
+            allMessages.forEach(message -> {
+                try {
+                    arrayNode.add(Util.pegarResultadoFuture(serializarMsg(message)));
+                } catch (ExecutionException e) {
+                    log.log(Level.SEVERE, "SerializarMsg", e);
+                }
+            });
+            chatNode.set("msgs", arrayNode);
+        }
         chatNode.put("noEarlierMsgs", chat.noEarlierMsgs());
         chatNode.put("isVisible", chat.isVisible());
         chatNode.put("unreadCount", (Double) utils.Util.convertJSValue(chat.getJsObject().getProperty("unreadCount")));
@@ -65,7 +67,7 @@ public class SerializadorWhatsApp {
             try {
                 arrayNode.add(Util.pegarResultadoFuture(serializarChat(chat)));
             } catch (ExecutionException e) {
-                e.printStackTrace();
+                log.log(Level.SEVERE, "SerializarChat", e);
             }
         });
         return CompletableFuture.completedFuture(arrayNode);
@@ -76,12 +78,6 @@ public class SerializadorWhatsApp {
         ObjectNode msgNode = Objects.requireNonNull(converterParaObjectNode(message));
         if (message.getSender() != null && (message.getChat() instanceof GroupChat)) {
             msgNode.putObject("sender").setAll(Objects.requireNonNull(converterParaObjectNode(message.getSender())));
-        }
-        if (message instanceof MediaMessage) {
-            msgNode.put("filename", ((MediaMessage) message).getFileName());
-            if (message.getJsObject().hasProperty("pageCount") && message.getJsObject().getProperty("pageCount").isNumber()) {
-                msgNode.put("pageCount", message.getJsObject().getProperty("pageCount").asNumber().getValue());
-            }
         }
         msgNode.remove(Arrays.asList("self", "invis", "clientUrl", "directPath", "filehash", "uploadhash", "mediaKey", "mediaKeyTimestamp"));
         return CompletableFuture.completedFuture(msgNode);
@@ -94,7 +90,7 @@ public class SerializadorWhatsApp {
             try {
                 arrayNode.add(Util.pegarResultadoFuture(serializarMsg(message)));
             } catch (ExecutionException e) {
-                e.printStackTrace();
+                log.log(Level.SEVERE, "SerializarMsg", e);
             }
         });
         return CompletableFuture.completedFuture(arrayNode);
@@ -102,7 +98,7 @@ public class SerializadorWhatsApp {
 
     private ObjectNode converterParaObjectNode(WhatsappObject whatsappObject) {
         try {
-            return (ObjectNode) objectMapper.readTree(whatsappObject.toJson());
+            return (ObjectNode) objectMapper.readTree(utils.Util.callFunction(whatsappObject.getJsObject(), "toJSON").asObject().toJSONString());
         } catch (IOException e) {
             log.log(Level.SEVERE, "ConverterParaObjectNode", e);
             return null;
