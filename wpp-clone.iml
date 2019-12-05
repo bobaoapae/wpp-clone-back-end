@@ -39,8 +39,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:3.2" level="project" />
     <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:3.0.3" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:4.4" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:3.1.5" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-data-jpa:2.1.6.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-aop:2.1.6.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.aspectj:aspectjweaver:1.9.4" level="project" />
@@ -153,8 +151,8 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.9" level="project" />
     <orderEntry type="library" name="Maven: org.modelmapper:modelmapper:2.3.5" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:4.4" level="project" />
-    <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:3.1.5" level="project" />
+    <orderEntry type="library" name="Maven: br.com.zapia:BotWhatsApp:4.6" level="project" />
+    <orderEntry type="library" name="Maven: br.com.zapia:WebWhatsAppLib:3.1.7" level="project" />
     <orderEntry type="library" name="Maven: br.com.zapia:JxBrowserCrack:6.24.1" level="project" />
     <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser-win32:6.24.1" level="project" />
     <orderEntry type="library" name="Maven: com.teamdev.jxbrowser:jxbrowser:6.24.1" level="project" />
