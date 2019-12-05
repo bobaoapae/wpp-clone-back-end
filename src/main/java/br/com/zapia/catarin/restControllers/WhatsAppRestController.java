@@ -138,7 +138,7 @@ public class WhatsAppRestController {
         chat.loadEarlierMsgs(() -> {
             try {
                 whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            } catch (ExecutionException e) {
+            } catch (ExecutionException | IOException e) {
                 e.printStackTrace();
             }
         });
