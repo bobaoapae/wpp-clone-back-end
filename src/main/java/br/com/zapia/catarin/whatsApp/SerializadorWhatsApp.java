@@ -8,7 +8,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import modelo.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
@@ -33,8 +32,11 @@ public class SerializadorWhatsApp {
     private LoadingCache<Chat, ObjectNode> cacheChats;
     private LoadingCache<Message, ObjectNode> cacheMsgs;
     @Lazy
-    @Autowired
-    private SerializadorWhatsApp serializadorWhatsApp;
+    private final SerializadorWhatsApp serializadorWhatsApp;
+
+    public SerializadorWhatsApp(SerializadorWhatsApp serializadorWhatsApp) {
+        this.serializadorWhatsApp = serializadorWhatsApp;
+    }
 
     @PostConstruct
     public void init() {
