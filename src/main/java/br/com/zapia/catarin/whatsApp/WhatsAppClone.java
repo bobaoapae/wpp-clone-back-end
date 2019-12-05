@@ -207,7 +207,7 @@ public class WhatsAppClone {
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
         whatsAppClone.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
-            whatsAppClone.sendInit(ws);
+            sendInit(ws);
         }
     }
 
