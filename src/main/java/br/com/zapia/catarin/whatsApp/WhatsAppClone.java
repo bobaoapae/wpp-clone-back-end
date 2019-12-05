@@ -207,13 +207,15 @@ public class WhatsAppClone {
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
         whatsAppClone.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
-            sendInit(ws);
+            logger.info("Call sendInit");
+            whatsAppClone.sendInit(ws);
         }
     }
 
     @Async
     public void sendInit(WebSocketSession ws) {
         try {
+            logger.info("SendInit");
             ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode dados = objectMapper.createObjectNode();
             Chat myChat = driver.getFunctions().getMyChat();
