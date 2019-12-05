@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -171,11 +170,6 @@ public class WhatsAppClone {
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
-    }
-
-    @Scheduled(fixedDelay = 6000L)
-    public void enviarNotificacaoParaTestarConexao() {
-        broadcastParaWs(new WsMessage("ping", System.currentTimeMillis()));
     }
 
     @Async
