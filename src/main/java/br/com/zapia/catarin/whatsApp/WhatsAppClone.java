@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -98,27 +97,15 @@ public class WhatsAppClone {
             }
             driver.getFunctions().addListennerToNewChat(chat -> controleChatsAsync.addChat(chat));
             driver.getFunctions().addListennerToNewChat(chat -> {
-                try {
-                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-                } catch (ExecutionException e) {
-                    logger.log(Level.SEVERE, "OnNewChat", e);
-                }
+                enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
             }, true);
             driver.getFunctions().addListennerToUpdateChat(chat -> {
-                try {
-                    enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-                } catch (ExecutionException e) {
-                    logger.log(Level.SEVERE, "OnUpdateChat", e);
-                }
+                enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
             });
             driver.getFunctions().addListennerToNewMsg(new MessageObserverIncludeMe() {
                 @Override
                 public void onNewMsg(Message msg) {
-                    try {
-                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
-                    } catch (ExecutionException e) {
-                        logger.log(Level.SEVERE, "OnUpdateChat", e);
-                    }
+                    enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
                 }
 
                 @Override
@@ -130,11 +117,7 @@ public class WhatsAppClone {
             driver.getFunctions().addListennerToChangeMsg(new MessageObserverIncludeMe() {
                 @Override
                 public void onNewMsg(Message msg) {
-                    try {
-                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
-                    } catch (ExecutionException e) {
-                        logger.log(Level.SEVERE, "OnUpdateMsg", e);
-                    }
+                    enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(msg)));
                 }
 
                 @Override

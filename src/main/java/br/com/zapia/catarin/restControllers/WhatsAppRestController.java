@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
-import java.util.concurrent.ExecutionException;
 
 @Scope("usuario")
 @RestController
@@ -136,11 +135,7 @@ public class WhatsAppRestController {
             return ResponseEntity.notFound().build();
         }
         chat.loadEarlierMsgs(() -> {
-            try {
-                whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
+            whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
         });
         return ResponseEntity.ok().build();
     }
