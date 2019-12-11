@@ -1,12 +1,15 @@
 package br.com.zapia.catarin.whatsApp;
 
 import br.com.zapia.catarin.authentication.UsuarioPrincipalAutoWired;
+import br.com.zapia.catarin.payloads.DeleteMessageRequest;
+import br.com.zapia.catarin.payloads.ForwardMessagesRequest;
+import br.com.zapia.catarin.payloads.SendMessageRequest;
 import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.catarin.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import driver.WebWhatsDriver;
 import modelo.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -16,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -31,8 +35,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.*;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -72,10 +78,12 @@ public class WhatsAppClone {
     private String pathLogs;
     @Value("${pathBinarios}")
     private String pathBinarios;
+    private ObjectMapper objectMapper;
 
 
     @PostConstruct
     public void init() throws IOException {
+        objectMapper = new ObjectMapper();
         File file = new File(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid());
         if (!file.exists()) {
             file.mkdir();
@@ -170,6 +178,9 @@ public class WhatsAppClone {
 
     @Async
     public void enviarParaWs(WebSocketSession ws, WsMessage message) {
+        if (!(ws instanceof ConcurrentWebSocketSessionDecorator)) {
+            ws = buscarWsDecorator(ws);
+        }
         if (ws.isOpen()) {
             try {
                 ws.sendMessage(new TextMessage(message.toString()));
@@ -181,6 +192,143 @@ public class WhatsAppClone {
         }
     }
 
+    private WebSocketSession buscarWsDecorator(WebSocketSession ws) {
+        return sessions.stream().filter(webSocketSession -> {
+            ConcurrentWebSocketSessionDecorator concurrentWebSocketSessionDecorator = (ConcurrentWebSocketSessionDecorator) webSocketSession;
+            return concurrentWebSocketSessionDecorator.getDelegate().equals(ws);
+        }).findFirst().orElse(ws);
+    }
+
+    @Async
+    public CompletableFuture<Void> processWebSocketMsg(WebSocketSession session, String[] dataResponse) {
+        if (driver.getEstadoDriver() != EstadoDriver.LOGGED) {
+            enviarParaWs(session, new WsMessage(dataResponse[1], 401));
+        } else {
+            try {
+                switch (dataResponse[0]) {
+                    case "updatePicture": {
+                        serializadorWhatsApp.updatePictureChat(this, session, dataResponse[1]);
+                        break;
+                    }
+                    case "seeChat": {
+                        Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chatById != null) {
+                            chatById.sendSeen(false);
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], 404));
+                        }
+                    }
+                    case "loadEarly": {
+                        Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chatById != null) {
+                            chatById.loadEarlierMsgs();
+                            enviarEventoWpp(TipoEventoWpp.CHAT_UPDATE, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chatById)));
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], 404));
+                        }
+                        break;
+                    }
+                    case "sendMessage": {
+                        SendMessageRequest sendMessageRequest = objectMapper.readValue(dataResponse[1], SendMessageRequest.class);
+                        if (sendMessageRequest.getChatId() != null && !sendMessageRequest.getChatId().isEmpty()) {
+                            Chat chat = driver.getFunctions().getChatById(sendMessageRequest.getChatId());
+                            if (chat != null) {
+                                Message message = null;
+                                if (!Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
+                                    message = driver.getFunctions().getMessageById(sendMessageRequest.getQuotedMsg());
+                                    if (message == null) {
+                                        enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                                    }
+                                }
+                                if (sendMessageRequest.getMedia() == null || sendMessageRequest.getMedia().isEmpty()) {
+                                    if (message != null) {
+                                        message.replyMessage(sendMessageRequest.getMessage());
+                                    } else {
+                                        chat.sendMessage(sendMessageRequest.getMessage());
+                                    }
+                                } else if (sendMessageRequest.getFileName() != null && !sendMessageRequest.getFileName().isEmpty()) {
+                                    if (message != null) {
+                                        message.replyMessageWithFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), sendMessageRequest.getMessage());
+                                    } else {
+                                        chat.sendFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), sendMessageRequest.getMessage());
+                                    }
+                                } else {
+                                    enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
+                                }
+                            } else {
+                                enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                            }
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
+                        }
+                        break;
+                    }
+                    case "deleteMessage": {
+                        DeleteMessageRequest deleteMessageRequest = objectMapper.readValue(dataResponse[1], DeleteMessageRequest.class);
+                        Message message = driver.getFunctions().getMessageById(deleteMessageRequest.getMsgId());
+                        if (message != null) {
+                            message.deleteMessage(deleteMessageRequest.isFromAll());
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                        }
+                        break;
+                    }
+                    case "forwardMessage": {
+                        ForwardMessagesRequest forwardMessagesRequest = objectMapper.readValue(dataResponse[1], ForwardMessagesRequest.class);
+                        List<Chat> chats = new ArrayList<>();
+                        List<Message> msgs = new ArrayList<>();
+                        for (String idMsg : forwardMessagesRequest.getIdsMsgs()) {
+                            Message msg = driver.getFunctions().getMessageById(idMsg);
+                            if (msg != null) {
+                                msgs.add(msg);
+                            }
+                        }
+                        for (String idChat : forwardMessagesRequest.getIdsChats()) {
+                            Chat chat = driver.getFunctions().getChatById(idChat);
+                            if (chat != null) {
+                                chats.add(chat);
+                            }
+                        }
+                        if (chats.size() > 0 && msgs.size() > 0) {
+                            msgs.get(0).getChat().forwardMessage(msgs.toArray(Message[]::new), chats.toArray(Chat[]::new));
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
+                        }
+                        break;
+                    }
+                    case "pinChat": {
+                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chat != null) {
+                            chat.setPin(true);
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                        }
+                        break;
+                    }
+                    case "unpinChat": {
+                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chat != null) {
+                            chat.setPin(false);
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                        }
+                        break;
+                    }
+                    case "logout": {
+                        logout();
+                        break;
+                    }
+                    default: {
+                        enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_IMPLEMENTED));
+                    }
+                }
+            } catch (Exception e) {
+                enviarEventoWpp(TipoEventoWpp.ERROR, e);
+            }
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
     @Async
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
         getSessions().forEach(webSocketSession -> whatsAppClone.enviarEventoWpp(tipoEventoWpp, dado, webSocketSession));
@@ -190,7 +338,6 @@ public class WhatsAppClone {
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
         whatsAppClone.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
-            logger.info("Call sendInit");
             whatsAppClone.sendInit(ws);
         }
     }
@@ -198,22 +345,13 @@ public class WhatsAppClone {
     @Async
     public void sendInit(WebSocketSession ws) {
         try {
-            logger.info("SendInit");
-            ObjectMapper objectMapper = new ObjectMapper();
             ObjectNode dados = objectMapper.createObjectNode();
             Chat myChat = driver.getFunctions().getMyChat();
             if (myChat == null) {
                 driver.reiniciar();
             } else {
                 dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat)));
-                ArrayNode chatsNode = objectMapper.createArrayNode();
-                List<CompletableFuture<ArrayNode>> futures = new ArrayList<>();
-                List<Chat> allChats = driver.getFunctions().getAllChats();
-                int partitionSize = allChats.size() < Runtime.getRuntime().availableProcessors() ? allChats.size() : allChats.size() / Runtime.getRuntime().availableProcessors();
-                Collection<List<Chat>> partition = Util.partition(allChats, partitionSize);
-                partition.forEach(chats -> futures.add(serializadorWhatsApp.serializarChat(chats)));
-                Util.pegarResultadosFutures(futures).forEach(chatsNode::addAll);
-                dados.putArray("chats").addAll(chatsNode);
+                dados.putArray("chats").addAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarAllChats(driver)));
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             }
         } catch (Exception e) {
@@ -252,7 +390,8 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 15000, 10 * 1024 * 1024);
+        ws.setTextMessageSizeLimit(100 * 1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 10 * 1024 * 1024);
         sessions.add(ws);
         whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getEstadoDriver().name(), ws);
     }
@@ -291,6 +430,7 @@ public class WhatsAppClone {
         NEED_QRCODE,
         UPDATE_ESTADO,
         ERROR,
+        CHAT_PICTURE,
         INIT
     }
 
@@ -303,7 +443,6 @@ public class WhatsAppClone {
             this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             this.setExtendedState(JFrame.MAXIMIZED_BOTH);
             this.getContentPane().setLayout(new BorderLayout());
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             this.setMinimumSize(new Dimension(800, 600));
             this.setPreferredSize(new Dimension(800, 600));
             panel = new JPanel(new BorderLayout());

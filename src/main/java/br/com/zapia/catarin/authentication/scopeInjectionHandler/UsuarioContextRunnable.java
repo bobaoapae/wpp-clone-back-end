@@ -1,8 +1,12 @@
 package br.com.zapia.catarin.authentication.scopeInjectionHandler;
 
 import br.com.zapia.catarin.modelo.Usuario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UsuarioContextRunnable implements Runnable {
+
+    private static Logger logger = LoggerFactory.getLogger(UsuarioContextRunnable.class);
     private Runnable task;
     private Usuario usuario;
 
@@ -16,10 +20,13 @@ public class UsuarioContextRunnable implements Runnable {
         if (usuario != null) {
             UsuarioScopedContext.setUsuario(usuario);
         } else {
-            System.out.println("Usuario Null");
+            logger.warn("Usuario Null");
         }
         try {
             task.run();
+        } catch (Exception e) {
+            logger.error("call ", e);
+            throw e;
         } finally {
             UsuarioScopedContext.reset();
         }

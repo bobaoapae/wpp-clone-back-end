@@ -1,15 +1,18 @@
 package br.com.zapia.catarin.whatsApp;
 
 import br.com.zapia.catarin.utils.Util;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import driver.WebWhatsDriver;
 import modelo.Chat;
 import modelo.Message;
 import modelo.WhatsappObject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -26,15 +29,50 @@ public class SerializadorWhatsApp {
     private ObjectMapper objectMapper;
     private Logger log = Logger.getLogger(SerializadorWhatsApp.class.getName());
 
+
     @PostConstruct
     public void init() {
         this.objectMapper = new ObjectMapper();
     }
 
     @Async
+    public CompletableFuture<Void> updatePictureChat(WhatsAppClone whatsAppClone, WebSocketSession session, String chatId) {
+        Chat chatById = whatsAppClone.getDriver().getFunctions().getChatById(chatId);
+        ObjectNode chatNode = objectMapper.createObjectNode();
+        chatNode.put("id", chatId);
+        try {
+            if (chatById != null) {
+                chatNode.put("picture", chatById.getContact().getThumb());
+            }
+            whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.CHAT_PICTURE, objectMapper.writeValueAsString(chatNode), session);
+        } catch (JsonProcessingException e) {
+            log.log(Level.SEVERE, "SerializarAllChats", e);
+            whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.ERROR, e);
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Async
+    public CompletableFuture<ArrayNode> serializarAllChats(WebWhatsDriver driver) {
+        try {
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(driver.getBrowser().executeJavaScriptAndReturnValue("Store.Chat.toJSON()").asArray().toJSONString()));
+        } catch (JsonProcessingException e) {
+            log.log(Level.SEVERE, "SerializarAllChats", e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    @Async
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) {
+        return CompletableFuture.completedFuture(Util.pegarResultadoFuture(serializarChat(chat, false)));
+    }
+
+    @Async
+    public CompletableFuture<ObjectNode> serializarChat(Chat chat, boolean withPicture) {
         ObjectNode chatNode = Objects.requireNonNull(converterParaObjectNode(chat));
-        chatNode.put("picture", chat.getContact().getThumb());
+        if (withPicture) {
+            chatNode.put("picture", chat.getContact().getThumb());
+        }
         return CompletableFuture.completedFuture(chatNode);
     }
 

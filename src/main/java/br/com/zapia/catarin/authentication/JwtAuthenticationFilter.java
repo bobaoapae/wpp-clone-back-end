@@ -16,8 +16,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        tokenProvider.validateRequest(request);
-        filterChain.doFilter(request, response);
+        if (request.getMethod().equals("OPTIONS")) {
+            response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+        } else {
+            tokenProvider.validateRequest(request);
+            filterChain.doFilter(request, response);
+        }
     }
 
 }

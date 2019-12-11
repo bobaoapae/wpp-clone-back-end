@@ -30,6 +30,7 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
             case "token":
                 try {
                     if (tokenProvider.validateTokenWs(dataResponse[1])) {
+                        session.getAttributes().put("token", dataResponse[1]);
                         session.sendMessage(new TextMessage("token, valido"));
                         getCatarinWhatsApp().adicionarSession(session);
                     } else {
@@ -40,6 +41,14 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
                     logger.error("Token Ws", e);
                 }
                 break;
+            default:
+                try {
+                    if (tokenProvider.validateTokenWs((String) session.getAttributes().get("token"))) {
+                        getCatarinWhatsApp().processWebSocketMsg(session, dataResponse);
+                    }
+                } catch (Exception e) {
+                    logger.error("WebSocket", e);
+                }
         }
     }
 

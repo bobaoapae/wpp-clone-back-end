@@ -6,12 +6,7 @@ public class SendMessageRequest {
     private String message;
     private String media;
     private String fileName;
-
-    public SendMessageRequest() {
-        this.message = "";
-        this.fileName = "";
-        this.media = "";
-    }
+    private String quotedMsg;
 
     public String getChatId() {
         return chatId;
@@ -43,5 +38,13 @@ public class SendMessageRequest {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public String getQuotedMsg() {
+        return quotedMsg;
+    }
+
+    public void setQuotedMsg(String quotedMsg) {
+        this.quotedMsg = quotedMsg;
     }
 }
