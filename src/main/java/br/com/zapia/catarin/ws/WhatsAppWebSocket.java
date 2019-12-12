@@ -31,11 +31,10 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
                 try {
                     if (tokenProvider.validateTokenWs(dataResponse[1])) {
                         session.getAttributes().put("token", dataResponse[1]);
-                        session.sendMessage(new TextMessage("token, valido"));
+                        session.sendMessage(new TextMessage("token,valido"));
                         getCatarinWhatsApp().adicionarSession(session);
                     } else {
-                        session.sendMessage(new TextMessage("token, invalido"));
-                        session.close(CloseStatus.POLICY_VIOLATION);
+                        session.sendMessage(new TextMessage("token,invalido"));
                     }
                 } catch (IOException e) {
                     logger.error("Token Ws", e);
@@ -79,7 +78,13 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        super.afterConnectionClosed(session, status);
+        try {
+            if (tokenProvider.validateTokenWs((String) session.getAttributes().get("token"))) {
+                getCatarinWhatsApp().removerSession(session);
+            }
+        } catch (Exception e) {
+            logger.error("WebSocket ConnectionClosed", e);
+        }
     }
 
     private WhatsAppClone getCatarinWhatsApp() {

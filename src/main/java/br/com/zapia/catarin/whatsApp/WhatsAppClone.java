@@ -164,7 +164,7 @@ public class WhatsAppClone {
         }
     }
 
-    @Scheduled(fixedDelay = 6000L)
+    @Scheduled(fixedDelay = 10000L)
     public void enviarNotificacaoParaTestarConexao() {
         broadcastParaWs(new WsMessage("ping", System.currentTimeMillis()));
     }
