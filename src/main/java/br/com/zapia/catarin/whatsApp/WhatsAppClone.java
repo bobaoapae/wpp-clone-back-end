@@ -350,7 +350,7 @@ public class WhatsAppClone {
             if (myChat == null) {
                 driver.reiniciar();
             } else {
-                dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat)));
+                dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat, true)));
                 dados.putArray("chats").addAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarAllChats(driver)));
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             }
