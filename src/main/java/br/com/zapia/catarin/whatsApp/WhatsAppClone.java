@@ -8,6 +8,7 @@ import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.catarin.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Strings;
 import driver.WebWhatsDriver;
@@ -351,6 +352,15 @@ public class WhatsAppClone {
                 driver.reiniciar();
             } else {
                 dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat, true)));
+                if (driver.getFunctions().isBusiness()) {
+                    driver.getFunctions().getStoreObjectByName("QuickReply").ifPresent(jsObject -> {
+                        try {
+                            dados.putArray("quickReplys").addAll((ArrayNode) objectMapper.readTree(jsObject.toJSONString()));
+                        } catch (Exception e) {
+                            logger.log(Level.SEVERE, "Serialize QuickReplys", e);
+                        }
+                    });
+                }
                 dados.putArray("chats").addAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarAllChats(driver)));
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             }
