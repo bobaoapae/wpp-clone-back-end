@@ -297,6 +297,19 @@ public class WhatsAppClone {
                         }
                         break;
                     }
+                    case "markPlayed": {
+                        Message message = driver.getFunctions().getMessageById(dataResponse[1]);
+                        if (message != null) {
+                            if (message instanceof MediaMessage) {
+                                ((MediaMessage) message).markPlayed();
+                            } else {
+                                enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
+                            }
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                        }
+                        break;
+                    }
                     case "pinChat": {
                         Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
                         if (chat != null) {
