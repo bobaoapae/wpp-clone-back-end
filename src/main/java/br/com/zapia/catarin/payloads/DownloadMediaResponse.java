@@ -1,11 +1,11 @@
 package br.com.zapia.catarin.payloads;
 
-public class MediaMessageResponse {
+public class DownloadMediaResponse {
 
     private String fileName;
     private String base64;
 
-    public MediaMessageResponse(String fileName, String base64) {
+    public DownloadMediaResponse(String fileName, String base64) {
         this.fileName = fileName;
         this.base64 = base64;
     }

@@ -1,9 +1,7 @@
 package br.com.zapia.catarin.whatsApp;
 
 import br.com.zapia.catarin.authentication.UsuarioPrincipalAutoWired;
-import br.com.zapia.catarin.payloads.DeleteMessageRequest;
-import br.com.zapia.catarin.payloads.ForwardMessagesRequest;
-import br.com.zapia.catarin.payloads.SendMessageRequest;
+import br.com.zapia.catarin.payloads.*;
 import br.com.zapia.catarin.utils.Util;
 import br.com.zapia.catarin.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.catarin.ws.WsMessage;
@@ -36,10 +34,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.nio.file.Files;
 import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -333,7 +330,42 @@ public class WhatsAppClone {
                         break;
                     }
                     default: {
-                        enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_IMPLEMENTED));
+                        String[] dataResponse2 = dataResponse[1].split(",", 2);
+                        switch (dataResponse2[0]) {
+                            case "downloadMedia": {
+                                Message message = driver.getFunctions().getMessageById(dataResponse2[1]);
+                                if (message instanceof MediaMessage) {
+                                    File file = ((MediaMessage) message).downloadMedia(5);
+                                    if (file == null) {
+                                        file = ((MediaMessage) message).downloadMedia(20);
+                                    }
+                                    if (file != null) {
+                                        String contentType = Files.probeContentType(file.toPath());
+                                        byte[] data = Files.readAllBytes(file.toPath());
+                                        String fileName = ((MediaMessage) message).getFileName();
+                                        if (fileName.isEmpty()) {
+                                            fileName = file.getName();
+                                        }
+                                        String base64str = Base64.getEncoder().encodeToString(data);
+                                        StringBuilder sb = new StringBuilder();
+                                        sb.append("data:");
+                                        sb.append(contentType);
+                                        sb.append(";base64,");
+                                        sb.append(base64str);
+                                        enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), new DownloadMediaResponse(fileName, sb.toString()))));
+                                    } else {
+                                        enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
+                                    }
+                                } else {
+                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.BAD_REQUEST.value())));
+                                }
+                                break;
+                            }
+
+                            default: {
+                                enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED.value())));
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
