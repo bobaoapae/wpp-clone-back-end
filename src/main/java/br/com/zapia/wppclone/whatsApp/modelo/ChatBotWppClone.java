@@ -45,10 +45,6 @@ public class ChatBotWppClone extends ChatBot {
 
     }
 
-    @Override
-    public void processNewStatusV3Msg(Message message) {
-
-    }
 
     public void finalizar() {
         if (this.checkMsgs != null && !this.checkMsgs.isCancelled() && !this.checkMsgs.isDone()) {
