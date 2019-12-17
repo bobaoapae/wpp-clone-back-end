@@ -213,6 +213,7 @@ public class WhatsAppClone {
                         } else {
                             enviarParaWs(session, new WsMessage(dataResponse[1], 404));
                         }
+                        break;
                     }
                     case "loadEarly": {
                         Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
