@@ -107,7 +107,7 @@ public class WhatsAppClone {
             }, EventType.ADD);
             driver.getFunctions().addChatListenner(chat -> {
                 enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            }, EventType.CHANGE, "unreadCount", "pin");
+            }, EventType.CHANGE, "unreadCount", "pin", "presenceType");
             driver.getFunctions().addChatListenner(chat -> {
                 enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
             }, EventType.REMOVE);
@@ -206,12 +206,39 @@ public class WhatsAppClone {
                         serializadorWhatsApp.updatePictureChat(session, dataResponse[1]);
                         break;
                     }
+                    case "subscribePresence": {
+                        Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chatById != null) {
+                            chatById.subscribePresence();
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], 404));
+                        }
+                        break;
+                    }
                     case "seeChat": {
                         Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
                         if (chatById != null) {
                             chatById.sendSeen(false);
                         } else {
                             enviarParaWs(session, new WsMessage(dataResponse[1], 404));
+                        }
+                        break;
+                    }
+                    case "pinChat": {
+                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chat != null) {
+                            chat.setPin(true);
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
+                        }
+                        break;
+                    }
+                    case "unpinChat": {
+                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
+                        if (chat != null) {
+                            chat.setPin(false);
+                        } else {
+                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
                         }
                         break;
                     }
@@ -301,24 +328,6 @@ public class WhatsAppClone {
                             } else {
                                 enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
                             }
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                        }
-                        break;
-                    }
-                    case "pinChat": {
-                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chat != null) {
-                            chat.setPin(true);
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                        }
-                        break;
-                    }
-                    case "unpinChat": {
-                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chat != null) {
-                            chat.setPin(false);
                         } else {
                             enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
                         }
