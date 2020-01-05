@@ -76,6 +76,8 @@ public class WhatsAppClone {
     private String pathLogs;
     @Value("${pathBinarios}")
     private String pathBinarios;
+    @Value("${headLess}")
+    private boolean headLess;
     private ObjectMapper objectMapper;
 
 
@@ -143,9 +145,13 @@ public class WhatsAppClone {
         onChangeEstadoDriver = (e) -> {
             whatsAppClone.enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
-        telaWhatsApp = new TelaWhatsApp();
-        telaWhatsApp.setVisible(true);
-        this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+        if (!headLess) {
+            telaWhatsApp = new TelaWhatsApp();
+            telaWhatsApp.setVisible(true);
+            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+        } else {
+            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+        }
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();
         properties.put("org.quartz.scheduler.instanceName", "WppWebClone" + usuarioPrincipalAutoWired.getUsuario().getUuid());

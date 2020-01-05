@@ -37,6 +37,11 @@ public class WebWhatsDriverSpring {
         return this.driver;
     }
 
+    public WebWhatsDriver initialize(String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
+        this.driver = new WebWhatsDriverSpringIntern(profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        return this.driver;
+    }
+
     private class WebWhatsDriverSpringIntern extends WebWhatsDriver {
 
         public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
