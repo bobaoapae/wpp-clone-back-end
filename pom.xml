@@ -91,7 +91,7 @@
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>BotWhatsApp</artifactId>
-            <version>6.6</version>
+            <version>6.7</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
