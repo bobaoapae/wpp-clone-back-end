@@ -375,6 +375,14 @@ public class WhatsAppClone {
                                 }
                                 break;
                             }
+                            case "findChat": {
+                                Chat chat = driver.getFunctions().getChatById(dataResponse2[1]);
+                                if (chat != null) {
+                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)))));
+                                } else {
+                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
+                                }
+                            }
 
                             default: {
                                 enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED.value())));
