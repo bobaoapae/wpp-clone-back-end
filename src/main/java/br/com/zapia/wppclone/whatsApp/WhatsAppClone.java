@@ -109,7 +109,7 @@ public class WhatsAppClone {
             }, EventType.ADD);
             driver.getFunctions().addChatListenner(chat -> {
                 enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            }, EventType.CHANGE, "unreadCount", "pin", "presenceType");
+            }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList");
             driver.getFunctions().addChatListenner(chat -> {
                 enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
             }, EventType.REMOVE);
