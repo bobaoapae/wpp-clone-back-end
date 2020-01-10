@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.socket.WebSocketSession;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
@@ -37,23 +36,6 @@ public class SerializadorWhatsApp {
     @PostConstruct
     public void init() {
         this.objectMapper = new ObjectMapper();
-    }
-
-    @Async
-    public CompletableFuture<Void> updatePictureChat(WebSocketSession session, String chatId) {
-        Chat chatById = whatsAppClone.getDriver().getFunctions().getChatById(chatId);
-        ObjectNode chatNode = objectMapper.createObjectNode();
-        chatNode.put("id", chatId);
-        try {
-            if (chatById != null) {
-                chatNode.put("picture", chatById.getContact().getThumb());
-            }
-            whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.CHAT_PICTURE, objectMapper.writeValueAsString(chatNode), session);
-        } catch (JsonProcessingException e) {
-            log.log(Level.SEVERE, "SerializarAllChats", e);
-            whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.ERROR, e);
-        }
-        return CompletableFuture.completedFuture(null);
     }
 
     @Async

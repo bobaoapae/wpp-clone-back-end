@@ -208,10 +208,6 @@ public class WhatsAppClone {
         } else {
             try {
                 switch (dataResponse[0]) {
-                    case "updatePicture": {
-                        serializadorWhatsApp.updatePictureChat(session, dataResponse[1]);
-                        break;
-                    }
                     case "subscribePresence": {
                         Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
                         if (chatById != null) {
@@ -379,6 +375,14 @@ public class WhatsAppClone {
                                 Chat chat = driver.getFunctions().getChatById(dataResponse2[1]);
                                 if (chat != null) {
                                     enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)))));
+                                } else {
+                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
+                                }
+                            }
+                            case "findPicture": {
+                                Chat chat = driver.getFunctions().getChatById(dataResponse2[1]);
+                                if (chat != null) {
+                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), chat.getContact().getThumb())));
                                 } else {
                                     enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
                                 }
