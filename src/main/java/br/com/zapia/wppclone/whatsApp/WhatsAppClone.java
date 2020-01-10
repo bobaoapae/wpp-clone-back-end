@@ -293,7 +293,11 @@ public class WhatsAppClone {
                         DeleteMessageRequest deleteMessageRequest = objectMapper.readValue(dataResponse[1], DeleteMessageRequest.class);
                         Message message = driver.getFunctions().getMessageById(deleteMessageRequest.getMsgId());
                         if (message != null) {
-                            message.deleteMessage(deleteMessageRequest.isFromAll());
+                            if (deleteMessageRequest.isFromAll()) {
+                                message.revokeMessage();
+                            } else {
+                                message.deleteMessage();
+                            }
                         } else {
                             enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
                         }
