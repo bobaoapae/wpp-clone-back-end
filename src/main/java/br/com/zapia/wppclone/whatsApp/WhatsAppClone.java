@@ -130,7 +130,7 @@ public class WhatsAppClone {
                 public void run(Message m) {
                     enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
                 }
-            }, EventType.CHANGE, "ack", "isRevoked");
+            }, EventType.CHANGE, "ack", "isRevoked", "oldId");
         };
         onLowBaterry = (e) -> {
             whatsAppClone.enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
