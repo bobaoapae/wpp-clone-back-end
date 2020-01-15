@@ -20,7 +20,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -164,18 +163,6 @@ public class WhatsAppClone {
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
-    }
-
-    @Scheduled(fixedDelay = 10000L)
-    public void enviarNotificacaoParaTestarConexao() {
-        broadcastParaWs(new WsMessage("ping", System.currentTimeMillis()));
-    }
-
-    @Async
-    public void broadcastParaWs(WsMessage message) {
-        getSessions().stream().filter(WebSocketSession::isOpen).forEach(webSocketSession -> {
-            whatsAppClone.enviarParaWs(webSocketSession, message);
-        });
     }
 
     @Async
@@ -346,6 +333,10 @@ public class WhatsAppClone {
                     default: {
                         String[] dataResponse2 = dataResponse[1].split(",", 2);
                         switch (dataResponse2[0]) {
+                            case "pong": {
+                                enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value())));
+                                break;
+                            }
                             case "downloadMedia": {
                                 Message message = driver.getFunctions().getMessageById(dataResponse2[1]);
                                 if (message instanceof MediaMessage) {
