@@ -382,6 +382,7 @@ public class WhatsAppClone {
                                 } else {
                                     enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
                                 }
+                                break;
                             }
                             case "findPicture": {
                                 Chat chat = driver.getFunctions().getChatById(dataResponse2[1]);
@@ -390,6 +391,7 @@ public class WhatsAppClone {
                                 } else {
                                     enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
                                 }
+                                break;
                             }
 
                             default: {
