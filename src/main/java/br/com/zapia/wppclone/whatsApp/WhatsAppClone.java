@@ -77,6 +77,8 @@ public class WhatsAppClone {
     private String pathBinarios;
     @Value("${headLess}")
     private boolean headLess;
+    @Value("${forceBeta}")
+    private boolean forceBeta;
     private ObjectMapper objectMapper;
 
 
@@ -147,9 +149,9 @@ public class WhatsAppClone {
         if (!headLess) {
             telaWhatsApp = new TelaWhatsApp();
             telaWhatsApp.setVisible(true);
-            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
         } else {
-            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
         }
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();
