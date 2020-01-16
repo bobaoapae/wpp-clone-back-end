@@ -33,12 +33,12 @@ public class WebWhatsDriverSpring {
     }
 
     public WebWhatsDriver initialize(JPanel panel, String profilePath, boolean forceBeta, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-        this.driver = new WebWhatsDriverSpringIntern(panel, profilePath, forceBeta, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        this.driver = new WebWhatsDriverSpringIntern(panel, profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
         return this.driver;
     }
 
     public WebWhatsDriver initialize(String profilePath, boolean forceBeta, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-        this.driver = new WebWhatsDriverSpringIntern(profilePath, forceBeta, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        this.driver = new WebWhatsDriverSpringIntern(profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
         return this.driver;
     }
 
@@ -48,13 +48,13 @@ public class WebWhatsDriverSpring {
             super(panel, profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
         }
 
-        public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, boolean forceBeta, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
+        /*public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, boolean forceBeta, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
             super(panel, profilePath, forceBeta, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
         }
 
         public WebWhatsDriverSpringIntern(String profilePath, boolean forceBeta, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
             super(profilePath, forceBeta, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
-        }
+        }*/
 
         public WebWhatsDriverSpringIntern(String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
             super(profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
