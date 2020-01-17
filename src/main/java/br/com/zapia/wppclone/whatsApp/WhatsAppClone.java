@@ -386,6 +386,11 @@ public class WhatsAppClone {
                                 }
                                 break;
                             }
+                            case "changeProfilePic": {
+                                boolean result = driver.getFunctions().setProfilePicture(dataResponse2[1]);
+                                enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(result ? HttpStatus.OK.value() : HttpStatus.INTERNAL_SERVER_ERROR.value())));
+                                break;
+                            }
 
                             default: {
                                 enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED.value())));
