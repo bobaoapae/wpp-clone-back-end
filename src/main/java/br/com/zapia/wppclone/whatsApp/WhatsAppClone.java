@@ -221,7 +221,6 @@ public class WhatsAppClone {
     private CompletableFuture<WebSocketResponse> processWebSocketResponse(WebSocketRequest webSocketRequest) {
         try {
             HandlerWebSocket handlerWebSocket = handlers.get(webSocketRequest.getWebSocketRequestPayLoad().getEvent());
-            logger.info("WebSocket Event: " + webSocketRequest.getWebSocketRequestPayLoad().getEvent());
             if (handlerWebSocket != null) {
                 return handlerWebSocket.handle(this, webSocketRequest.getWebSocketRequestPayLoad().getPayload());
             } else {
