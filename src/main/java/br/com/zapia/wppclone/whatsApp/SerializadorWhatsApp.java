@@ -67,7 +67,10 @@ public class SerializadorWhatsApp {
     public CompletableFuture<ObjectNode> serializarChat(Chat chat, boolean withPicture) {
         ObjectNode chatNode = Objects.requireNonNull(converterParaObjectNode(chat));
         if (withPicture) {
-            chatNode.put("picture", chat.getContact().getThumb());
+            return chat.getContact().getThumb().thenApply(s -> {
+                chatNode.put("picture", s);
+                return chatNode;
+            });
         }
         return CompletableFuture.completedFuture(chatNode);
     }

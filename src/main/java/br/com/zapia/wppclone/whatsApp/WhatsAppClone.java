@@ -1,19 +1,23 @@
 package br.com.zapia.wppclone.whatsApp;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
-import br.com.zapia.wppclone.payloads.*;
+import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocket;
+import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
+import br.com.zapia.wppclone.payloads.WebSocketRequest;
+import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.base.Strings;
 import driver.WebWhatsDriver;
 import modelo.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
+import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -32,11 +36,14 @@ import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -80,11 +87,20 @@ public class WhatsAppClone {
     @Value("${forceBeta}")
     private boolean forceBeta;
     private ObjectMapper objectMapper;
+    private Map<String, HandlerWebSocket> handlers;
 
 
     @PostConstruct
     public void init() throws IOException {
         objectMapper = new ObjectMapper();
+        handlers = new ConcurrentHashMap<>();
+        new Reflections("br.com.zapia.wppclone.handlersWebSocket").getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
+            try {
+                handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), (HandlerWebSocket) aClass.getDeclaredConstructor().newInstance());
+            } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                logger.log(Level.SEVERE, "Init Handlers", e);
+            }
+        });
         File file = new File(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid());
         if (!file.exists()) {
             file.mkdir();
@@ -101,9 +117,7 @@ public class WhatsAppClone {
         logger = Logger.getLogger(WhatsAppClone.class.getName());
         sessions = new ConcurrentArrayList<>();
         onConnect = () -> {
-            for (Chat chat : driver.getFunctions().getAllNewChats()) {
-                controleChatsAsync.addChat(chat);
-            }
+            driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
             driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD, false);
             driver.getFunctions().addChatListenner(chat -> {
                 enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
@@ -167,8 +181,7 @@ public class WhatsAppClone {
         }
     }
 
-    @Async
-    public void enviarParaWs(WebSocketSession ws, WsMessage message) {
+    private void enviarParaWs(WebSocketSession ws, WsMessage message) {
         if (!(ws instanceof ConcurrentWebSocketSessionDecorator)) {
             ws = buscarWsDecorator(ws);
         }
@@ -191,218 +204,33 @@ public class WhatsAppClone {
     }
 
     @Async
-    public CompletableFuture<Void> processWebSocketMsg(WebSocketSession session, String[] dataResponse) {
+    public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
         if (driver.getEstadoDriver() != EstadoDriver.LOGGED) {
-            enviarParaWs(session, new WsMessage(dataResponse[1], 401));
+            enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
         } else {
             try {
-                switch (dataResponse[0]) {
-                    case "subscribePresence": {
-                        Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chatById != null) {
-                            chatById.subscribePresence();
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], 404));
-                        }
-                        break;
-                    }
-                    case "seeChat": {
-                        Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chatById != null) {
-                            chatById.sendSeen(false);
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], 404));
-                        }
-                        break;
-                    }
-                    case "pinChat": {
-                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chat != null) {
-                            chat.setPin(true);
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                        }
-                        break;
-                    }
-                    case "unpinChat": {
-                        Chat chat = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chat != null) {
-                            chat.setPin(false);
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                        }
-                        break;
-                    }
-                    case "loadEarly": {
-                        Chat chatById = driver.getFunctions().getChatById(dataResponse[1]);
-                        if (chatById != null) {
-                            chatById.loadEarlierMsgs();
-                            enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chatById)));
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], 404));
-                        }
-                        break;
-                    }
-                    case "sendMessage": {
-                        SendMessageRequest sendMessageRequest = objectMapper.readValue(dataResponse[1], SendMessageRequest.class);
-                        if (sendMessageRequest.getChatId() != null && !sendMessageRequest.getChatId().isEmpty()) {
-                            Chat chat = driver.getFunctions().getChatById(sendMessageRequest.getChatId());
-                            if (chat != null) {
-                                Message message = null;
-                                if (!Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
-                                    message = driver.getFunctions().getMessageById(sendMessageRequest.getQuotedMsg());
-                                    if (message == null) {
-                                        enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                                    }
-                                }
-                                if (sendMessageRequest.getMedia() == null || sendMessageRequest.getMedia().isEmpty()) {
-                                    if (message != null) {
-                                        message.replyMessage(sendMessageRequest.getMessage());
-                                    } else {
-                                        chat.sendMessage(sendMessageRequest.getMessage());
-                                    }
-                                } else if (sendMessageRequest.getFileName() != null && !sendMessageRequest.getFileName().isEmpty()) {
-                                    if (message != null) {
-                                        message.replyMessageWithFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), sendMessageRequest.getMessage());
-                                    } else {
-                                        chat.sendFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), sendMessageRequest.getMessage());
-                                    }
-                                } else {
-                                    enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
-                                }
-                            } else {
-                                enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                            }
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
-                        }
-                        break;
-                    }
-                    case "deleteMessage": {
-                        DeleteMessageRequest deleteMessageRequest = objectMapper.readValue(dataResponse[1], DeleteMessageRequest.class);
-                        Message message = driver.getFunctions().getMessageById(deleteMessageRequest.getMsgId());
-                        if (message != null) {
-                            if (deleteMessageRequest.isFromAll()) {
-                                message.revokeMessage();
-                            } else {
-                                message.deleteMessage();
-                            }
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                        }
-                        break;
-                    }
-                    case "forwardMessage": {
-                        ForwardMessagesRequest forwardMessagesRequest = objectMapper.readValue(dataResponse[1], ForwardMessagesRequest.class);
-                        List<Chat> chats = new ArrayList<>();
-                        List<Message> msgs = new ArrayList<>();
-                        for (String idMsg : forwardMessagesRequest.getIdsMsgs()) {
-                            Message msg = driver.getFunctions().getMessageById(idMsg);
-                            if (msg != null) {
-                                msgs.add(msg);
-                            }
-                        }
-                        for (String idChat : forwardMessagesRequest.getIdsChats()) {
-                            Chat chat = driver.getFunctions().getChatById(idChat);
-                            if (chat != null) {
-                                chats.add(chat);
-                            }
-                        }
-                        if (chats.size() > 0 && msgs.size() > 0) {
-                            msgs.get(0).getChat().forwardMessage(msgs.toArray(Message[]::new), chats.toArray(Chat[]::new));
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
-                        }
-                        break;
-                    }
-                    case "markPlayed": {
-                        Message message = driver.getFunctions().getMessageById(dataResponse[1]);
-                        if (message != null) {
-                            if (message instanceof MediaMessage) {
-                                ((MediaMessage) message).markPlayed();
-                            } else {
-                                enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.BAD_REQUEST));
-                            }
-                        } else {
-                            enviarParaWs(session, new WsMessage(dataResponse[1], HttpStatus.NOT_FOUND));
-                        }
-                        break;
-                    }
-                    case "logout": {
-                        logout();
-                        break;
-                    }
-                    default: {
-                        String[] dataResponse2 = dataResponse[1].split(",", 2);
-                        switch (dataResponse2[0]) {
-                            case "pong": {
-                                enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value())));
-                                break;
-                            }
-                            case "downloadMedia": {
-                                Message message = driver.getFunctions().getMessageById(dataResponse2[1]);
-                                if (message instanceof MediaMessage) {
-                                    File file = ((MediaMessage) message).downloadMedia(5);
-                                    if (file == null) {
-                                        file = ((MediaMessage) message).downloadMedia(20);
-                                    }
-                                    if (file != null) {
-                                        String contentType = Files.probeContentType(file.toPath());
-                                        byte[] data = Files.readAllBytes(file.toPath());
-                                        String fileName = ((MediaMessage) message).getFileName();
-                                        if (fileName.isEmpty()) {
-                                            fileName = file.getName();
-                                        }
-                                        String base64str = Base64.getEncoder().encodeToString(data);
-                                        StringBuilder sb = new StringBuilder();
-                                        sb.append("data:");
-                                        sb.append(contentType);
-                                        sb.append(";base64,");
-                                        sb.append(base64str);
-                                        enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), new DownloadMediaResponse(fileName, sb.toString()))));
-                                    } else {
-                                        enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
-                                    }
-                                } else {
-                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.BAD_REQUEST.value())));
-                                }
-                                break;
-                            }
-                            case "findChat": {
-                                Chat chat = driver.getFunctions().getChatById(dataResponse2[1]);
-                                if (chat != null) {
-                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)))));
-                                } else {
-                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
-                                }
-                                break;
-                            }
-                            case "findPicture": {
-                                Chat chat = driver.getFunctions().getChatById(dataResponse2[1]);
-                                if (chat != null) {
-                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.OK.value(), chat.getContact().getThumb())));
-                                } else {
-                                    enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_FOUND.value())));
-                                }
-                                break;
-                            }
-                            case "changeProfilePic": {
-                                boolean result = driver.getFunctions().setProfilePicture(dataResponse2[1]);
-                                enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(result ? HttpStatus.OK.value() : HttpStatus.INTERNAL_SERVER_ERROR.value())));
-                                break;
-                            }
-
-                            default: {
-                                enviarParaWs(session, new WsMessage(dataResponse[0], new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED.value())));
-                            }
-                        }
-                    }
-                }
+                processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
+                    enviarParaWs(session, new WsMessage(webSocketRequest, webSocketResponse));
+                });
             } catch (Exception e) {
                 enviarEventoWpp(TipoEventoWpp.ERROR, e);
             }
         }
-        return CompletableFuture.completedFuture(null);
+    }
+
+    private CompletableFuture<WebSocketResponse> processWebSocketResponse(WebSocketRequest webSocketRequest) {
+        try {
+            HandlerWebSocket handlerWebSocket = handlers.get(webSocketRequest.getWebSocketRequestPayLoad().getEvent());
+            logger.info("WebSocket Event: " + webSocketRequest.getWebSocketRequestPayLoad().getEvent());
+            if (handlerWebSocket != null) {
+                return handlerWebSocket.handle(this, webSocketRequest.getWebSocketRequestPayLoad().getPayload());
+            } else {
+                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED));
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Handle WebSocketRequest", e);
+            return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(e)));
+        }
     }
 
     @Async
@@ -420,38 +248,43 @@ public class WhatsAppClone {
 
     @Async
     public void sendInit(WebSocketSession ws) {
-        try {
-            ObjectNode dados = objectMapper.createObjectNode();
-            Chat myChat = driver.getFunctions().getMyChat();
-            if (myChat == null) {
-                driver.reiniciar();
-            } else {
-                dados.putObject("self").setAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(myChat, true)));
-                if (driver.getFunctions().isBusiness()) {
-                    driver.getFunctions().getStoreObjectByName("QuickReply").ifPresent(jsObject -> {
-                        try {
-                            dados.putArray("quickReplys").addAll((ArrayNode) objectMapper.readTree(jsObject.toJSONString()));
-                        } catch (Exception e) {
-                            logger.log(Level.SEVERE, "Serialize QuickReplys", e);
-                        }
+        driver.getFunctions().getMyChat().thenCompose(chat -> {
+            if (chat != null) {
+                ObjectNode dados = objectMapper.createObjectNode();
+                return serializadorWhatsApp.serializarChat(chat, true).thenAccept(jsonNodes -> {
+                    dados.putObject("self").setAll(jsonNodes);
+                }).thenCompose(aVoid -> driver.getFunctions().isBusiness()).thenCompose(value -> {
+                    if (value) {
+                        return driver.getFunctions().getStoreObjectByName("QuickReply").thenAccept(jsObject -> {
+                            try {
+                                dados.putArray("quickReplys").addAll((ArrayNode) objectMapper.readTree(jsObject.toJSONString()));
+                            } catch (Exception e) {
+                                logger.log(Level.SEVERE, "Serialize QuickReplys", e);
+                            }
+                        });
+                    } else {
+                        return CompletableFuture.completedFuture(null);
+                    }
+                }).thenCompose(aVoid -> {
+                    return serializadorWhatsApp.serializarAllContacts().thenAccept(jsonNodes -> {
+                        dados.putArray("contacts").addAll(jsonNodes);
+                    }).thenCompose(aVoid1 -> serializadorWhatsApp.serializarAllChats()).thenAccept(jsonNodes -> {
+                        dados.putArray("chats").addAll(jsonNodes);
                     });
-                }
-                dados.putArray("contacts").addAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarAllContacts()));
-                dados.putArray("chats").addAll(Util.pegarResultadoFuture(serializadorWhatsApp.serializarAllChats()));
-                whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
+                }).thenApply(aVoid -> {
+                    try {
+                        return objectMapper.writeValueAsString(dados);
+                    } catch (JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            } else {
+                driver.reiniciar();
+                return CompletableFuture.completedFuture("My Chat null");
             }
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "SendInit", e);
-        }
-    }
-
-    public void enviarMesagemParaTecnico(String msg) {
-        Chat c = driver.getFunctions().getChatByNumber("554491050665");
-        String mensagem = "*" + usuarioPrincipalAutoWired.getUsuario().getLogin() + ":* " + msg;
-        if (c != null) {
-            c.sendMessage(mensagem);
-            c.setArchive(true);
-        }
+        }).thenAccept(s -> {
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, s, ws);
+        });
     }
 
     public byte[] zip(final String str) {
@@ -471,8 +304,7 @@ public class WhatsAppClone {
 
     @Async
     public CompletableFuture<Void> logout() {
-        driver.getFunctions().logout();
-        return CompletableFuture.completedFuture(null);
+        return driver.getFunctions().logout();
     }
 
     public void adicionarSession(WebSocketSession ws) {
@@ -503,6 +335,10 @@ public class WhatsAppClone {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public SerializadorWhatsApp getSerializadorWhatsApp() {
+        return serializadorWhatsApp;
     }
 
     public enum TipoEventoWpp {

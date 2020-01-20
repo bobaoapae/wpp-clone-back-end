@@ -35,9 +35,7 @@ public class ChatBotWppClone extends ChatBot {
 
     @Override
     public void onResume() {
-        if (getChat().getDriver().getFunctions().isBusiness()) {
-            getChat().removeLabel("Precisa de Ajuda");
-        }
+
     }
 
     @Override

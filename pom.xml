@@ -91,7 +91,7 @@
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>BotWhatsApp</artifactId>
-            <version>7.9</version>
+            <version>8.0</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
@@ -103,6 +103,12 @@
             <artifactId>commons-beanutils</artifactId>
             <version>1.9.4</version>
         </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.12</version>
+        </dependency>
+
 
     </dependencies>
 
