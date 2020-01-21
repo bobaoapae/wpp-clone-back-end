@@ -2,6 +2,8 @@ package br.com.zapia.wppclone.ws;
 
 import br.com.zapia.wppclone.authentication.JwtAuthenticationFilter;
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
+import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
@@ -38,8 +40,13 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
                 if (webSocketRequest.getWebSocketRequestPayLoad().getEvent().equalsIgnoreCase("token")) {
                     if (tokenProvider.validateTokenWs(webSocketRequest.getWebSocketRequestPayLoad().getPayload())) {
                         session.getAttributes().put("token", webSocketRequest.getWebSocketRequestPayLoad().getPayload());
-                        session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.OK)).toString()));
-                        getWhatsAppClone().adicionarSession(session);
+                        Usuario usuario = UsuarioScopedContext.getUsuario();
+                        if (usuario.isAtivo()) {
+                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.OK)).toString()));
+                            getWhatsAppClone().adicionarSession(session);
+                        } else {
+                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FORBIDDEN, "Usuário Inativado")).toString()));
+                        }
                     } else {
                         session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED)).toString()));
                     }

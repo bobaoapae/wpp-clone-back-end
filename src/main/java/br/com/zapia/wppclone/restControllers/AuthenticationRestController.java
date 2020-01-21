@@ -48,8 +48,8 @@ public class AuthenticationRestController {
         return ResponseEntity.ok(loginResponse);
     }
 
-    @GetMapping("/loadInitialData")
-    public ResponseEntity<?> loadInitialData() {
+    @GetMapping("/resetDatabase")
+    public ResponseEntity<?> resetDatabase() {
         for (Usuario usuario : usuariosService.listar()) {
             usuariosService.remover(usuario);
         }

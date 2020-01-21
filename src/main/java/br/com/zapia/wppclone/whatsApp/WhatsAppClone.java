@@ -20,17 +20,22 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.support.AbstractBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.threadly.concurrent.collections.ConcurrentArrayList;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.swing.*;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
@@ -64,6 +69,8 @@ public class WhatsAppClone {
     private WhatsAppClone whatsAppClone;
     @Autowired
     private WebWhatsDriverSpring webWhatsDriverSpring;
+    @Autowired
+    private ApplicationContext ap;
     private List<WebSocketSession> sessions;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
@@ -148,17 +155,17 @@ public class WhatsAppClone {
             }, EventType.CHANGE, "ack", "isRevoked", "oldId");
         };
         onLowBaterry = (e) -> {
-            whatsAppClone.enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
+            enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
         };
         onNeedQrCode = (e) -> {
-            whatsAppClone.enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
+            enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
         };
         onErrorInDriver = (e) -> {
             logger.log(Level.SEVERE, e.getMessage(), e);
-            whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
+            enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
         };
         onChangeEstadoDriver = (e) -> {
-            whatsAppClone.enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
+            enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
         if (!headLess) {
             telaWhatsApp = new TelaWhatsApp();
@@ -241,11 +248,10 @@ public class WhatsAppClone {
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
         whatsAppClone.enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
-            whatsAppClone.sendInit(ws);
+            sendInit(ws);
         }
     }
 
-    @Async
     public void sendInit(WebSocketSession ws) {
         driver.getFunctions().getMyChat().thenCompose(chat -> {
             if (chat != null) {
@@ -321,6 +327,35 @@ public class WhatsAppClone {
             }).collect(Collectors.toList()));
         } else {
             sessions.remove(ws);
+        }
+    }
+
+    @Scheduled(fixedDelay = 120000, initialDelay = 240000)
+    public void finalizarQuandoInativo() {
+        if (driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
+            logger.info("Finalizar Instancia Inativa: " + usuarioPrincipalAutoWired.getUsuario().getLogin());
+            ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+        }
+    }
+
+    @PreDestroy
+    public void preDestroy() {
+        logger.info("Destroy WhatsAppClone");
+        driver.finalizar();
+        if (telaWhatsApp != null) {
+            telaWhatsApp.dispose();
+        }
+        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("controleChatsAsync");
+        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("serializadorWhatsApp");
+        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("webWhatsDriverSpring");
+        for (WebSocketSession webSocketSession : getSessions()) {
+            if (webSocketSession.isOpen()) {
+                try {
+                    webSocketSession.close(CloseStatus.GOING_AWAY);
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Close Ws Session", e);
+                }
+            }
         }
     }
 

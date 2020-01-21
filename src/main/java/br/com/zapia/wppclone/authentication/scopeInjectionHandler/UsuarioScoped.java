@@ -15,6 +15,7 @@ public class UsuarioScoped implements Scope {
     private static final Logger log = Logger.getLogger(Usuario.class.getName());
 
     private final static Map<String, Object> scopes = new HashMap<>();
+    private final static Map<String, Runnable> destructions = new HashMap<>();
     private final static ReentrantLock lock = new ReentrantLock();
 
 
@@ -27,7 +28,7 @@ public class UsuarioScoped implements Scope {
             }
         } catch (Exception e) {
             log.log(Level.SEVERE, "UsuarioScoped: " + s, e);
-            throw new IllegalStateException();
+            throw new IllegalStateException(e);
         } finally {
             lock.unlock();
         }
@@ -49,7 +50,14 @@ public class UsuarioScoped implements Scope {
 
     @Override
     public void registerDestructionCallback(String s, Runnable runnable) {
-
+        try {
+            lock.lock();
+            destructions.put(getConversationId() + s, runnable);
+        } catch (Exception e) {
+            log.log(Level.SEVERE, "UsuarioScoped", e);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
