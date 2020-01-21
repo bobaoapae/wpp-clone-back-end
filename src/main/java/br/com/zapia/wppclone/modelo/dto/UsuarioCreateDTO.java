@@ -5,8 +5,6 @@ public class UsuarioCreateDTO {
     private String login;
     private String senha;
     private String nome;
-    @DTORelation
-    private PermissaoDTO permissao;
 
     public String getLogin() {
         return login;
@@ -30,13 +28,5 @@ public class UsuarioCreateDTO {
 
     public void setNome(String nome) {
         this.nome = nome;
-    }
-
-    public PermissaoDTO getPermissao() {
-        return permissao;
-    }
-
-    public void setPermissao(PermissaoDTO permissao) {
-        this.permissao = permissao;
     }
 }

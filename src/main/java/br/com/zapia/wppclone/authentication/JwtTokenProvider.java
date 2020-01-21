@@ -47,7 +47,7 @@ public class JwtTokenProvider {
             if (StringUtils.hasText(jwt) && isValidToken(jwt)) {
                 UUID uuid = getUserUUIDFromJWT(jwt);
                 Usuario userDetails = usuariosService.buscar(uuid);
-                if (userDetails != null) {
+                if (userDetails != null && userDetails.isAtivo()) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, Arrays.asList(userDetails.getPermissao()));
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);

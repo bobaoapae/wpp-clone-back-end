@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import java.util.List;
 
 @Repository
 public class UsuariosRepository extends CRUDRepository<Usuario> {
@@ -22,5 +23,13 @@ public class UsuariosRepository extends CRUDRepository<Usuario> {
         Root<Usuario> root = query.from(Usuario.class);
         query.select(root).where(builder.equal(root.get(Usuario_.login), login));
         return DataAccessUtils.singleResult(getEm().createQuery(query).getResultList());
+    }
+
+    public List<Usuario> listarUsuariosFilhos(Usuario usuarioPai) {
+        CriteriaBuilder builder = getCriteriaBuilder();
+        CriteriaQuery<Usuario> query = getCriteriaQuery();
+        Root<Usuario> root = query.from(Usuario.class);
+        query.select(root).where(builder.equal(root.get(Usuario_.USUARIO_PAI), usuarioPai));
+        return getEm().createQuery(query).getResultList();
     }
 }

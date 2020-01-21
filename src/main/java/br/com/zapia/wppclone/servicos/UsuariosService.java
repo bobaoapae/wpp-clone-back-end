@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.Arrays;
+import java.util.List;
 
 @Service
 @Transactional
@@ -35,5 +36,9 @@ public class UsuariosService extends CRUDService<Usuario> implements UserDetails
         usuarioAuthentication.setNome(usuario.getNome());
         usuarioAuthentication.setAuthorities(Arrays.asList(usuario.getPermissao()));
         return usuarioAuthentication;
+    }
+
+    public List<Usuario> listarUsuariosFilhos(Usuario usuarioPai) {
+        return usuariosRepository.listarUsuariosFilhos(usuarioPai);
     }
 }

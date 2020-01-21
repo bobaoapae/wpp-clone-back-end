@@ -41,6 +41,7 @@ public abstract class CRUDRepository<T extends Entidade> {
     @Transactional
     public boolean remover(T entidade) {
         try {
+            em.refresh(entidade);
             em.remove(entidade);
             return true;
         } catch (Exception e) {
@@ -52,10 +53,53 @@ public abstract class CRUDRepository<T extends Entidade> {
     @Transactional
     public boolean remover(UUID uuid) {
         try {
-            em.remove(buscar(uuid));
-            return true;
+            return remover(buscar(uuid));
         } catch (Exception e) {
             logger.error("Erro ao Excluir", e);
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean desativar(T entidade) {
+        try {
+            entidade.setAtivo(false);
+            return salvar(entidade);
+        } catch (Exception e) {
+            logger.error("Erro ao Desativar", e);
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean desativar(UUID uuid) {
+        try {
+            T entidade = buscar(uuid);
+            return desativar(entidade);
+        } catch (Exception e) {
+            logger.error("Erro ao Desativar", e);
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean ativar(T entidade) {
+        try {
+            entidade.setAtivo(true);
+            return salvar(entidade);
+        } catch (Exception e) {
+            logger.error("Erro ao Ativar", e);
+            return false;
+        }
+    }
+
+    @Transactional
+    public boolean ativar(UUID uuid) {
+        try {
+            T entidade = buscar(uuid);
+            return ativar(entidade);
+        } catch (Exception e) {
+            logger.error("Erro ao Ativar", e);
             return false;
         }
     }

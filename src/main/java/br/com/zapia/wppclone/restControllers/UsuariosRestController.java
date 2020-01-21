@@ -6,7 +6,9 @@ import br.com.zapia.wppclone.modelo.dto.DTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioCreateDTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioUpdateDTO;
+import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
+import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,13 +28,19 @@ public class UsuariosRestController {
     @Autowired
     private UsuariosService usuariosService;
     @Autowired
+    private PermissoesService permissoesService;
+    @Autowired
     private UsuarioPrincipalAutoWired usuario;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private WhatsAppCloneService whatsAppCloneService;
 
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
     @PostMapping
     public ResponseEntity<?> criarNovoUsuario(@DTO(UsuarioCreateDTO.class) Usuario usuario) {
+        usuario.setUsuarioPai(this.usuario.getUsuario());
+        usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_USER"));
         if (usuariosService.salvar(usuario)) {
             return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
         } else {
@@ -40,7 +48,7 @@ public class UsuariosRestController {
         }
     }
 
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
+    @Secured({"ROLE_SUPER_ADMIN"})
     @PutMapping
     public ResponseEntity<?> atualizarUsuario(@DTO(UsuarioUpdateDTO.class) Usuario usuario) {
         if (usuariosService.salvar(usuario)) {
@@ -50,15 +58,55 @@ public class UsuariosRestController {
         }
     }
 
-    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
+    @Secured({"ROLE_SUPER_ADMIN"})
     @DeleteMapping("/{uuid}")
     public ResponseEntity<?> deletarUsuario(@PathVariable("uuid") String uuid) {
         Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
         if (usuario != null) {
             if (usuariosService.remover(usuario)) {
+                whatsAppCloneService.finalizarInstanciaDoUsuarioSeEstiverAtiva(usuario);
                 return ResponseEntity.ok().build();
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
+    @PostMapping("/desativar/{uuid}")
+    public ResponseEntity<?> desativarUsuario(@PathVariable("uuid") String uuid) {
+        Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
+        if (usuario != null) {
+            if (this.usuario.isSuperAdmin() || usuario.getUsuarioPai().equals(this.usuario.getUsuario())) {
+                if (usuariosService.desativar(usuario)) {
+                    whatsAppCloneService.finalizarInstanciaDoUsuarioSeEstiverAtiva(usuario);
+                    return ResponseEntity.ok().build();
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
+    @PostMapping("/ativar/{uuid}")
+    public ResponseEntity<?> ativarUsuario(@PathVariable("uuid") String uuid) {
+        Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
+        if (usuario != null) {
+            if (this.usuario.isSuperAdmin() || usuario.getUsuarioPai().equals(this.usuario.getUsuario())) {
+                if (usuariosService.ativar(usuario)) {
+                    return ResponseEntity.ok().build();
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
         } else {
             return ResponseEntity.notFound().build();
@@ -78,7 +126,12 @@ public class UsuariosRestController {
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
     @GetMapping
     public ResponseEntity<?> listarTodos() {
-        List<Usuario> listar = usuariosService.listar();
+        List<Usuario> listar;
+        if (usuario.isSuperAdmin()) {
+            listar = usuariosService.listar();
+        } else {
+            listar = usuariosService.listarUsuariosFilhos(usuario.getUsuario());
+        }
         return ResponseEntity.ok(modelMapper.map(listar, new TypeToken<List<UsuarioResponseDTO>>() {
         }.getType()));
     }

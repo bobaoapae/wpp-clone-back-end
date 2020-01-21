@@ -10,4 +10,13 @@ public class UsuarioPrincipalAutoWired {
     public Usuario getUsuario() {
         return UsuarioScopedContext.getUsuario();
     }
+
+    public boolean isSuperAdmin() {
+        return getUsuario().getPermissao().getPermissao().equals("ROLE_SUPER_ADMIN");
+    }
+
+    public boolean isAdmin() {
+        return getUsuario().getPermissao().getPermissao().equals("ROLE_ADMIN");
+    }
+
 }

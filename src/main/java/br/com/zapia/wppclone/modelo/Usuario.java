@@ -3,6 +3,7 @@ package br.com.zapia.wppclone.modelo;
 import br.com.zapia.wppclone.listenners.PasswordUsuariosListenner;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @EntityListeners(PasswordUsuariosListenner.class)
@@ -16,6 +17,10 @@ public class Usuario extends Entidade {
     private String senha;
     @ManyToOne
     private Permissao permissao;
+    @ManyToOne
+    private Usuario usuarioPai;
+    @OneToMany(mappedBy = "usuarioPai", cascade = CascadeType.ALL)
+    private List<Usuario> usuariosFilhos;
     @Transient
     private boolean updateSenha;
 
@@ -50,6 +55,22 @@ public class Usuario extends Entidade {
 
     public void setPermissao(Permissao permissao) {
         this.permissao = permissao;
+    }
+
+    public Usuario getUsuarioPai() {
+        return usuarioPai;
+    }
+
+    public void setUsuarioPai(Usuario usuarioPai) {
+        this.usuarioPai = usuarioPai;
+    }
+
+    public List<Usuario> getUsuariosFilhos() {
+        return usuariosFilhos;
+    }
+
+    public void setUsuariosFilhos(List<Usuario> usuariosFilhos) {
+        this.usuariosFilhos = usuariosFilhos;
     }
 
     public boolean isUpdateSenha() {

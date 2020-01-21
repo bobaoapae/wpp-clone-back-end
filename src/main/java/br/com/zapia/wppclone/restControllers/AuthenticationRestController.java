@@ -7,6 +7,11 @@ import br.com.zapia.wppclone.payloads.LoginRequest;
 import br.com.zapia.wppclone.payloads.LoginResponse;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
+import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
+import org.passay.CharacterData;
+import org.passay.CharacterRule;
+import org.passay.EnglishCharacterData;
+import org.passay.PasswordGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -29,6 +34,8 @@ public class AuthenticationRestController {
     private PermissoesService permissoesService;
     @Autowired
     private UsuariosService usuariosService;
+    @Autowired
+    private WhatsAppCloneService whatsAppCloneService;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @ModelAttribute LoginRequest loginRequest) {
@@ -52,19 +59,37 @@ public class AuthenticationRestController {
     public ResponseEntity<?> resetDatabase() {
         for (Usuario usuario : usuariosService.listar()) {
             usuariosService.remover(usuario);
+            whatsAppCloneService.finalizarInstanciaDoUsuarioSeEstiverAtiva(usuario);
         }
         for (Permissao permissao : permissoesService.listar()) {
             permissoesService.remover(permissao);
         }
-        permissoesService.salvar(new Permissao("ROLE_OPERADOR"));
+        permissoesService.salvar(new Permissao("ROLE_USER"));
         permissoesService.salvar(new Permissao("ROLE_ADMIN"));
         permissoesService.salvar(new Permissao("ROLE_SUPER_ADMIN"));
+        PasswordGenerator gen = new PasswordGenerator();
+        CharacterData lowerCaseChars = EnglishCharacterData.LowerCase;
+        CharacterRule lowerCaseRule = new CharacterRule(lowerCaseChars);
+        lowerCaseRule.setNumberOfCharacters(2);
+
+        CharacterData upperCaseChars = EnglishCharacterData.UpperCase;
+        CharacterRule upperCaseRule = new CharacterRule(upperCaseChars);
+        upperCaseRule.setNumberOfCharacters(2);
+
+        CharacterData digitChars = EnglishCharacterData.Digit;
+        CharacterRule digitRule = new CharacterRule(digitChars);
+        digitRule.setNumberOfCharacters(2);
+        CharacterRule splCharRule = new CharacterRule(EnglishCharacterData.Special);
+        splCharRule.setNumberOfCharacters(2);
+
+        String password = gen.generatePassword(10, splCharRule, lowerCaseRule,
+                upperCaseRule, digitRule);
         Usuario usuario = new Usuario();
-        usuario.setLogin("joao");
-        usuario.setSenha("joao0123@");
-        usuario.setNome("João Vitor Borges");
+        usuario.setLogin("admin");
+        usuario.setSenha(password);
+        usuario.setNome("Administrador");
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_SUPER_ADMIN"));
         usuariosService.salvar(usuario);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(password);
     }
 }

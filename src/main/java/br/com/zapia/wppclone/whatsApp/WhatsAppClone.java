@@ -3,8 +3,10 @@ package br.com.zapia.wppclone.whatsApp;
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocket;
 import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
+import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
+import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
@@ -38,11 +40,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.swing.*;
 import java.awt.*;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
 @Component
 @Scope("usuario")
@@ -71,6 +70,8 @@ public class WhatsAppClone {
     private WebWhatsDriverSpring webWhatsDriverSpring;
     @Autowired
     private ApplicationContext ap;
+    @Autowired
+    WhatsAppCloneService whatsAppCloneService;
     private List<WebSocketSession> sessions;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
@@ -186,6 +187,7 @@ public class WhatsAppClone {
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
+        whatsAppCloneService.adicionarInstancia(this);
     }
 
     private void enviarParaWs(WebSocketSession ws, WsMessage message) {
@@ -292,21 +294,6 @@ public class WhatsAppClone {
         });
     }
 
-    public byte[] zip(final String str) {
-        if ((str == null) || (str.length() == 0)) {
-            throw new IllegalArgumentException("Cannot zip null or empty string");
-        }
-
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-                gzipOutputStream.write(str.getBytes(StandardCharsets.UTF_8));
-            }
-            return byteArrayOutputStream.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to zip content", e);
-        }
-    }
-
     @Async
     public CompletableFuture<Void> logout() {
         return driver.getFunctions().logout();
@@ -334,8 +321,12 @@ public class WhatsAppClone {
     public void finalizarQuandoInativo() {
         if (driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
             logger.info("Finalizar Instancia Inativa: " + usuarioPrincipalAutoWired.getUsuario().getLogin());
-            ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+            shutdown();
         }
+    }
+
+    public void shutdown() {
+        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
     }
 
     @PreDestroy
@@ -357,6 +348,7 @@ public class WhatsAppClone {
                 }
             }
         }
+        whatsAppCloneService.removerInstancia(this);
     }
 
     public List<WebSocketSession> getSessions() {
@@ -373,6 +365,10 @@ public class WhatsAppClone {
 
     public SerializadorWhatsApp getSerializadorWhatsApp() {
         return serializadorWhatsApp;
+    }
+
+    public Usuario getUsuario() {
+        return usuarioPrincipalAutoWired.getUsuario();
     }
 
     public enum TipoEventoWpp {

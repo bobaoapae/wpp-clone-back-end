@@ -20,6 +20,22 @@ public abstract class CRUDService<T extends Entidade> {
         return getRepository().remover(uuid);
     }
 
+    public boolean desativar(T entidade) {
+        return getRepository().desativar(entidade);
+    }
+
+    public boolean desativar(UUID uuid) {
+        return getRepository().desativar(uuid);
+    }
+
+    public boolean ativar(T entidade) {
+        return getRepository().ativar(entidade);
+    }
+
+    public boolean ativar(UUID uuid) {
+        return getRepository().ativar(uuid);
+    }
+
     public T buscar(UUID uuid) {
         return getRepository().buscar(uuid);
     }
