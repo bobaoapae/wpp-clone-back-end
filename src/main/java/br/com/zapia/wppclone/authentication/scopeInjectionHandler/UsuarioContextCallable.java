@@ -29,8 +29,6 @@ public class UsuarioContextCallable<T> implements Callable<T> {
         } catch (Exception e) {
             logger.error("call ", e);
             throw e;
-        } finally {
-            UsuarioScopedContext.reset();
         }
     }
 }

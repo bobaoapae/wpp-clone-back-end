@@ -39,9 +39,10 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
                 WebSocketRequest webSocketRequest = mapper.readValue(message.getPayload(), WebSocketRequest.class);
                 if (webSocketRequest.getWebSocketRequestPayLoad().getEvent().equalsIgnoreCase("token")) {
                     if (tokenProvider.validateTokenWs(webSocketRequest.getWebSocketRequestPayLoad().getPayload())) {
-                        session.getAttributes().put("token", webSocketRequest.getWebSocketRequestPayLoad().getPayload());
                         Usuario usuario = UsuarioScopedContext.getUsuario();
+                        session.getAttributes().put("token", webSocketRequest.getWebSocketRequestPayLoad().getPayload());
                         if (usuario.isAtivo()) {
+                            session.getAttributes().put("usuario", usuario);
                             session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.OK)).toString()));
                             getWhatsAppClone().adicionarSession(session);
                         } else {
@@ -51,8 +52,18 @@ public class WhatsAppWebSocket extends BinaryWebSocketHandler {
                         session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED)).toString()));
                     }
                 } else {
-                    if (tokenProvider.validateTokenWs((String) session.getAttributes().get("token"))) {
+                    Object usuario = session.getAttributes().get("usuario");
+                    boolean result = false;
+                    if (usuario instanceof Usuario && ((Usuario) usuario).isAtivo()) {
+                        UsuarioScopedContext.setUsuario((Usuario) usuario);
+                        result = true;
+                    } else if (tokenProvider.validateTokenWs((String) session.getAttributes().get("token"))) {
+                        result = true;
+                    }
+                    if (result) {
                         getWhatsAppClone().processWebSocketMsg(session, webSocketRequest);
+                    } else {
+                        session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED)).toString()));
                     }
                 }
             } catch (JsonProcessingException e) {

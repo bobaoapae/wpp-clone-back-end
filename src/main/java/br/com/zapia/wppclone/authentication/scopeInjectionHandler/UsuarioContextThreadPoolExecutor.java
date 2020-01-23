@@ -30,11 +30,7 @@ public class UsuarioContextThreadPoolExecutor extends ThreadPoolExecutor {
 
     @Override
     public void execute(Runnable command) {
-        if (command instanceof UsuarioContextRunnable || command instanceof UsuarioContextCallable) {
-            super.execute(command);
-        } else {
-            super.execute(new UsuarioContextRunnable(command, usuario));
-        }
+        super.execute(new UsuarioContextRunnable(command, usuario));
     }
 
     @Override

@@ -27,8 +27,6 @@ public class UsuarioContextRunnable implements Runnable {
         } catch (Exception e) {
             logger.error("call ", e);
             throw e;
-        } finally {
-            UsuarioScopedContext.reset();
         }
     }
 }
