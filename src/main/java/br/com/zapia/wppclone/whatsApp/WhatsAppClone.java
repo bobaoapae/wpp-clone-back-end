@@ -328,7 +328,9 @@ public class WhatsAppClone {
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
     public void checkPresence() {
         if (getSessions().isEmpty()) {
-            driver.getFunctions().sendPresenceUnavailable();
+            if (driver.getEstadoDriver() == EstadoDriver.LOGGED) {
+                driver.getFunctions().sendPresenceUnavailable();
+            }
         }
     }
 
