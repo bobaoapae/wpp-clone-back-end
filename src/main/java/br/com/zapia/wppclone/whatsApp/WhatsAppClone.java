@@ -42,6 +42,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +96,7 @@ public class WhatsAppClone {
     private boolean forceBeta;
     private ObjectMapper objectMapper;
     private Map<String, HandlerWebSocket> handlers;
+    private LocalDateTime lastTimeWithSessions;
 
 
     @PostConstruct
@@ -218,6 +220,7 @@ public class WhatsAppClone {
 
     @Async
     public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
+        lastTimeWithSessions = LocalDateTime.now();
         if (driver.getEstadoDriver() != EstadoDriver.LOGGED) {
             enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
         } else {
@@ -323,7 +326,7 @@ public class WhatsAppClone {
 
     @Scheduled(fixedDelay = 120000, initialDelay = 240000)
     public void finalizarQuandoInativo() {
-        if (driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
+        if (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(10).isBefore(LocalDateTime.now())) || driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
             logger.info("Finalizar Instancia Inativa: " + usuarioPrincipalAutoWired.getUsuario().getLogin());
             shutdown();
         }
