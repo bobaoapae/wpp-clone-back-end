@@ -1,7 +1,6 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import modelo.MediaMessage;
 import org.springframework.http.HttpStatus;
@@ -9,9 +8,9 @@ import org.springframework.http.HttpStatus;
 import java.util.concurrent.CompletableFuture;
 
 @HandlerWebSocketEvent(event = "markPlayed")
-public class MarkPlayedHandler implements HandlerWebSocket {
+public class MarkPlayedHandler extends HandlerWebSocket {
     @Override
-    public CompletableFuture<WebSocketResponse> handle(WhatsAppClone whatsAppClone, Object payload) throws JsonProcessingException {
+    public CompletableFuture<WebSocketResponse> handle(Object payload) throws JsonProcessingException {
         return whatsAppClone.getDriver().getFunctions().getMessageById((String) payload).thenCompose(msg -> {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));

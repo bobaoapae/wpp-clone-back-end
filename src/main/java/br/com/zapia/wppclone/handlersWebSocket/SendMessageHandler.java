@@ -2,7 +2,6 @@ package br.com.zapia.wppclone.handlersWebSocket;
 
 import br.com.zapia.wppclone.payloads.SendMessageRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
@@ -11,9 +10,9 @@ import org.springframework.http.HttpStatus;
 import java.util.concurrent.CompletableFuture;
 
 @HandlerWebSocketEvent(event = "sendMessage")
-public class SendMessageHandler implements HandlerWebSocket {
+public class SendMessageHandler extends HandlerWebSocket {
     @Override
-    public CompletableFuture<WebSocketResponse> handle(WhatsAppClone whatsAppClone, Object payload) throws JsonProcessingException {
+    public CompletableFuture<WebSocketResponse> handle(Object payload) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         SendMessageRequest sendMessageRequest = objectMapper.readValue((String) payload, SendMessageRequest.class);
         return whatsAppClone.getDriver().getFunctions().getChatById(sendMessageRequest.getChatId()).thenCompose(chat -> {

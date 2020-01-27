@@ -2,7 +2,6 @@ package br.com.zapia.wppclone.handlersWebSocket;
 
 import br.com.zapia.wppclone.payloads.DeleteMessageRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
@@ -10,9 +9,9 @@ import org.springframework.http.HttpStatus;
 import java.util.concurrent.CompletableFuture;
 
 @HandlerWebSocketEvent(event = "deleteMessage")
-public class DeleteMessageHandler implements HandlerWebSocket {
+public class DeleteMessageHandler extends HandlerWebSocket {
     @Override
-    public CompletableFuture<WebSocketResponse> handle(WhatsAppClone whatsAppClone, Object payload) throws JsonProcessingException {
+    public CompletableFuture<WebSocketResponse> handle(Object payload) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         DeleteMessageRequest deleteMessageRequest = objectMapper.readValue((String) payload, DeleteMessageRequest.class);
         return whatsAppClone.getDriver().getFunctions().getMessageById(deleteMessageRequest.getMsgId()).thenCompose(msg -> {

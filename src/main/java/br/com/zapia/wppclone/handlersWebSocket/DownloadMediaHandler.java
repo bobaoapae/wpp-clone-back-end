@@ -2,7 +2,6 @@ package br.com.zapia.wppclone.handlersWebSocket;
 
 import br.com.zapia.wppclone.payloads.DownloadMediaResponse;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import modelo.MediaMessage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
@@ -14,9 +13,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 @HandlerWebSocketEvent(event = "downloadMedia")
-public class DownloadMediaHandler implements HandlerWebSocket {
+public class DownloadMediaHandler extends HandlerWebSocket {
     @Override
-    public CompletableFuture<WebSocketResponse> handle(WhatsAppClone whatsAppClone, Object payload) {
+    public CompletableFuture<WebSocketResponse> handle(Object payload) {
         return whatsAppClone.getDriver().getFunctions().getMessageById((String) payload).thenCompose(msg -> {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
