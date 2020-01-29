@@ -16,13 +16,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
-import org.springframework.web.socket.handler.BinaryWebSocketHandler;
+import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import org.threadly.util.ExceptionUtils;
 
 import java.io.IOException;
 
 @Service
-public class WhatsAppWebSocket extends BinaryWebSocketHandler {
+public class WhatsAppWebSocket extends AbstractWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
     private static final ObjectMapper mapper = new ObjectMapper();
