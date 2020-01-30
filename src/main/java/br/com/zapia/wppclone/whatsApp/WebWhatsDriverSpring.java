@@ -5,10 +5,7 @@ import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContext
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.modelo.Usuario;
 import driver.WebWhatsDriver;
-import modelo.ActionOnChangeEstadoDriver;
-import modelo.ActionOnErrorInDriver;
-import modelo.ActionOnLowBattery;
-import modelo.ActionOnNeedQrCode;
+import modelo.*;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -32,32 +29,32 @@ public class WebWhatsDriverSpring {
         usuario = UsuarioScopedContext.getUsuario();
     }
 
-    public WebWhatsDriver initialize(JPanel panel, String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-        this.driver = new WebWhatsDriverSpringIntern(panel, profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+    public WebWhatsDriver initialize(JPanel panel, String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {
+        this.driver = new WebWhatsDriverSpringIntern(panel, profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         return this.driver;
     }
 
-    public WebWhatsDriver initialize(String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-        this.driver = new WebWhatsDriverSpringIntern(profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+    public WebWhatsDriver initialize(String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {
+        this.driver = new WebWhatsDriverSpringIntern(profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         return this.driver;
     }
 
     private class WebWhatsDriverSpringIntern extends WebWhatsDriver {
 
-        public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-            super(panel, profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {
+            super(panel, profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         }
 
-        public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-            super(panel, profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        public WebWhatsDriverSpringIntern(JPanel panel, String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {
+            super(panel, profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         }
 
-        public WebWhatsDriverSpringIntern(String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-            super(profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        public WebWhatsDriverSpringIntern(String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {
+            super(profilePath, forceBeta, alwaysOnline, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         }
 
-        public WebWhatsDriverSpringIntern(String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver) throws IOException {
-            super(profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver);
+        public WebWhatsDriverSpringIntern(String profilePath, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {
+            super(profilePath, onConnect, onNeedQrCode, onError, onLowBaterry, onSmarthphoneDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         }
 
         @Override

@@ -4,10 +4,12 @@ import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContext
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextTaskScheduler;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedBeanFactoryPostProcessor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -23,6 +25,9 @@ import java.util.concurrent.Executor;
 @EnableAsync
 @SpringBootApplication
 public class WhatsAppCloneApplication implements AsyncConfigurer, SchedulingConfigurer {
+
+    @Autowired
+    private Environment env;
 
     public static void main(String[] args) {
         SpringApplicationBuilder builder = new SpringApplicationBuilder(WhatsAppCloneApplication.class);

@@ -6,6 +6,7 @@ import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
+import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
@@ -38,6 +39,7 @@ import org.threadly.concurrent.collections.ConcurrentArrayList;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.mail.MessagingException;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -71,7 +73,9 @@ public class WhatsAppClone {
     @Autowired
     private ApplicationContext ap;
     @Autowired
-    WhatsAppCloneService whatsAppCloneService;
+    private WhatsAppCloneService whatsAppCloneService;
+    @Autowired
+    private SendEmailService sendEmailService;
     private List<WebSocketSession> sessions;
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
@@ -80,6 +84,7 @@ public class WhatsAppClone {
     private ActionOnLowBattery onLowBaterry;
     private ActionOnErrorInDriver onErrorInDriver;
     private ActionOnChangeEstadoDriver onChangeEstadoDriver;
+    private ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch;
     private Runnable onConnect;
     private Runnable onDisconnect;
     private Scheduler scheduler;
@@ -169,12 +174,23 @@ public class WhatsAppClone {
         onChangeEstadoDriver = (e) -> {
             enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
+        onWhatsAppVersionMismatch = (target, actual) -> {
+            try {
+                sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
+                        "" + usuarioPrincipalAutoWired.getUsuario().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
+                        "\n" +
+                        "Versão Atual da Lib: " + actual.toString() + "\n" +
+                        "Versão Atual do WhatsApp: " + actual.toString());
+            } catch (MessagingException e) {
+                logger.log(Level.SEVERE, "Envio de Email", e);
+            }
+        };
         if (!headLess) {
             telaWhatsApp = new TelaWhatsApp();
             telaWhatsApp.setVisible(true);
-            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         } else {
-            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver);
+            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         }
         schedulerFactory = new StdSchedulerFactory();
         Properties properties = new Properties();

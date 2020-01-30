@@ -5,6 +5,7 @@
  */
 package br.com.zapia.wppclone.whatsApp.modelo;
 
+import ezvcard.parameter.TelephoneType;
 import handlersBot.HandlerBot;
 import modelo.Chat;
 import modelo.ChatBot;
@@ -40,7 +41,9 @@ public class ChatBotWppClone extends ChatBot {
 
     @Override
     public void processNewMsg(Message m) {
-
+        if (m.getContent().equals("/vcard")) {
+            chat.sendContact("João Vitor Borges", "5544991050665", TelephoneType.CELL);
+        }
     }
 
 
