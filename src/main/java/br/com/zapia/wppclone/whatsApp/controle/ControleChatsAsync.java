@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.threadly.concurrent.collections.ConcurrentArrayList;
 
+import javax.annotation.PreDestroy;
 import java.util.List;
 
 @Controller
@@ -77,6 +78,7 @@ public class ControleChatsAsync {
         return chats;
     }
 
+    @PreDestroy
     public void finalizar() {
         for (ChatBotWppCloneSpring chatt : chats) {
             chatt.getChatBotWppClone().finalizar();

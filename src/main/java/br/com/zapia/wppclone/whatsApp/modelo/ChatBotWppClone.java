@@ -46,12 +46,4 @@ public class ChatBotWppClone extends ChatBot {
             chat.sendContact("João Vitor Borges", "5544991050665", TelephoneType.CELL);
         }
     }
-
-
-    public void finalizar() {
-        if (this.checkMsgs != null && !this.checkMsgs.isCancelled() && !this.checkMsgs.isDone()) {
-            this.checkMsgs.cancel(true);
-        }
-        this.executor.shutdown();
-    }
 }
