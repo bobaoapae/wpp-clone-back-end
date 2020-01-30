@@ -1,5 +1,6 @@
 package br.com.zapia.wppclone.whatsApp.modelo;
 
+import modelo.BindMsgListennerException;
 import modelo.Chat;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -14,7 +15,7 @@ public class ChatBotWppCloneSpring {
     private ApplicationContext applicationContext;
     private ChatBotWppClone chatBotWppClone;
 
-    public ChatBotWppClone inicializarChatBotWppClone(Chat chat) {
+    public ChatBotWppClone inicializarChatBotWppClone(Chat chat) throws BindMsgListennerException {
         if (chatBotWppClone == null) {
             chatBotWppClone = new ChatBotWppClone(this, chat);
         }

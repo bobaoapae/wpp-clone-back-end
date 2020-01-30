@@ -7,6 +7,7 @@ package br.com.zapia.wppclone.whatsApp.modelo;
 
 import ezvcard.parameter.TelephoneType;
 import handlersBot.HandlerBot;
+import modelo.BindMsgListennerException;
 import modelo.Chat;
 import modelo.ChatBot;
 import modelo.Message;
@@ -15,7 +16,7 @@ public class ChatBotWppClone extends ChatBot {
 
     private ChatBotWppCloneSpring chatBotWppCloneSpring;
 
-    public ChatBotWppClone(ChatBotWppCloneSpring chatBotWppCloneSpring, Chat chat) {
+    public ChatBotWppClone(ChatBotWppCloneSpring chatBotWppCloneSpring, Chat chat) throws BindMsgListennerException {
         super(chat);
         this.chatBotWppCloneSpring = chatBotWppCloneSpring;
     }
