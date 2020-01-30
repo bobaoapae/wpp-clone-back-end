@@ -179,7 +179,7 @@ public class WhatsAppClone {
                 sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
                         "" + usuarioPrincipalAutoWired.getUsuario().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
                         "\n" +
-                        "Versão Atual da Lib: " + actual.toString() + "\n" +
+                        "Versão Atual da Lib: " + target.toString() + "\n" +
                         "Versão Atual do WhatsApp: " + actual.toString());
             } catch (MessagingException e) {
                 logger.log(Level.SEVERE, "Envio de Email", e);
