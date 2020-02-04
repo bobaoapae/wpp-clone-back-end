@@ -1,15 +1,14 @@
 package br.com.zapia.wppclone.modelo;
 
+import br.com.zapia.wppclone.listenners.EntidadeListenner;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
+@EntityListeners(EntidadeListenner.class)
 @MappedSuperclass
 public abstract class Entidade implements Serializable {
 
@@ -22,6 +21,8 @@ public abstract class Entidade implements Serializable {
     @Column(updatable = false, nullable = false)
     private UUID uuid;
     private boolean ativo;
+    @Transient
+    private boolean excluido;
 
     public Entidade() {
         ativo = true;
@@ -37,6 +38,14 @@ public abstract class Entidade implements Serializable {
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public boolean isExcluido() {
+        return excluido;
+    }
+
+    public void setExcluido(boolean excluido) {
+        this.excluido = excluido;
     }
 
     @Override

@@ -41,6 +41,9 @@ public abstract class CRUDRepository<T extends Entidade> {
     @Transactional
     public boolean remover(T entidade) {
         try {
+            if (entidade.isExcluido()) {
+                return true;
+            }
             em.refresh(entidade);
             em.remove(entidade);
             return true;

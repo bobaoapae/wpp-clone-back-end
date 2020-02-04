@@ -4,6 +4,7 @@ import br.com.zapia.wppclone.modelo.dto.DTO;
 import br.com.zapia.wppclone.modelo.dto.DTORelation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpInputMessage;
@@ -24,15 +25,18 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Collections;
+import java.util.UUID;
 
 public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
-    private static final ModelMapper modelMapper = new ModelMapper();
 
+    private final ModelMapper modelMapper;
     private EntityManager entityManager;
 
     public DTOModelMapper(ObjectMapper objectMapper, EntityManager entityManager) {
         super(Collections.singletonList(new MappingJackson2HttpMessageConverter(objectMapper)));
         this.entityManager = entityManager;
+        modelMapper = new ModelMapper();
+        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
     }
 
     @Override
@@ -98,6 +102,9 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
     }
 
     private Object getEntityId(@NotNull Object dto) {
+        if (dto instanceof UUID) {
+            return dto;
+        }
         for (Field field : dto.getClass().getDeclaredFields()) {
             if (field.getAnnotation(Id.class) != null) {
                 try {
