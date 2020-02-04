@@ -21,8 +21,8 @@ public class SendMessageHandler extends HandlerWebSocket {
             } else {
                 if (Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
                     if (Strings.isNullOrEmpty(sendMessageRequest.getMedia())) {
-                        return chat.sendMessage(sendMessageRequest.getMessage()).thenApply(jsValue -> {
-                            return new WebSocketResponse(HttpStatus.OK);
+                        return chat.sendMessage(sendMessageRequest.getMessage()).thenApply(message -> {
+                            return new WebSocketResponse(HttpStatus.OK, message.toJson());
                         });
                     } else if (!Strings.isNullOrEmpty(sendMessageRequest.getFileName())) {
                         return chat.sendFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), sendMessageRequest.getMessage()).thenApply(jsValue -> {
@@ -35,8 +35,8 @@ public class SendMessageHandler extends HandlerWebSocket {
                     return whatsAppClone.getDriver().getFunctions().getMessageById(sendMessageRequest.getQuotedMsg()).thenCompose(message -> {
                         if (message != null) {
                             if (Strings.isNullOrEmpty(sendMessageRequest.getMedia())) {
-                                return message.replyMessage(sendMessageRequest.getMessage()).thenApply(jsValue -> {
-                                    return new WebSocketResponse(HttpStatus.OK);
+                                return message.replyMessage(sendMessageRequest.getMessage()).thenApply(message1 -> {
+                                    return new WebSocketResponse(HttpStatus.OK, message1.toJson());
                                 });
                             } else if (!Strings.isNullOrEmpty(sendMessageRequest.getFileName())) {
                                 return message.replyMessageWithFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), sendMessageRequest.getMessage()).thenApply(jsValue -> {
