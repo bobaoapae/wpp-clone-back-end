@@ -9,7 +9,7 @@ public class UsuarioUpdateDTO {
     private UUID uuid;
     private String nome;
     @DTORelation
-    private PermissaoDTO permissao;
+    private PermissaoDTO permissaoDTO;
 
     public UUID getUuid() {
         return uuid;
@@ -27,11 +27,11 @@ public class UsuarioUpdateDTO {
         this.nome = nome;
     }
 
-    public PermissaoDTO getPermissao() {
-        return permissao;
+    public PermissaoDTO getPermissaoDTO() {
+        return permissaoDTO;
     }
 
-    public void setPermissao(PermissaoDTO permissao) {
-        this.permissao = permissao;
+    public void setPermissaoDTO(PermissaoDTO permissaoDTO) {
+        this.permissaoDTO = permissaoDTO;
     }
 }

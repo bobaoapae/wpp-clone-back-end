@@ -72,13 +72,20 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
 
     private Object resolveRelations(Object dto, Object entity) {
         for (Field field : dto.getClass().getDeclaredFields()) {
-            if (field.getAnnotation(DTORelation.class) != null) {
+            DTORelation annotation = field.getAnnotation(DTORelation.class);
+            if (annotation != null) {
                 try {
                     field.setAccessible(true);
                     Object objRelation = field.get(dto);
                     Object entityId = getEntityId(objRelation);
                     if (entityId != null) {
-                        Field declaredField = entity.getClass().getDeclaredField(field.getName());
+                        String fieldName;
+                        if (annotation.fieldName().isEmpty()) {
+                            fieldName = field.getName().substring(0, field.getName().length() - 3);
+                        } else {
+                            fieldName = annotation.fieldName();
+                        }
+                        Field declaredField = entity.getClass().getDeclaredField(fieldName);
                         declaredField.setAccessible(true);
                         declaredField.set(entity, entityManager.find(declaredField.getType(), entityId));
                     }
