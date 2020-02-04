@@ -85,7 +85,7 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
                     if (entityId != null) {
                         String fieldName;
                         if (annotation.fieldName().isEmpty()) {
-                            fieldName = field.getName().substring(0, field.getName().length() - 3);
+                            fieldName = field.getName();
                         } else {
                             fieldName = annotation.fieldName();
                         }
