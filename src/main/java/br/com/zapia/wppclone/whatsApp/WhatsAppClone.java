@@ -21,8 +21,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-import org.reflections.scanners.TypeAnnotationsScanner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.support.AbstractBeanFactory;
@@ -46,6 +44,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -107,10 +107,12 @@ public class WhatsAppClone {
 
 
     @PostConstruct
-    public void init() throws IOException {
+    public void init() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         objectMapper = new ObjectMapper();
         handlers = new ConcurrentHashMap<>();
-        new Reflections(new TypeAnnotationsScanner(), new SubTypesScanner()).merge(Reflections.collect()).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
+        Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
+        declaredConstructor.setAccessible(true);
+        declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
             try {
                 handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), ap.getBean((Class<HandlerWebSocket>) aClass));
             } catch (Exception e) {

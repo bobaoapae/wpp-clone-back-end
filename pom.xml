@@ -174,7 +174,7 @@
                             <scripts>
                                 <script><![CDATA[
                         new org.reflections.Reflections(
-                          "br.com.zapia.wppclone.handlersWebSocket")
+                          "br.com.zapia.wppclone.handlersWebSocket", new org.reflections.scanners.TypeAnnotationsScanner(), new org.reflections.scanners.SubTypesScanner())
                             .save(project.basedir.absolutePath.replace(File.separator,'/')+"/src/main/resources/META-INF/reflections/reflections.xml")]]>
                                 </script>
                             </scripts>
