@@ -67,6 +67,6 @@ public class UsuarioScoped implements Scope {
 
     @Override
     public String getConversationId() {
-        return UsuarioScopedContext.getUsuario().getUuid().toString();
+        return UsuarioScopedContext.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString();
     }
 }
