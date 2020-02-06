@@ -21,6 +21,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.Scheduler;
 import org.quartz.impl.StdSchedulerFactory;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.support.AbstractBeanFactory;
@@ -108,7 +110,7 @@ public class WhatsAppClone {
     public void init() throws IOException {
         objectMapper = new ObjectMapper();
         handlers = new ConcurrentHashMap<>();
-        new Reflections("br.com.zapia.wppclone.handlersWebSocket").getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
+        new Reflections(new TypeAnnotationsScanner(), new SubTypesScanner()).merge(Reflections.collect()).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
             try {
                 handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), ap.getBean((Class<HandlerWebSocket>) aClass));
             } catch (Exception e) {
