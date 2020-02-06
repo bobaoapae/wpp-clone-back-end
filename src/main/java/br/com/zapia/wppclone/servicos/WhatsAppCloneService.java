@@ -26,7 +26,7 @@ public class WhatsAppCloneService {
     public void adicionarInstancia(WhatsAppClone whatsAppClone) {
         try {
             lock.lock();
-            instanciasAtivas.put(whatsAppClone.getUsuario(), whatsAppClone);
+            instanciasAtivas.put(whatsAppClone.getUsuario().getUsuarioResponsavelPelaInstancia(), whatsAppClone);
         } catch (Exception e) {
             log.error("Adicionar Instancia", e);
         } finally {
@@ -37,7 +37,7 @@ public class WhatsAppCloneService {
     public void removerInstancia(WhatsAppClone whatsAppClone) {
         try {
             lock.lock();
-            instanciasAtivas.remove(whatsAppClone.getUsuario());
+            instanciasAtivas.remove(whatsAppClone.getUsuario().getUsuarioResponsavelPelaInstancia());
         } catch (Exception e) {
             log.error("Remover Instancia", e);
         } finally {
@@ -48,7 +48,7 @@ public class WhatsAppCloneService {
     public boolean finalizarInstanciaDoUsuarioSeEstiverAtiva(Usuario usuario) {
         try {
             lock.lock();
-            WhatsAppClone whatsAppClone = instanciasAtivas.get(usuario);
+            WhatsAppClone whatsAppClone = instanciasAtivas.get(usuario.getUsuarioResponsavelPelaInstancia());
             if (whatsAppClone != null) {
                 whatsAppClone.shutdown();
                 return true;

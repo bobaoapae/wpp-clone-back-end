@@ -1,8 +1,10 @@
 package br.com.zapia.wppclone.modelo;
 
 import br.com.zapia.wppclone.listenners.PasswordUsuariosListenner;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -15,6 +17,8 @@ public class Usuario extends Entidade {
     private String login;
     @Column(nullable = false)
     private String senha;
+    @CreationTimestamp
+    private LocalDateTime localDateTime;
     @ManyToOne
     private Permissao permissao;
     @ManyToOne
@@ -79,5 +83,13 @@ public class Usuario extends Entidade {
 
     public void setUpdateSenha(boolean updateSenha) {
         this.updateSenha = updateSenha;
+    }
+
+    public Usuario getUsuarioResponsavelPelaInstancia() {
+        if (getPermissao().getPermissao().equals("ROLE_OPERADOR")) {
+            return getUsuarioPai();
+        } else {
+            return this;
+        }
     }
 }

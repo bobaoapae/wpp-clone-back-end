@@ -58,6 +58,7 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
             obj = modelMapper.map(dto, parameter.getParameterType());
         } else {
             obj = entityManager.find(parameter.getParameterType(), id);
+            entityManager.detach(obj);
             modelMapper.map(dto, obj);
         }
         return resolveRelations(dto, obj);
@@ -91,7 +92,9 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
                         }
                         Field declaredField = entity.getClass().getDeclaredField(fieldName);
                         declaredField.setAccessible(true);
-                        declaredField.set(entity, entityManager.find(declaredField.getType(), entityId));
+                        Object obj = entityManager.find(declaredField.getType(), entityId);
+                        entityManager.detach(obj);
+                        declaredField.set(entity, obj);
                     }
                 } catch (IllegalAccessException | NoSuchFieldException e) {
                     throw new RuntimeException(e);

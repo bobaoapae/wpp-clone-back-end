@@ -56,7 +56,7 @@ public abstract class CRUDRepository<T extends Entidade> {
     @Transactional
     public boolean remover(UUID uuid) {
         try {
-            return remover(buscar(uuid));
+            return remover(em.getReference(classeEntidade, uuid));
         } catch (Exception e) {
             logger.error("Erro ao Excluir", e);
             return false;
