@@ -4,6 +4,8 @@ import br.com.zapia.wppclone.modelo.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.RejectedExecutionException;
+
 public class UsuarioContextRunnable implements Runnable {
 
     private static Logger logger = LoggerFactory.getLogger(UsuarioContextRunnable.class);
@@ -25,8 +27,10 @@ public class UsuarioContextRunnable implements Runnable {
         try {
             task.run();
         } catch (Exception e) {
-            logger.error("call ", e);
-            throw e;
+            if (!(e instanceof RejectedExecutionException)) {
+                logger.error("call ", e);
+                throw e;
+            }
         }
     }
 }

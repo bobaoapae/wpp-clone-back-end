@@ -1,5 +1,6 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
+import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,5 +16,5 @@ public abstract class HandlerWebSocket {
     protected WhatsAppClone whatsAppClone;
 
     @Async
-    abstract public CompletableFuture<WebSocketResponse> handle(Object payload) throws Exception;
+    abstract public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) throws Exception;
 }

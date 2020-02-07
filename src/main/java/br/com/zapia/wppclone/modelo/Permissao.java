@@ -6,12 +6,14 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 @Entity
 public class Permissao extends Entidade implements GrantedAuthority {
 
-    @Column(unique = true)
+    @NotBlank
+    @Column(unique = true, nullable = false)
     private String permissao;
     @OneToMany(mappedBy = "permissao", cascade = CascadeType.ALL)
     private List<Usuario> usuarios;

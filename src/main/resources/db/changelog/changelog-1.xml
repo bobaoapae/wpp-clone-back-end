@@ -1,0 +1,169 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+    <changeSet author="JOAO" id="07022020-1">
+        <createTable tableName="permissao">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_PERMISSAO"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="permissao" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-2">
+        <addUniqueConstraint columnNames="permissao"
+                             constraintName="UQ_PERMISSAO_PERMISSAO"
+                             tableName="permissao"/>
+    </changeSet>
+    <changeSet id="07022020-3" author="JOAO">
+        <createTable tableName="configuracaousuario">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_CONFIGURACAO_USUARIO"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column defaultValueBoolean="false" name="enviarnomeoperadores" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-4">
+        <createTable tableName="usuario">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_USUARIO"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="login" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nome" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="senha" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permissao_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usuariopai_uuid" type="UUID"/>
+            <column name="configuracao_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-5">
+        <addForeignKeyConstraint baseColumnNames="usuariopai_uuid"
+                                 baseTableName="usuario"
+                                 constraintName="FK_USUARIO_USUARIO"
+                                 deferrable="true"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="usuario"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-6">
+        <addForeignKeyConstraint baseColumnNames="permissao_uuid"
+                                 baseTableName="usuario"
+                                 constraintName="FK_PERMISSAO_USUARIO"
+                                 deferrable="true"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="permissao"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-7">
+        <addForeignKeyConstraint baseColumnNames="configuracao_uuid"
+                                 baseTableName="usuario"
+                                 constraintName="FK_CONFIGURACAO_USUARIO"
+                                 deferrable="true"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="configuracaousuario"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-8">
+        <addUniqueConstraint columnNames="login"
+                             constraintName="UQ_LOGIN_USUARIO"
+                             tableName="usuario"/>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-9">
+        <createTable tableName="cobranca">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_COBRANCA"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="situacao" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valor" type="numeric(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usuario_uuid" type="UUID"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-10">
+        <addForeignKeyConstraint baseColumnNames="usuario_uuid"
+                                 baseTableName="cobranca"
+                                 constraintName="FK_USUARIO_COBRANCA"
+                                 deferrable="true"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="usuario"
+                                 validate="true"/>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-11">
+        <createTable tableName="pagamento">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_PAGAMENTO"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="formapagamento" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referencia" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="situacao" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valor" type="numeric(19, 2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cobranca_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="JOAO" id="07022020-12">
+        <addForeignKeyConstraint baseColumnNames="cobranca_uuid"
+                                 baseTableName="pagamento"
+                                 constraintName="FK_COBRANCA_PAGAMENTO"
+                                 deferrable="true"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="cobranca"
+                                 validate="true"/>
+    </changeSet>
+</databaseChangeLog>

@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
 import modelo.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.quartz.Scheduler;
-import org.quartz.impl.StdSchedulerFactory;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,7 +48,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -80,7 +77,6 @@ public class WhatsAppClone {
     private SendEmailService sendEmailService;
     private List<WebSocketSession> sessions;
     private Logger logger;
-    private StdSchedulerFactory schedulerFactory;
     private WebWhatsDriver driver;
     private ActionOnNeedQrCode onNeedQrCode;
     private ActionOnLowBattery onLowBaterry;
@@ -89,7 +85,6 @@ public class WhatsAppClone {
     private ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch;
     private Runnable onConnect;
     private Runnable onDisconnect;
-    private Scheduler scheduler;
     private TelaWhatsApp telaWhatsApp;
     @Value("${pathCacheWebWhats}")
     private String pathCacheWebWhats;
@@ -104,10 +99,14 @@ public class WhatsAppClone {
     private ObjectMapper objectMapper;
     private Map<String, HandlerWebSocket> handlers;
     private LocalDateTime lastTimeWithSessions;
+    private boolean forceShutdown;
 
 
     @PostConstruct
     public void init() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        if (!getUsuario().getUsuarioResponsavelPelaInstancia().isAtivo()) {
+            throw new InstantiationException("Usuário Responsável Inativo");
+        }
         objectMapper = new ObjectMapper();
         handlers = new ConcurrentHashMap<>();
         Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
@@ -119,11 +118,11 @@ public class WhatsAppClone {
                 logger.log(Level.SEVERE, "Init Handlers", e);
             }
         });
-        File file = new File(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid());
+        File file = new File(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
         if (!file.exists()) {
             file.mkdir();
         }
-        file = new File(pathLogs + usuarioPrincipalAutoWired.getUsuario().getUuid());
+        file = new File(pathLogs + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
         if (!file.exists()) {
             file.mkdir();
         }
@@ -166,7 +165,7 @@ public class WhatsAppClone {
             }, EventType.CHANGE, "ack", "isRevoked", "oldId");
         };
         onLowBaterry = (e) -> {
-            enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
+            enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e);
         };
         onNeedQrCode = (e) -> {
             enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
@@ -178,10 +177,13 @@ public class WhatsAppClone {
         onChangeEstadoDriver = (e) -> {
             enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
         };
+        onDisconnect = () -> {
+            enviarEventoWpp(TipoEventoWpp.DISCONNECT, "Falha ao Conectar ao Telefone");
+        };
         onWhatsAppVersionMismatch = (target, actual) -> {
             try {
                 sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
-                        "" + usuarioPrincipalAutoWired.getUsuario().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
+                        "" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
                         "\n" +
                         "Versão Atual da Lib: " + target.toString() + "\n" +
                         "Versão Atual do WhatsApp: " + actual.toString());
@@ -192,21 +194,9 @@ public class WhatsAppClone {
         if (!headLess) {
             telaWhatsApp = new TelaWhatsApp();
             telaWhatsApp.setVisible(true);
-            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
+            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         } else {
-            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
-        }
-        schedulerFactory = new StdSchedulerFactory();
-        Properties properties = new Properties();
-        properties.put("org.quartz.scheduler.instanceName", "WppWebClone" + usuarioPrincipalAutoWired.getUsuario().getUuid());
-        properties.put("org.quartz.scheduler.instanceId", "AUTO");
-        properties.put("org.quartz.threadPool.threadCount", "2");
-        try {
-            schedulerFactory.initialize(properties);
-            scheduler = schedulerFactory.getScheduler();
-            scheduler.start();
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
         }
         whatsAppCloneService.adicionarInstancia(this);
     }
@@ -258,7 +248,7 @@ public class WhatsAppClone {
         try {
             HandlerWebSocket handlerWebSocket = handlers.get(webSocketRequest.getWebSocketRequestPayLoad().getEvent());
             if (handlerWebSocket != null) {
-                return handlerWebSocket.handle(webSocketRequest.getWebSocketRequestPayLoad().getPayload());
+                return handlerWebSocket.handle((Usuario) webSocketRequest.getWebSocketSession().getAttributes().get("usuario"), webSocketRequest.getWebSocketRequestPayLoad().getPayload());
             } else {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED));
             }
@@ -347,7 +337,15 @@ public class WhatsAppClone {
     @Scheduled(fixedDelay = 120000, initialDelay = 240000)
     public void finalizarQuandoInativo() {
         if (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(10).isBefore(LocalDateTime.now())) || driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
-            logger.info("Finalizar Instancia Inativa: " + usuarioPrincipalAutoWired.getUsuario().getLogin());
+            logger.info("Finalizar Instancia Inativa: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
+            shutdown();
+        }
+    }
+
+    @Scheduled(fixedDelay = 10000, initialDelay = 0)
+    public void finalizarSeForcado() {
+        if (!getUsuario().getUsuarioResponsavelPelaInstancia().isAtivo() || forceShutdown) {
+            logger.info("Finalizar Instancia Forçada: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             shutdown();
         }
     }
@@ -361,8 +359,12 @@ public class WhatsAppClone {
         }
     }
 
-    public void shutdown() {
+    private void shutdown() {
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+    }
+
+    public void setForceShutdown(boolean forceShutdown) {
+        this.forceShutdown = forceShutdown;
     }
 
     @PreDestroy
@@ -420,6 +422,7 @@ public class WhatsAppClone {
         LOW_BATTERY,
         NEED_QRCODE,
         UPDATE_ESTADO,
+        DISCONNECT,
         ERROR,
         CHAT_PICTURE,
         INIT
@@ -430,7 +433,7 @@ public class WhatsAppClone {
         private JPanel panel;
 
         public TelaWhatsApp() {
-            this.setTitle(usuarioPrincipalAutoWired.getUsuario().getNome() + " - " + usuarioPrincipalAutoWired.getUsuario().getLogin());
+            this.setTitle(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getNome() + " - " + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
             this.setExtendedState(JFrame.MAXIMIZED_BOTH);
             this.getContentPane().setLayout(new BorderLayout());

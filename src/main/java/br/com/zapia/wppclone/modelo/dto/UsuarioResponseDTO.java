@@ -8,6 +8,8 @@ public class UsuarioResponseDTO {
     private UUID uuid;
     private String login;
     private String nome;
+    private ConfiguracaoUsuarioResponseDTO configuracao;
+    private boolean ativo;
     private PermissaoResponseDTO permissao;
     private List<UsuarioResponseDTO> usuariosFilhos;
 
@@ -49,5 +51,21 @@ public class UsuarioResponseDTO {
 
     public void setUsuariosFilhos(List<UsuarioResponseDTO> usuariosFilhos) {
         this.usuariosFilhos = usuariosFilhos;
+    }
+
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
+
+    public ConfiguracaoUsuarioResponseDTO getConfiguracao() {
+        return configuracao;
+    }
+
+    public void setConfiguracao(ConfiguracaoUsuarioResponseDTO configuracao) {
+        this.configuracao = configuracao;
     }
 }

@@ -1,32 +1,44 @@
 package br.com.zapia.wppclone.modelo;
 
 import br.com.zapia.wppclone.listenners.PasswordUsuariosListenner;
-import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Entity
 @EntityListeners(PasswordUsuariosListenner.class)
 public class Usuario extends Entidade {
 
+    @NotBlank
     @Column(nullable = false)
     private String nome;
+    @NotBlank
     @Column(unique = true, nullable = false)
     private String login;
+    @NotBlank
     @Column(nullable = false)
     private String senha;
-    @CreationTimestamp
-    private LocalDateTime localDateTime;
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Permissao permissao;
+    @NotNull
+    @JoinColumn(name = "configuracao_uuid")
+    @OneToOne(cascade = CascadeType.ALL, optional = false, orphanRemoval = true)
+    private ConfiguracaoUsuario configuracao;
     @ManyToOne
     private Usuario usuarioPai;
     @OneToMany(mappedBy = "usuarioPai", cascade = CascadeType.ALL)
     private List<Usuario> usuariosFilhos;
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<Cobranca> cobrancas;
     @Transient
     private boolean updateSenha;
+
+    public Usuario() {
+        configuracao = new ConfiguracaoUsuario();
+        configuracao.setUsuario(this);
+    }
 
     public String getNome() {
         return nome;
@@ -53,12 +65,28 @@ public class Usuario extends Entidade {
         this.senha = senha;
     }
 
+    public List<Cobranca> getCobrancas() {
+        return cobrancas;
+    }
+
+    public void setCobrancas(List<Cobranca> cobrancas) {
+        this.cobrancas = cobrancas;
+    }
+
     public Permissao getPermissao() {
         return permissao;
     }
 
     public void setPermissao(Permissao permissao) {
         this.permissao = permissao;
+    }
+
+    public ConfiguracaoUsuario getConfiguracao() {
+        return configuracao;
+    }
+
+    public void setConfiguracao(ConfiguracaoUsuario configuracao) {
+        this.configuracao = configuracao;
     }
 
     public Usuario getUsuarioPai() {
@@ -86,7 +114,7 @@ public class Usuario extends Entidade {
     }
 
     public Usuario getUsuarioResponsavelPelaInstancia() {
-        if (getPermissao().getPermissao().equals("ROLE_OPERADOR")) {
+        if (getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
             return getUsuarioPai();
         } else {
             return this;

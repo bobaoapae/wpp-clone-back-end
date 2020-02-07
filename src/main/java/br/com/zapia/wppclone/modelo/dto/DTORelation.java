@@ -8,5 +8,9 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DTORelation {
+    Class classEntidade();
+
+    String key() default "UUI";
+
     String fieldName() default "";
 }

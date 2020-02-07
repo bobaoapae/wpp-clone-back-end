@@ -50,7 +50,7 @@ public class WhatsAppCloneService {
             lock.lock();
             WhatsAppClone whatsAppClone = instanciasAtivas.get(usuario.getUsuarioResponsavelPelaInstancia());
             if (whatsAppClone != null) {
-                whatsAppClone.shutdown();
+                whatsAppClone.setForceShutdown(true);
                 return true;
             }
         } catch (Exception e) {

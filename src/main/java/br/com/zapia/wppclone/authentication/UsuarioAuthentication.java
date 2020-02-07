@@ -1,72 +1,37 @@
 package br.com.zapia.wppclone.authentication;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import br.com.zapia.wppclone.modelo.Usuario;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Objects;
-import java.util.UUID;
 
 public class UsuarioAuthentication implements UserDetails {
 
-    private UUID uuid;
-    private String nome;
-    private String login;
-    @JsonIgnore
-    private String senha;
+    private Usuario usuario;
 
-    private Collection<? extends GrantedAuthority> authorities;
-
-    public UUID getUuid() {
-        return uuid;
+    public UsuarioAuthentication(Usuario usuario) {
+        this.usuario = usuario;
     }
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getLogin() {
-        return login;
-    }
-
-    public void setLogin(String login) {
-        this.login = login;
-    }
-
-    public String getSenha() {
-        return senha;
-    }
-
-    public void setSenha(String senha) {
-        this.senha = senha;
+    public Usuario getUsuario() {
+        return usuario;
     }
 
     @Override
     public String getUsername() {
-        return login;
+        return usuario.getLogin();
     }
 
     @Override
     public String getPassword() {
-        return senha;
+        return usuario.getSenha();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
-    }
-
-    public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
-        this.authorities = authorities;
+        return Arrays.asList(usuario.getPermissao());
     }
 
     @Override
@@ -76,7 +41,7 @@ public class UsuarioAuthentication implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return usuario.isAtivo() && usuario.getUsuarioResponsavelPelaInstancia().isAtivo();
     }
 
     @Override
@@ -86,7 +51,7 @@ public class UsuarioAuthentication implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return usuario.isAtivo() && usuario.getUsuarioResponsavelPelaInstancia().isAtivo();
     }
 
     @Override
@@ -94,11 +59,11 @@ public class UsuarioAuthentication implements UserDetails {
         if (this == o) return true;
         if (!(o instanceof UsuarioAuthentication)) return false;
         UsuarioAuthentication that = (UsuarioAuthentication) o;
-        return Objects.equals(uuid, that.uuid);
+        return usuario.equals(that.getUsuario());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(uuid);
+        return usuario.hashCode();
     }
 }

@@ -4,21 +4,28 @@ import br.com.zapia.wppclone.modelo.dto.DTO;
 import br.com.zapia.wppclone.modelo.dto.DTORelation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.http.HttpInputMessage;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -32,11 +39,10 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
     private final ModelMapper modelMapper;
     private EntityManager entityManager;
 
-    public DTOModelMapper(ObjectMapper objectMapper, EntityManager entityManager) {
+    public DTOModelMapper(ObjectMapper objectMapper, EntityManager entityManager, ModelMapper modelMapper) {
         super(Collections.singletonList(new MappingJackson2HttpMessageConverter(objectMapper)));
         this.entityManager = entityManager;
-        modelMapper = new ModelMapper();
-        modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        this.modelMapper = modelMapper;
     }
 
     @Override
@@ -49,6 +55,7 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
         binder.validate();
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
         Object dto = super.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
@@ -58,7 +65,9 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
             obj = modelMapper.map(dto, parameter.getParameterType());
         } else {
             obj = entityManager.find(parameter.getParameterType(), id);
-            entityManager.detach(obj);
+            if (obj == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, parameter.getParameterType().getSimpleName() + " with id:" + id + " was not found.");
+            }
             modelMapper.map(dto, obj);
         }
         return resolveRelations(dto, obj);
@@ -75,28 +84,38 @@ public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
         throw new RuntimeException();
     }
 
-    private Object resolveRelations(Object dto, Object entity) {
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public Object resolveRelations(Object dto, Object entity) {
         for (Field field : dto.getClass().getDeclaredFields()) {
             DTORelation annotation = field.getAnnotation(DTORelation.class);
             if (annotation != null) {
                 try {
                     field.setAccessible(true);
                     Object objRelation = field.get(dto);
-                    Object entityId = getEntityId(objRelation);
-                    if (entityId != null) {
-                        String fieldName;
-                        if (annotation.fieldName().isEmpty()) {
-                            fieldName = field.getName();
-                        } else {
-                            fieldName = annotation.fieldName();
-                        }
-                        Field declaredField = entity.getClass().getDeclaredField(fieldName);
-                        declaredField.setAccessible(true);
-                        Object obj = entityManager.find(declaredField.getType(), entityId);
-                        entityManager.detach(obj);
-                        declaredField.set(entity, obj);
+                    String fieldName;
+                    if (annotation.fieldName().isEmpty()) {
+                        fieldName = field.getName();
+                    } else {
+                        fieldName = annotation.fieldName();
                     }
-                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    Field declaredField = entity.getClass().getDeclaredField(fieldName);
+                    declaredField.setAccessible(true);
+                    if (objRelation != null) {
+                        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+                        CriteriaQuery criteriaQuery = criteriaBuilder.createQuery(annotation.classEntidade());
+                        Root root = criteriaQuery.from(annotation.classEntidade());
+                        criteriaQuery.select(root).where(criteriaBuilder.equal(root.get(annotation.key()), objRelation));
+                        Object obj = DataAccessUtils.singleResult(entityManager.createQuery(criteriaQuery).getResultList());
+                        if (obj == null) {
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "DTO Relation To:" + annotation.classEntidade().getSimpleName() + " with key('" + annotation.key() + "'):" + objRelation + " was not found.");
+                        }
+                        declaredField.set(entity, obj);
+                    } else {
+                        declaredField.set(entity, null);
+                    }
+                } catch (ResponseStatusException e) {
+                    throw e;
+                } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
             }

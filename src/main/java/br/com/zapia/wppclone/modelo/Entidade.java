@@ -1,10 +1,14 @@
 package br.com.zapia.wppclone.modelo;
 
 import br.com.zapia.wppclone.listenners.EntidadeListenner;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -18,9 +22,16 @@ public abstract class Entidade implements Serializable {
             name = "UUID",
             strategy = "org.hibernate.id.UUIDGenerator"
     )
+    @NotNull
     @Column(updatable = false, nullable = false)
     private UUID uuid;
-    private boolean ativo;
+    @NotNull
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean ativo;
+    @CreationTimestamp
+    private LocalDateTime criadoEm;
+    @UpdateTimestamp
+    private LocalDateTime atualizadoEm;
     @Transient
     private boolean excluido;
 
@@ -38,6 +49,22 @@ public abstract class Entidade implements Serializable {
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public void setCriadoEm(LocalDateTime criadoEm) {
+        this.criadoEm = criadoEm;
+    }
+
+    public LocalDateTime getAtualizadoEm() {
+        return atualizadoEm;
+    }
+
+    public void setAtualizadoEm(LocalDateTime atualizadoEm) {
+        this.atualizadoEm = atualizadoEm;
     }
 
     public boolean isExcluido() {

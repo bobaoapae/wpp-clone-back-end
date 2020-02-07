@@ -4,21 +4,24 @@ import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.modelo.dto.DTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioCreateDTO;
+import br.com.zapia.wppclone.modelo.dto.UsuarioOperadorUpdateDTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioUpdateDTO;
+import br.com.zapia.wppclone.servicos.OperadoresService;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/operadores")
+@RequestMapping("/api/operators")
 @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_USER"})
 public class OperadorRestController {
 
@@ -29,12 +32,15 @@ public class OperadorRestController {
     @Autowired
     private UsuarioPrincipalAutoWired usuario;
     @Autowired
+    private OperadoresService operadoresService;
+    @Autowired
     private ModelMapper modelMapper;
 
     @PostMapping
     public ResponseEntity<?> criarNovoOperador(@DTO(UsuarioCreateDTO.class) Usuario usuario) {
         usuario.setUsuarioPai(this.usuario.getUsuario());
-        usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_OPERADOR"));
+        usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_OPERATOR"));
+        usuario.setLogin(usuario.getUsuarioPai().getLogin().concat("/").concat(usuario.getLogin()));
         if (usuariosService.salvar(usuario)) {
             return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
         } else {
@@ -43,7 +49,7 @@ public class OperadorRestController {
     }
 
     @PutMapping
-    public ResponseEntity<?> atualizarOperador(@DTO(UsuarioUpdateDTO.class) Usuario usuario) {
+    public ResponseEntity<?> atualizarOperador(@DTO(UsuarioOperadorUpdateDTO.class) Usuario usuario) {
         if (usuario.getUsuarioPai().equals(this.usuario.getUsuario())) {
             if (usuariosService.salvar(usuario)) {
                 return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
@@ -61,6 +67,7 @@ public class OperadorRestController {
         if (usuario != null) {
             if (usuario.getUsuarioPai().equals(this.usuario.getUsuario())) {
                 if (usuariosService.remover(usuario)) {
+                    operadoresService.finalizarSessoesParaOperadorSeEstiveremAtivas(usuario);
                     return ResponseEntity.ok().build();
                 } else {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -71,5 +78,12 @@ public class OperadorRestController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<?> listarTodos() {
+        List<Usuario> listar = usuariosService.listarOperadores(usuario.getUsuario());
+        return ResponseEntity.ok(modelMapper.map(listar, new TypeToken<List<UsuarioResponseDTO>>() {
+        }.getType()));
     }
 }

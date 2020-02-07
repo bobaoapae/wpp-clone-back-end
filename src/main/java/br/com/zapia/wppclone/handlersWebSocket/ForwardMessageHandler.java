@@ -1,5 +1,6 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
+import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.ForwardMessagesRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -15,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 @HandlerWebSocketEvent(event = "forwardMessage")
 public class ForwardMessageHandler extends HandlerWebSocket {
     @Override
-    public CompletableFuture<WebSocketResponse> handle(Object payload) throws JsonProcessingException {
+    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         ForwardMessagesRequest forwardMessagesRequest = objectMapper.readValue((String) payload, ForwardMessagesRequest.class);
         List<Chat> chats = new ArrayList<>();

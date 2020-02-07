@@ -1,18 +1,13 @@
 package br.com.zapia.wppclone.modelo.dto;
 
-import br.com.zapia.wppclone.modelo.Permissao;
-import br.com.zapia.wppclone.modelo.Permissao_;
-
 import javax.persistence.Id;
 import java.util.UUID;
 
-public class UsuarioUpdateDTO {
+public class UsuarioOperadorUpdateDTO {
 
     @Id
     private UUID uuid;
     private String nome;
-    @DTORelation(classEntidade = Permissao.class, key = Permissao_.PERMISSAO)
-    private String permissao;
 
     public UUID getUuid() {
         return uuid;
@@ -28,13 +23,5 @@ public class UsuarioUpdateDTO {
 
     public void setNome(String nome) {
         this.nome = nome;
-    }
-
-    public String getPermissao() {
-        return permissao;
-    }
-
-    public void setPermissao(String permissao) {
-        this.permissao = permissao;
     }
 }

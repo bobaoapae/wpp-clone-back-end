@@ -26,7 +26,7 @@ public class WebWhatsDriverSpring {
 
     @PostConstruct
     public void init() {
-        usuario = UsuarioScopedContext.getUsuario();
+        usuario = UsuarioScopedContext.getUsuario().getUsuarioResponsavelPelaInstancia();
     }
 
     public WebWhatsDriver initialize(JPanel panel, String profilePath, boolean forceBeta, boolean alwaysOnline, Runnable onConnect, ActionOnNeedQrCode onNeedQrCode, ActionOnErrorInDriver onError, ActionOnLowBattery onLowBaterry, Runnable onSmarthphoneDisconnect, ActionOnChangeEstadoDriver onChangeEstadoDriver, ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch) throws IOException {

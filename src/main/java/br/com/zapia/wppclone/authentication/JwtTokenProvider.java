@@ -7,17 +7,19 @@ import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 
@@ -28,16 +30,21 @@ public class JwtTokenProvider {
 
     @Autowired
     private UsuariosService usuariosService;
+    @Value("${jwt.sign.pass}")
+    private String jwtSignPass;
 
-    public String generateToken(Authentication authentication) {
+    @PostConstruct
+    public void init() {
+        jwtSignPass = Base64.getEncoder().encodeToString(jwtSignPass.getBytes());
+    }
 
-        UsuarioAuthentication userPrincipal = (UsuarioAuthentication) authentication.getPrincipal();
+    public String generateToken(UsuarioAuthentication userPrincipal) {
 
         return Jwts.builder()
-                .setSubject(userPrincipal.getUuid().toString())
+                .setSubject(userPrincipal.getUsuario().getUuid().toString())
                 .setIssuedAt(new Date())
                 .setExpiration(Date.from(LocalDateTime.now().plusDays(7).atZone(ZoneId.systemDefault()).toInstant()))
-                .signWith(SignatureAlgorithm.HS512, "Zapia845689!@#$")
+                .signWith(SignatureAlgorithm.HS512, jwtSignPass)
                 .compact();
     }
 
@@ -73,7 +80,7 @@ public class JwtTokenProvider {
 
     public UUID getUserUUIDFromJWT(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey("Zapia845689!@#$")
+                .setSigningKey(jwtSignPass)
                 .parseClaimsJws(token)
                 .getBody();
 
@@ -96,7 +103,7 @@ public class JwtTokenProvider {
 
     public boolean isValidToken(String authToken) {
         try {
-            Jwts.parser().setSigningKey("Zapia845689!@#$").parseClaimsJws(authToken);
+            Jwts.parser().setSigningKey(jwtSignPass).parseClaimsJws(authToken);
             return true;
         } catch (SignatureException ex) {
             logger.error("Invalid JWT signature: " + authToken);
