@@ -8,6 +8,14 @@ public class SendMessageRequest {
     private String fileName;
     private String quotedMsg;
 
+    public SendMessageRequest() {
+        chatId = "";
+        message = "";
+        media = "";
+        fileName = "";
+        quotedMsg = "";
+    }
+
     public String getChatId() {
         return chatId;
     }

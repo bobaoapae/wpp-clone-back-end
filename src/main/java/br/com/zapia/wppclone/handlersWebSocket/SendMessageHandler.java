@@ -20,49 +20,60 @@ public class SendMessageHandler extends HandlerWebSocket {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                String textMsg;
-                if (usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    textMsg = "*".concat(usuario.getNome()).concat(" diz:* ").concat(sendMessageRequest.getMessage());
-                } else {
-                    textMsg = sendMessageRequest.getMessage();
-                }
-                String captionImage;
-                if (usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    captionImage = "*".concat(usuario.getNome()).concat(" enviado por:* ").concat(sendMessageRequest.getMessage());
-                } else {
-                    captionImage = sendMessageRequest.getMessage();
-                }
-                if (Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
-                    if (Strings.isNullOrEmpty(sendMessageRequest.getMedia())) {
-                        return chat.sendMessage(textMsg).thenApply(message -> {
-                            return new WebSocketResponse(HttpStatus.OK, message.toJson());
-                        });
-                    } else if (!Strings.isNullOrEmpty(sendMessageRequest.getFileName())) {
-                        return chat.sendFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), captionImage).thenApply(jsValue -> {
-                            return new WebSocketResponse(HttpStatus.OK);
-                        });
+                return chat.getLastMsg().thenCompose(lastMessage -> {
+                    boolean flagAppend = lastMessage == null || !usuario.getUuid().toString().equals(lastMessage.getCustomProperty("usuario").join());
+                    String textMsg;
+                    if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
+                        textMsg = "*".concat(usuario.getNome()).concat(" diz:* ").concat(sendMessageRequest.getMessage());
                     } else {
-                        return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST));
+                        textMsg = sendMessageRequest.getMessage();
                     }
-                } else {
-                    return whatsAppClone.getDriver().getFunctions().getMessageById(sendMessageRequest.getQuotedMsg()).thenCompose(message -> {
-                        if (message != null) {
-                            if (Strings.isNullOrEmpty(sendMessageRequest.getMedia())) {
-                                return message.replyMessage(textMsg).thenApply(message1 -> {
-                                    return new WebSocketResponse(HttpStatus.OK, message1.toJson());
+                    String captionImage;
+                    if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
+                        captionImage = "*Enviado por: ".concat(usuario.getNome()).concat("*");
+                    } else {
+                        captionImage = sendMessageRequest.getMessage();
+                    }
+                    if (Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
+                        if (Strings.isNullOrEmpty(sendMessageRequest.getMedia())) {
+                            return chat.sendMessage(textMsg).thenCompose(message -> {
+                                return message.addCustomProperty("usuario", usuario.getUuid().toString()).thenApply(jsValue -> {
+                                    return new WebSocketResponse(HttpStatus.OK, message.toJson());
                                 });
-                            } else if (!Strings.isNullOrEmpty(sendMessageRequest.getFileName())) {
-                                return message.replyMessageWithFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), captionImage).thenApply(jsValue -> {
-                                    return new WebSocketResponse(HttpStatus.OK);
+                            });
+                        } else if (!Strings.isNullOrEmpty(sendMessageRequest.getFileName())) {
+                            return chat.sendFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), captionImage).thenCompose(mediaMessage -> {
+                                return mediaMessage.addCustomProperty("usuario", usuario.getUuid().toString()).thenApply(jsValue -> {
+                                    return new WebSocketResponse(HttpStatus.OK, mediaMessage.toJson());
                                 });
-                            } else {
-                                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST));
-                            }
+                            });
                         } else {
-                            return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND, "Quoted Message"));
+                            return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST));
                         }
-                    });
-                }
+                    } else {
+                        return whatsAppClone.getDriver().getFunctions().getMessageById(sendMessageRequest.getQuotedMsg()).thenCompose(message -> {
+                            if (message != null) {
+                                if (Strings.isNullOrEmpty(sendMessageRequest.getMedia())) {
+                                    return message.replyMessage(textMsg).thenCompose(message1 -> {
+                                        return message1.addCustomProperty("usuario", usuario.getUuid().toString()).thenApply(jsValue -> {
+                                            return new WebSocketResponse(HttpStatus.OK, message1.toJson());
+                                        });
+                                    });
+                                } else if (!Strings.isNullOrEmpty(sendMessageRequest.getFileName())) {
+                                    return message.replyMessageWithFile(sendMessageRequest.getMedia(), sendMessageRequest.getFileName(), captionImage).thenCompose(mediaMessage -> {
+                                        return mediaMessage.addCustomProperty("usuario", usuario.getUuid().toString()).thenApply(jsValue -> {
+                                            return new WebSocketResponse(HttpStatus.OK, mediaMessage.toJson());
+                                        });
+                                    });
+                                } else {
+                                    return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST));
+                                }
+                            } else {
+                                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND, "Quoted Message"));
+                            }
+                        });
+                    }
+                });
             }
         });
     }
