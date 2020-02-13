@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 import java.util.concurrent.CompletableFuture;
 
-@HandlerWebSocketEvent(event = "logout")
+@HandlerWebSocketEvent(event = "changeProfilePic")
 public class ChangeProfilePicHandler extends HandlerWebSocket {
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) {
