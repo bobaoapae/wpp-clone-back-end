@@ -1,6 +1,7 @@
 package br.com.zapia.wppclone.servicos;
 
 import br.com.zapia.wppclone.authentication.UsuarioAuthentication;
+import br.com.zapia.wppclone.modelo.TrocaDeNumero;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.repositorios.CRUDRepository;
 import br.com.zapia.wppclone.repositorios.UsuariosRepository;
@@ -27,12 +28,16 @@ public class UsuariosService extends CRUDService<Usuario> implements UserDetails
 
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        Usuario usuario = usuariosRepository.buscarUsuarioPorLogin(login);
+        Usuario usuario = buscarUsuarioPorLogin(login);
         if (usuario == null) {
             throw new UsernameNotFoundException(login);
         }
         UsuarioAuthentication usuarioAuthentication = new UsuarioAuthentication(usuario);
         return usuarioAuthentication;
+    }
+
+    public Usuario buscarUsuarioPorLogin(String login) {
+        return usuariosRepository.buscarUsuarioPorLogin(login);
     }
 
     public List<Usuario> listarUsuariosFilhos(Usuario usuarioPai) {
@@ -41,5 +46,12 @@ public class UsuariosService extends CRUDService<Usuario> implements UserDetails
 
     public List<Usuario> listarOperadores(Usuario usuarioPai) {
         return usuariosRepository.listarOperadores(usuarioPai);
+    }
+
+    public boolean efetivarTrocaDeNumero(TrocaDeNumero trocaDeNumero) {
+        Usuario usuario = trocaDeNumero.getUsuario();
+        usuario.setTelefone(trocaDeNumero.getNovoNumero());
+        trocaDeNumero.setAtivo(false);
+        return salvar(usuario);
     }
 }

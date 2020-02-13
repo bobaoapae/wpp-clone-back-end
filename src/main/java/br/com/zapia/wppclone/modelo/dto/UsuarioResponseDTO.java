@@ -8,6 +8,7 @@ public class UsuarioResponseDTO {
     private UUID uuid;
     private String login;
     private String nome;
+    private String telefone;
     private ConfiguracaoUsuarioResponseDTO configuracao;
     private boolean ativo;
     private PermissaoResponseDTO permissao;
@@ -59,6 +60,14 @@ public class UsuarioResponseDTO {
 
     public void setAtivo(boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
     }
 
     public ConfiguracaoUsuarioResponseDTO getConfiguracao() {

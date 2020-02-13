@@ -1,6 +1,6 @@
 package br.com.zapia.wppclone.modelo;
 
-import br.com.zapia.wppclone.listenners.PasswordUsuariosListenner;
+import br.com.zapia.wppclone.modelo.listenners.PasswordUsuariosListenner;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -19,6 +19,9 @@ public class Usuario extends Entidade {
     private String login;
     @NotBlank
     @Column(nullable = false)
+    private String telefone;
+    @NotBlank
+    @Column(nullable = false)
     private String senha;
     @ManyToOne(optional = false)
     private Permissao permissao;
@@ -32,6 +35,8 @@ public class Usuario extends Entidade {
     private List<Usuario> usuariosFilhos;
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
     private List<Cobranca> cobrancas;
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<TrocaDeNumero> trocasDeNumeros;
     @Transient
     private boolean updateSenha;
 
@@ -111,6 +116,22 @@ public class Usuario extends Entidade {
 
     public void setUpdateSenha(boolean updateSenha) {
         this.updateSenha = updateSenha;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public List<TrocaDeNumero> getTrocasDeNumeros() {
+        return trocasDeNumeros;
+    }
+
+    public void setTrocasDeNumeros(List<TrocaDeNumero> trocasDeNumeros) {
+        this.trocasDeNumeros = trocasDeNumeros;
     }
 
     public Usuario getUsuarioResponsavelPelaInstancia() {

@@ -86,6 +86,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
                 .permitAll()
                 .antMatchers("/api/maintenance/resetDatabase")
                 .permitAll()
+                .antMatchers("/api/hotmart/**")
+                .permitAll()
                 .anyRequest()
                 .authenticated();
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

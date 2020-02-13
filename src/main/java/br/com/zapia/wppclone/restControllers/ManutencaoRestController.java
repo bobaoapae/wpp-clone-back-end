@@ -5,10 +5,7 @@ import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
-import org.passay.CharacterData;
-import org.passay.CharacterRule;
-import org.passay.EnglishCharacterData;
-import org.passay.PasswordGenerator;
+import br.com.zapia.wppclone.utils.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -45,23 +42,7 @@ public class ManutencaoRestController {
             permissoesService.salvar(new Permissao("ROLE_USER"));
             permissoesService.salvar(new Permissao("ROLE_ADMIN"));
             permissoesService.salvar(new Permissao("ROLE_SUPER_ADMIN"));
-            PasswordGenerator gen = new PasswordGenerator();
-            CharacterData lowerCaseChars = EnglishCharacterData.LowerCase;
-            CharacterRule lowerCaseRule = new CharacterRule(lowerCaseChars);
-            lowerCaseRule.setNumberOfCharacters(2);
-
-            CharacterData upperCaseChars = EnglishCharacterData.UpperCase;
-            CharacterRule upperCaseRule = new CharacterRule(upperCaseChars);
-            upperCaseRule.setNumberOfCharacters(2);
-
-            CharacterData digitChars = EnglishCharacterData.Digit;
-            CharacterRule digitRule = new CharacterRule(digitChars);
-            digitRule.setNumberOfCharacters(2);
-            CharacterRule splCharRule = new CharacterRule(EnglishCharacterData.Special);
-            splCharRule.setNumberOfCharacters(2);
-
-            String password = gen.generatePassword(20, splCharRule, lowerCaseRule,
-                    upperCaseRule, digitRule);
+            String password = Util.gerarSenha(20, true);
             Usuario usuario = new Usuario();
             usuario.setLogin("admin");
             usuario.setSenha(password);

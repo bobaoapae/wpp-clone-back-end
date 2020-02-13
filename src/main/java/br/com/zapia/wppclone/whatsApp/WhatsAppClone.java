@@ -92,14 +92,17 @@ public class WhatsAppClone {
     private String pathLogs;
     @Value("${pathBinarios}")
     private String pathBinarios;
+    @Value("${loginWhatsAppGeral}")
+    private String loginWhatsAppGeral;
     @Value("${headLess}")
     private boolean headLess;
     @Value("${forceBeta}")
     private boolean forceBeta;
+    private boolean forceShutdown;
+    private boolean instanciaGeral;
     private ObjectMapper objectMapper;
     private Map<String, HandlerWebSocket> handlers;
     private LocalDateTime lastTimeWithSessions;
-    private boolean forceShutdown;
 
 
     @PostConstruct
@@ -107,6 +110,7 @@ public class WhatsAppClone {
         if (!getUsuario().getUsuarioResponsavelPelaInstancia().isAtivo()) {
             throw new InstantiationException("Usuário Responsável Inativo");
         }
+        instanciaGeral = getUsuario().getLogin().equals(loginWhatsAppGeral);
         objectMapper = new ObjectMapper();
         handlers = new ConcurrentHashMap<>();
         Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
@@ -336,7 +340,7 @@ public class WhatsAppClone {
 
     @Scheduled(fixedDelay = 120000, initialDelay = 240000)
     public void finalizarQuandoInativo() {
-        if (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(10).isBefore(LocalDateTime.now())) || driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
+        if (!instanciaGeral && getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(10).isBefore(LocalDateTime.now())) || driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
             logger.info("Finalizar Instancia Inativa: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             shutdown();
         }

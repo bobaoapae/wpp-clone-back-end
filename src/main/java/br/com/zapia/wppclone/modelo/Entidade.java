@@ -1,6 +1,6 @@
 package br.com.zapia.wppclone.modelo;
 
-import br.com.zapia.wppclone.listenners.EntidadeListenner;
+import br.com.zapia.wppclone.modelo.listenners.EntidadeListenner;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;

@@ -1,4 +1,4 @@
-package br.com.zapia.wppclone.listenners;
+package br.com.zapia.wppclone.modelo.listenners;
 
 import br.com.zapia.wppclone.modelo.Entidade;
 

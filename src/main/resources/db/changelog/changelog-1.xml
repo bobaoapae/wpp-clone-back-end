@@ -166,4 +166,39 @@
                                  referencedTableName="cobranca"
                                  validate="true"/>
     </changeSet>
+    <changeSet id="11022020-1" author="JOAO">
+        <addColumn tableName="usuario">
+            <column name="telefone" defaultValue="000000000" type="varchar(18)">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="12022020-2" author="JOAO">
+        <createTable tableName="trocadenumero">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_TROCA_DE_NUMERO"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="novonumero" type="varchar(18)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usuario_uuid" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="12022020-3" author="JOAO">
+        <addForeignKeyConstraint baseColumnNames="usuario_uuid"
+                                 baseTableName="trocadenumero"
+                                 constraintName="FK_USUARIO_TROCA_DE_NUMERO"
+                                 deferrable="true"
+                                 initiallyDeferred="false"
+                                 referencedColumnNames="uuid"
+                                 referencedTableName="usuario"
+                                 validate="true"/>
+    </changeSet>
 </databaseChangeLog>
