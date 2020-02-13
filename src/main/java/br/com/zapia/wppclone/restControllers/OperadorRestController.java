@@ -41,6 +41,7 @@ public class OperadorRestController {
         usuario.setUsuarioPai(this.usuario.getUsuario());
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_OPERATOR"));
         usuario.setLogin(usuario.getUsuarioPai().getLogin().concat("/").concat(usuario.getLogin()));
+        usuario.setTelefone("000000000"); //TODO remover
         if (usuariosService.salvar(usuario)) {
             return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
         } else {
