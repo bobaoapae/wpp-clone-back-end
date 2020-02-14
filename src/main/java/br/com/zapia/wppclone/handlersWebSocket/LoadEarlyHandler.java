@@ -14,8 +14,10 @@ public class LoadEarlyHandler extends HandlerWebSocket {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                return chat.loadEarlierMsgs().thenApply(messages -> {
-                    return new WebSocketResponse(HttpStatus.OK, messages);
+                return chat.loadEarlierMsgs().thenCompose(messages -> {
+                    return whatsAppClone.getSerializadorWhatsApp().serializarMsg(messages).thenApply(jsonNodes -> {
+                        return new WebSocketResponse(HttpStatus.OK, jsonNodes);
+                    });
                 });
             }
         });

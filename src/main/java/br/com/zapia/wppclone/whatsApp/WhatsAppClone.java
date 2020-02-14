@@ -243,6 +243,7 @@ public class WhatsAppClone {
                     enviarParaWs(session, new WsMessage(webSocketRequest, webSocketResponse));
                 });
             } catch (Exception e) {
+                logger.log(Level.SEVERE, "Process WebSocket Msg", e);
                 enviarEventoWpp(TipoEventoWpp.ERROR, e);
             }
         }
