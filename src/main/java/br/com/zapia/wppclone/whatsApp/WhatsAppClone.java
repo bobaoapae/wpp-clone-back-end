@@ -244,7 +244,7 @@ public class WhatsAppClone {
                 });
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Process WebSocket Msg", e);
-                enviarEventoWpp(TipoEventoWpp.ERROR, e);
+                enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(e))));
             }
         }
     }
