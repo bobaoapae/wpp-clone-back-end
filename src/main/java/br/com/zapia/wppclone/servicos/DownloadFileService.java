@@ -8,11 +8,11 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class DownloadMediaService {
+public class DownloadFileService {
 
     private final Map<String, File> filesDownload;
 
-    public DownloadMediaService() {
+    public DownloadFileService() {
         filesDownload = new ConcurrentHashMap<>();
     }
 

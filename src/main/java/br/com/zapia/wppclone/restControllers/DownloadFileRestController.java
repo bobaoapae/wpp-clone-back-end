@@ -1,6 +1,6 @@
 package br.com.zapia.wppclone.restControllers;
 
-import br.com.zapia.wppclone.servicos.DownloadMediaService;
+import br.com.zapia.wppclone.servicos.DownloadFileService;
 import org.apache.tika.Tika;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -20,16 +20,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @RestController
-@RequestMapping("/api/downloadMedia")
-public class DownloadMediaRestController {
+@RequestMapping("/api/downloadFile")
+public class DownloadFileRestController {
 
     @Autowired
-    private DownloadMediaService downloadMediaService;
+    private DownloadFileService downloadFileService;
 
     @GetMapping("/{key}")
     public ResponseEntity<?> downloadMedia(@PathVariable("key") String key) {
         try {
-            File file = downloadMediaService.getFileToDownload(key);
+            File file = downloadFileService.getFileToDownload(key);
             Path path = Paths.get(file.getAbsolutePath());
             String contentType = new Tika().detect(file);
             ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
@@ -41,7 +41,7 @@ public class DownloadMediaRestController {
             headers.add("Expires", "0");
             headers.add("Filename", file.getName());
             headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Filename");
-            downloadMediaService.removeFileToDownload(key);
+            downloadFileService.removeFileToDownload(key);
 
             return ResponseEntity.ok()
                     .headers(headers)

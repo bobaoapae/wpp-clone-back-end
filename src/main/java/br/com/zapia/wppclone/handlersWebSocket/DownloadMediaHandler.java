@@ -2,7 +2,7 @@ package br.com.zapia.wppclone.handlersWebSocket;
 
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
-import br.com.zapia.wppclone.servicos.DownloadMediaService;
+import br.com.zapia.wppclone.servicos.DownloadFileService;
 import modelo.MediaMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 public class DownloadMediaHandler extends HandlerWebSocket {
 
     @Autowired
-    private DownloadMediaService downloadMediaService;
+    private DownloadFileService downloadFileService;
 
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) {
@@ -29,7 +29,7 @@ public class DownloadMediaHandler extends HandlerWebSocket {
                     }
                 }).thenApply(file -> {
                     if (file != null) {
-                        String key = downloadMediaService.addFileToFutureDownload(file);
+                        String key = downloadFileService.addFileToFutureDownload(file);
                         return new WebSocketResponse(HttpStatus.OK, key);
                     } else {
                         return new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, "file null");
