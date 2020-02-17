@@ -5,12 +5,10 @@ import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContext
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedBeanFactoryPostProcessor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -85,12 +83,12 @@ public class WhatsAppCloneApplication implements AsyncConfigurer, SchedulingConf
      * Configure async support for Spring MVC.
      */
     @Bean
-    public WebMvcConfigurer webMvcConfigurerConfigurer(@Qualifier("taskExecutor") AsyncTaskExecutor taskExecutor, CallableProcessingInterceptor callableProcessingInterceptor) {
+    public WebMvcConfigurer webMvcConfigurerConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
-                configurer.setDefaultTimeout(360000).setTaskExecutor(taskExecutor);
-                configurer.registerCallableInterceptors(callableProcessingInterceptor);
+                configurer.setDefaultTimeout(360000).setTaskExecutor(getAsyncExecutor());
+                configurer.registerCallableInterceptors(callableProcessingInterceptor());
                 WebMvcConfigurer.super.configureAsyncSupport(configurer);
             }
         };

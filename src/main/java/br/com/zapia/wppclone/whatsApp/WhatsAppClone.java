@@ -184,12 +184,13 @@ public class WhatsAppClone {
         onDisconnect = () -> {
             enviarEventoWpp(TipoEventoWpp.DISCONNECT, "Falha ao Conectar ao Telefone");
         };
-        onWhatsAppVersionMismatch = (target, actual) -> {
+        onWhatsAppVersionMismatch = (minVersion, maxVersion, actual) -> {
             try {
                 sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
                         "" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
                         "\n" +
-                        "Versão Atual da Lib: " + target.toString() + "\n" +
+                        "Versão Mínima da Lib: " + minVersion.toString() + "\n" +
+                        "Versão Máxima da Lib: " + maxVersion.toString() + "\n" +
                         "Versão Atual do WhatsApp: " + actual.toString());
             } catch (MessagingException e) {
                 logger.log(Level.SEVERE, "Envio de Email", e);
