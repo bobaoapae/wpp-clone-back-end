@@ -1,9 +1,11 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
 import br.com.zapia.wppclone.modelo.Usuario;
+import br.com.zapia.wppclone.payloads.FindPictureRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.servicos.DownloadFileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.tika.mime.MimeType;
@@ -24,11 +26,13 @@ public class FindPictureHandler extends HandlerWebSocket {
 
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) throws JsonProcessingException {
-        return whatsAppClone.getDriver().getFunctions().getChatById((String) payload).thenCompose(chat -> {
+        ObjectMapper objectMapper = new ObjectMapper();
+        FindPictureRequest findPictureRequest = objectMapper.readValue((String) payload, FindPictureRequest.class);
+        return whatsAppClone.getDriver().getFunctions().getChatById(findPictureRequest.getId()).thenCompose(chat -> {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                return chat.getContact().getThumb().thenApply(s -> {
+                return chat.getContact().getThumb(findPictureRequest.isFull()).thenApply(s -> {
                     if (!Strings.isNullOrEmpty(s)) {
                         try {
                             byte[] dearr = Base64.getDecoder().decode(s.split(",")[1]);
