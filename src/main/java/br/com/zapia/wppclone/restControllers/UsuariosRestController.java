@@ -65,8 +65,7 @@ public class UsuariosRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
-    @Secured({"ROLE_SUPER_ADMIN"})
+    
     @PutMapping("/alterarNumero")
     public ResponseEntity<?> alterarNumero(@RequestParam("telefone") String telefone) {
         WhatsAppClone instanciaGeral = whatsAppCloneService.getInstanciaGeral();
