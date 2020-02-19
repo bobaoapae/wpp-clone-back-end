@@ -6,6 +6,15 @@ import org.passay.EnglishCharacterData;
 import org.passay.PasswordGenerator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
 public class Util {
 
     public static String encodePassword(String password) {
@@ -36,5 +45,26 @@ public class Util {
             return gen.generatePassword(length, lowerCaseRule,
                     upperCaseRule, digitRule);
         }
+    }
+
+    public static List<String> splitStringByByteLength(String src, int maxsize) {
+        Charset cs = StandardCharsets.UTF_8;
+        CharsetEncoder coder = cs.newEncoder();
+        ByteBuffer out = ByteBuffer.allocate(maxsize);  // output buffer of required size
+        CharBuffer in = CharBuffer.wrap(src);
+        List<String> ss = new ArrayList<>();            // a list to store the chunks
+        int pos = 0;
+        while (true) {
+            CoderResult cr = coder.encode(in, out, true); // try to encode as much as possible
+            int newpos = src.length() - in.length();
+            String s = src.substring(pos, newpos);
+            ss.add(s);                                  // add what has been encoded to the list
+            pos = newpos;                               // store new input position
+            out.rewind();                               // and rewind output buffer
+            if (!cr.isOverflow()) {
+                break;                                  // everything has been encoded
+            }
+        }
+        return ss;
     }
 }

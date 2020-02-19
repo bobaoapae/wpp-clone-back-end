@@ -6,8 +6,10 @@ import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
+import br.com.zapia.wppclone.payloads.WebSocketResponseFrame;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
+import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -251,7 +253,35 @@ public class WhatsAppClone {
         } else {
             try {
                 processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
-                    enviarParaWs(session, new WsMessage(webSocketRequest, webSocketResponse));
+                    try {
+                        String dado;
+                        if (webSocketResponse.getResponse() instanceof String) {
+                            dado = (String) webSocketResponse.getResponse();
+                        } else {
+                            dado = objectMapper.writeValueAsString(webSocketResponse.getResponse());
+                        }
+                        int maxKb = 640 * 1024;
+                        if (dado.getBytes().length >= maxKb) {
+                            List<String> partials = Util.splitStringByByteLength(dado, maxKb);
+                            for (int x = 0; x < partials.size(); x++) {
+                                WebSocketResponseFrame frame = new WebSocketResponseFrame(webSocketResponse.getStatus(), partials.get(x));
+                                if (x + 1 < partials.size()) {
+                                    frame.setFrameId(x + 1);
+                                } else {
+                                    frame.setFrameId(-1);
+                                }
+                                enviarParaWs(session, new WsMessage(webSocketRequest, frame));
+                            }
+                        } else {
+                            enviarParaWs(session, new WsMessage(webSocketRequest, webSocketResponse));
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }).exceptionally(throwable -> {
+                    logger.log(Level.SEVERE, "Process WebSocket Msg", throwable);
+                    enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(throwable))));
+                    return null;
                 });
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Process WebSocket Msg", e);
@@ -311,8 +341,8 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws.setTextMessageSizeLimit(100 * 1024 * 1024);
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 80 * 1024 * 1024);
+        ws.setTextMessageSizeLimit(1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 10 * 1024 * 1024);
         sessions.add(ws);
         whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getEstadoDriver().name(), ws);
     }
