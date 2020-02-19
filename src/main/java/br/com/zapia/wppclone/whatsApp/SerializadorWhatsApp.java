@@ -1,6 +1,5 @@
 package br.com.zapia.wppclone.whatsApp;
 
-import br.com.zapia.wppclone.utils.Util;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -39,6 +38,16 @@ public class SerializadorWhatsApp {
     }
 
     @Async
+    public CompletableFuture<ArrayNode> serializarAllQuickReplys() {
+        try {
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().getBrowser().executeJavaScriptAndReturnValue("Store.QuickReply.toJSON()").asArray().toJSONString()));
+        } catch (JsonProcessingException e) {
+            log.log(Level.SEVERE, "SerializarAllQuickReplys", e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+
+    @Async
     public CompletableFuture<ArrayNode> serializarAllChats() {
         try {
             return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().getBrowser().executeJavaScriptAndReturnValue("Store.Chat.toJSON()").asArray().toJSONString()));
@@ -60,7 +69,7 @@ public class SerializadorWhatsApp {
 
     @Async
     public CompletableFuture<ObjectNode> serializarChat(Chat chat) {
-        return CompletableFuture.completedFuture(Util.pegarResultadoFuture(serializarChat(chat, false)));
+        return serializarChat(chat, false);
     }
 
     @Async
@@ -80,7 +89,7 @@ public class SerializadorWhatsApp {
         ArrayNode arrayNode = objectMapper.createArrayNode();
         chats.forEach(chat -> {
             try {
-                arrayNode.add(Util.pegarResultadoFuture(serializarChat(chat)));
+                arrayNode.add(serializarChat(chat).join());
             } catch (Exception e) {
                 log.log(Level.SEVERE, "SerializarChat", e);
             }
@@ -99,7 +108,7 @@ public class SerializadorWhatsApp {
         ArrayNode arrayNode = objectMapper.createArrayNode();
         messages.forEach(message -> {
             try {
-                arrayNode.add(Util.pegarResultadoFuture(serializarMsg(message)));
+                arrayNode.add(serializarMsg(message).join());
             } catch (Exception e) {
                 log.log(Level.SEVERE, "SerializarMsg", e);
             }

@@ -8,12 +8,9 @@ import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
-import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
 import modelo.*;
@@ -50,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -141,30 +139,42 @@ public class WhatsAppClone {
             driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
             driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD, false);
             driver.getFunctions().addChatListenner(chat -> {
-                enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
+                serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
+                    enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
+                });
             }, EventType.ADD);
             driver.getFunctions().addChatListenner(chat -> {
-                enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
+                serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
+                    enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, jsonNodes);
+                });
             }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime");
             driver.getFunctions().addChatListenner(chat -> {
-                enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
+                serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
+                    enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, jsonNodes);
+                });
             }, EventType.REMOVE);
             driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                 @Override
                 public void run(Message m) {
-                    enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
+                    serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
+                        enviarEventoWpp(TipoEventoWpp.NEW_MSG, jsonNodes);
+                    });
                 }
             }, EventType.ADD);
             driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                 @Override
                 public void run(Message m) {
-                    enviarEventoWpp(TipoEventoWpp.REMOVE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
+                    serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
+                        enviarEventoWpp(TipoEventoWpp.REMOVE_MSG, jsonNodes);
+                    });
                 }
             }, EventType.REMOVE);
             driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                 @Override
                 public void run(Message m) {
-                    enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
+                    serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
+                        enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, jsonNodes);
+                    });
                 }
             }, EventType.CHANGE, "ack", "isRevoked", "oldId");
         };
@@ -264,7 +274,6 @@ public class WhatsAppClone {
         }
     }
 
-    @Async
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
         getSessions().forEach(webSocketSession -> whatsAppClone.enviarEventoWpp(tipoEventoWpp, dado, webSocketSession));
     }
@@ -277,44 +286,23 @@ public class WhatsAppClone {
         }
     }
 
-    public void sendInit(WebSocketSession ws) {
-        driver.getFunctions().getMyChat().thenCompose(chat -> {
-            if (chat != null) {
+    private void sendInit(WebSocketSession ws) {
+        try {
+            Chat myChat = driver.getFunctions().getMyChat().get(10, TimeUnit.SECONDS);
+            if (myChat != null) {
+                boolean isBussiness = driver.getFunctions().isBusiness().join();
                 ObjectNode dados = objectMapper.createObjectNode();
-                return serializadorWhatsApp.serializarChat(chat, true).thenAccept(jsonNodes -> {
-                    dados.putObject("self").setAll(jsonNodes);
-                }).thenCompose(aVoid -> driver.getFunctions().isBusiness()).thenCompose(value -> {
-                    if (value) {
-                        return driver.getFunctions().getStoreObjectByName("QuickReply").thenAccept(jsObject -> {
-                            try {
-                                dados.putArray("quickReplys").addAll((ArrayNode) objectMapper.readTree(jsObject.toJSONString()));
-                            } catch (Exception e) {
-                                logger.log(Level.SEVERE, "Serialize QuickReplys", e);
-                            }
-                        });
-                    } else {
-                        return CompletableFuture.completedFuture(null);
-                    }
-                }).thenCompose(aVoid -> {
-                    return serializadorWhatsApp.serializarAllContacts().thenAccept(jsonNodes -> {
-                        dados.putArray("contacts").addAll(jsonNodes);
-                    }).thenCompose(aVoid1 -> serializadorWhatsApp.serializarAllChats()).thenAccept(jsonNodes -> {
-                        dados.putArray("chats").addAll(jsonNodes);
-                    });
-                }).thenApply(aVoid -> {
-                    try {
-                        return objectMapper.writeValueAsString(dados);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                dados.putObject("self").setAll(serializadorWhatsApp.serializarChat(myChat, true).join());
+                dados.put("isBussiness", isBussiness);
+                whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             } else {
-                driver.reiniciar();
-                return CompletableFuture.completedFuture("My Chat null");
+                driver.reiniciar(1000);
+                whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, "My Chat Null", ws);
             }
-        }).thenAccept(s -> {
-            whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, s, ws);
-        });
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "SendInit", e);
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e), ws);
+        }
     }
 
     @Async

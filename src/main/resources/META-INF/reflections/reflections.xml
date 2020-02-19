@@ -11,6 +11,9 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickReplysHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
@@ -54,6 +57,9 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickReplysHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
