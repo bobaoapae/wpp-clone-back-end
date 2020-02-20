@@ -97,6 +97,17 @@
             <groupId>br.com.zapia</groupId>
             <artifactId>BotWhatsApp</artifactId>
             <version>10.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>br.com.zapia</groupId>
+                    <artifactId>WebWhatsAppLib</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>br.com.zapia</groupId>
+            <artifactId>WebWhatsAppLib-ivelox</artifactId>
+            <version>1.0</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
