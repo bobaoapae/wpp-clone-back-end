@@ -149,7 +149,7 @@ public class WhatsAppClone {
                 serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                     enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, jsonNodes);
                 });
-            }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime");
+            }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime", "customProperties");
             driver.getFunctions().addChatListenner(chat -> {
                 serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                     enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, jsonNodes);
@@ -178,7 +178,7 @@ public class WhatsAppClone {
                         enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, jsonNodes);
                     });
                 }
-            }, EventType.CHANGE, "ack", "isRevoked", "oldId");
+            }, EventType.CHANGE, "ack", "isRevoked", "oldId", "customProperties");
         };
         onLowBaterry = (e) -> {
             enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e);
