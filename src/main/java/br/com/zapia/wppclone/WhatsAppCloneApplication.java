@@ -45,7 +45,7 @@ public class WhatsAppCloneApplication implements AsyncConfigurer, SchedulingConf
     @Override
     public ThreadPoolTaskExecutor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new UsuarioContextPoolExecutor();
-        executor.setCorePoolSize(100);
+        executor.setCorePoolSize(1000);
         executor.setThreadNamePrefix("Wpp-Async-");
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.initialize();

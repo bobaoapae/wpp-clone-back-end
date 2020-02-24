@@ -59,13 +59,13 @@ public class WebWhatsDriverSpring {
 
         @Override
         public ScheduledThreadPoolExecutor getScheduler() {
-            return new UsuarioContextThreadPoolScheduler(usuario, 10);
+            return new UsuarioContextThreadPoolScheduler(usuario, 1000);
         }
 
         @Override
         public ExecutorService getExecutorServiceInterno() {
-            return new UsuarioContextThreadPoolExecutor(usuario, 10, Integer.MAX_VALUE,
-                    60L, TimeUnit.SECONDS,
+            return new UsuarioContextThreadPoolExecutor(usuario, 1000, Integer.MAX_VALUE,
+                    10L, TimeUnit.SECONDS,
                     new SynchronousQueue<>());
         }
     }
