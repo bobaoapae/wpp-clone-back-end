@@ -37,6 +37,7 @@ public class DownloadFileRestController {
                 HttpHeaders headers = new HttpHeaders();
                 String filenameUtf = URLEncoder.encode(file.getName().split("#")[0], StandardCharsets.UTF_8);
                 headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filenameUtf + "; filename=" + filenameUtf);
+                headers.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(file.length()));
                 headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Filename");
                 headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
                 headers.add("Pragma", "no-cache");
