@@ -14,6 +14,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,12 +35,13 @@ public class DownloadFileRestController {
                 Path path = Paths.get(file.getAbsolutePath());
                 StreamingResponseBody streamingResponseBody = outputStream -> outputStream.write(Files.readAllBytes(path));
                 HttpHeaders headers = new HttpHeaders();
-                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + file.getName());
+                String filenameUtf = URLEncoder.encode(file.getName().split("#")[0], StandardCharsets.UTF_8);
+                headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filenameUtf + "; filename=" + filenameUtf);
                 headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Filename");
                 headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
                 headers.add("Pragma", "no-cache");
                 headers.add("Expires", "0");
-                headers.add("Filename", file.getName());
+                headers.add("Filename", filenameUtf);
                 headers.add("Content-Type", new Tika().detect(file));
                 downloadFileService.removeFileToDownload(key);
                 return new ResponseEntity(streamingResponseBody, headers, HttpStatus.OK);
