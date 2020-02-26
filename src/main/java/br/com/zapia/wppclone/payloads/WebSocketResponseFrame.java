@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 public class WebSocketResponseFrame extends WebSocketResponse {
 
     private int frameId;
+    private int qtdFrames;
 
     public WebSocketResponseFrame(int status) {
         super(status);
@@ -28,5 +29,13 @@ public class WebSocketResponseFrame extends WebSocketResponse {
 
     public void setFrameId(int frameId) {
         this.frameId = frameId;
+    }
+
+    public int getQtdFrames() {
+        return qtdFrames;
+    }
+
+    public void setQtdFrames(int qtdFrames) {
+        this.qtdFrames = qtdFrames;
     }
 }

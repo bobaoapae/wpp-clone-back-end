@@ -218,7 +218,8 @@ public class WhatsAppClone {
         whatsAppCloneService.adicionarInstancia(this);
     }
 
-    private void enviarParaWs(WebSocketSession ws, WsMessage message) {
+    @Async
+    public void enviarParaWs(WebSocketSession ws, WsMessage message) {
         if (!(ws instanceof ConcurrentWebSocketSessionDecorator)) {
             ws = buscarWsDecorator(ws);
         }
@@ -248,8 +249,9 @@ public class WhatsAppClone {
     @Async
     public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
         lastTimeWithSessions = LocalDateTime.now();
+        WebSocketSession finalSession = buscarWsDecorator(session);
         if (driver.getEstadoDriver() != EstadoDriver.LOGGED) {
-            enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
+            enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
         } else {
             try {
                 processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
@@ -260,32 +262,29 @@ public class WhatsAppClone {
                         } else {
                             dado = objectMapper.writeValueAsString(webSocketResponse.getResponse());
                         }
-                        int maxKb = 640 * 1024;
+                        int maxKb = 1024 * 1024;
                         if (dado.getBytes().length >= maxKb) {
                             List<String> partials = Util.splitStringByByteLength(dado, maxKb);
                             for (int x = 0; x < partials.size(); x++) {
                                 WebSocketResponseFrame frame = new WebSocketResponseFrame(webSocketResponse.getStatus(), partials.get(x));
-                                if (x + 1 < partials.size()) {
-                                    frame.setFrameId(x + 1);
-                                } else {
-                                    frame.setFrameId(-1);
-                                }
-                                enviarParaWs(session, new WsMessage(webSocketRequest, frame));
+                                frame.setFrameId(x + 1);
+                                frame.setQtdFrames(partials.size());
+                                whatsAppClone.enviarParaWs(finalSession, new WsMessage(webSocketRequest, frame));
                             }
                         } else {
-                            enviarParaWs(session, new WsMessage(webSocketRequest, webSocketResponse));
+                            enviarParaWs(finalSession, new WsMessage(webSocketRequest, webSocketResponse));
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }).exceptionally(throwable -> {
                     logger.log(Level.SEVERE, "Process WebSocket Msg", throwable);
-                    enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(throwable))));
+                    enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(throwable))));
                     return null;
                 });
             } catch (Exception e) {
                 logger.log(Level.SEVERE, "Process WebSocket Msg", e);
-                enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(e))));
+                enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(e))));
             }
         }
     }
@@ -341,7 +340,7 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws.setTextMessageSizeLimit(1024 * 1024);
+        ws.setTextMessageSizeLimit(5 * 1024 * 1024);
         ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 10 * 1024 * 1024);
         sessions.add(ws);
         whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getEstadoDriver().name(), ws);
