@@ -21,8 +21,6 @@ public class UsuarioContextCallable<T> implements Callable<T> {
     public T call() throws Exception {
         if (usuario != null) {
             UsuarioScopedContext.setUsuario(usuario);
-        } else {
-            logger.warn("Usuario Null");
         }
         try {
             return task.call();

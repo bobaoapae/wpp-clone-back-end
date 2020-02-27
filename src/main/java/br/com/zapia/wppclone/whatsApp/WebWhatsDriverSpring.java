@@ -13,7 +13,7 @@ import javax.annotation.PostConstruct;
 import javax.swing.*;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -58,13 +58,13 @@ public class WebWhatsDriverSpring {
         }
 
         @Override
-        public ScheduledThreadPoolExecutor getScheduler() {
-            return new UsuarioContextThreadPoolScheduler(usuario, 1000);
+        public ScheduledExecutorService getScheduler() {
+            return new UsuarioContextThreadPoolScheduler(usuario, 100);
         }
 
         @Override
         public ExecutorService getExecutorServiceInterno() {
-            return new UsuarioContextThreadPoolExecutor(usuario, 1000, Integer.MAX_VALUE,
+            return new UsuarioContextThreadPoolExecutor(usuario, 100, Integer.MAX_VALUE,
                     10L, TimeUnit.SECONDS,
                     new SynchronousQueue<>());
         }

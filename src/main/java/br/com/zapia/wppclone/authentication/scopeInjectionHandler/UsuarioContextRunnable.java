@@ -21,8 +21,6 @@ public class UsuarioContextRunnable implements Runnable {
     public void run() {
         if (usuario != null) {
             UsuarioScopedContext.setUsuario(usuario);
-        } else {
-            logger.warn("Usuario Null");
         }
         try {
             task.run();

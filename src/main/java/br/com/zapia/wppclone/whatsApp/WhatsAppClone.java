@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -413,7 +412,7 @@ public class WhatsAppClone {
     }
 
     public List<WebSocketSession> getSessions() {
-        return Collections.unmodifiableList(sessions);
+        return sessions.stream().filter(WebSocketSession::isOpen).collect(Collectors.toUnmodifiableList());
     }
 
     public WebWhatsDriver getDriver() {
