@@ -13,7 +13,7 @@ import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import modelo.Chat;
-import modelo.EstadoDriver;
+import modelo.DriverState;
 import modelo.MessageBuilder;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
@@ -65,11 +65,11 @@ public class UsuariosRestController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-    
+
     @PutMapping("/alterarNumero")
     public ResponseEntity<?> alterarNumero(@RequestParam("telefone") String telefone) {
         WhatsAppClone instanciaGeral = whatsAppCloneService.getInstanciaGeral();
-        if (instanciaGeral != null && instanciaGeral.getDriver().getEstadoDriver() == EstadoDriver.LOGGED) {
+        if (instanciaGeral != null && instanciaGeral.getDriver().getDriverState() == DriverState.LOGGED) {
             Chat novoNumero = instanciaGeral.getDriver().getFunctions().getChatByNumber(telefone).join();
             if (novoNumero != null) {
                 TrocaDeNumero trocaDeNumero = new TrocaDeNumero();

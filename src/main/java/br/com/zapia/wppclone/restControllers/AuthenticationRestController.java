@@ -14,7 +14,7 @@ import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import modelo.Chat;
-import modelo.EstadoDriver;
+import modelo.DriverState;
 import modelo.Message;
 import modelo.MessageBuilder;
 import org.modelmapper.ModelMapper;
@@ -107,7 +107,7 @@ public class AuthenticationRestController {
         if (usuario != null) {
             String novaSenha = Util.gerarSenha(10, false);
             WhatsAppClone instanciaGeral = whatsAppCloneService.getInstanciaGeral();
-            if (instanciaGeral != null && instanciaGeral.getDriver().getEstadoDriver() == EstadoDriver.LOGGED) {
+            if (instanciaGeral != null && instanciaGeral.getDriver().getDriverState() == DriverState.LOGGED) {
                 Chat chat = instanciaGeral.getDriver().getFunctions().getChatByNumber(usuario.getTelefone()).join();
                 if (chat != null) {
                     String oldHash = usuario.getSenha();
