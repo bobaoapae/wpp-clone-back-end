@@ -421,7 +421,6 @@ public class WhatsAppClone {
         }
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("controleChatsAsync");
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("serializadorWhatsApp");
-        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("webWhatsDriverSpring");
         for (WebSocketSession webSocketSession : getSessions()) {
             if (webSocketSession.isOpen()) {
                 try {
