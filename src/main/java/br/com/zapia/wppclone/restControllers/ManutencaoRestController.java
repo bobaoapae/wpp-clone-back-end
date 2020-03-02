@@ -47,6 +47,7 @@ public class ManutencaoRestController {
             usuario.setLogin("admin");
             usuario.setSenha(password);
             usuario.setNome("Administrador");
+            usuario.setTelefone("999999999");
             usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_SUPER_ADMIN"));
             usuariosService.salvar(usuario);
             return ResponseEntity.ok().body(password);

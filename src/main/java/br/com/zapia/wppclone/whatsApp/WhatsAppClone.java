@@ -16,6 +16,7 @@ import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.RateLimiter;
 import driver.WebWhatsDriver;
 import driver.WebWhatsDriverBuilder;
 import modelo.*;
@@ -105,6 +106,7 @@ public class WhatsAppClone {
     private Usuario usuarioResponsavelInstancia;
     private Supplier<ExecutorService> executorServiceSupplier;
     private Supplier<ScheduledExecutorService> scheduledExecutorServiceSupplier;
+    private RateLimiter rateLimiter;
 
 
     @PostConstruct
@@ -126,11 +128,11 @@ public class WhatsAppClone {
         });
         File file = new File(pathCacheWebWhats + getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
         if (!file.exists()) {
-            file.mkdir();
+            file.mkdirs();
         }
         file = new File(pathLogs + getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
         if (!file.exists()) {
-            file.mkdir();
+            file.mkdirs();
         }
         file = new File(pathBinarios);
         if (!file.exists()) {
@@ -217,6 +219,7 @@ public class WhatsAppClone {
         scheduledExecutorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 100);
         };
+        rateLimiter = RateLimiter.create(20);
         WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
         if (!headLess) {
             telaWhatsApp = new TelaWhatsApp();
@@ -269,6 +272,8 @@ public class WhatsAppClone {
         WebSocketSession finalSession = buscarWsDecorator(session);
         if (driver.getDriverState() != DriverState.LOGGED) {
             enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
+        } else if (!rateLimiter.tryAcquire(30, TimeUnit.SECONDS)) {
+            enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests, max allowed are 20 requests per second")));
         } else {
             try {
                 processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
