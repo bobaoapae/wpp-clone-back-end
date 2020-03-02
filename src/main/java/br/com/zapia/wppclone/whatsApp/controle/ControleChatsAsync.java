@@ -81,7 +81,15 @@ public class ControleChatsAsync {
     @PreDestroy
     public void finalizar() {
         for (ChatBotWppCloneSpring chatt : chats) {
-            chatt.getChatBotWppClone().finalizar();
+            try {
+                chatt.getChatBotWppClone().finalizar();
+            } catch (Exception e) {
+                logger.error("Finalizar Chat", e);
+            }
         }
+    }
+
+    public void clearAllChats() {
+        chats.clear();
     }
 }

@@ -140,6 +140,8 @@ public class WhatsAppClone {
         logger = Logger.getLogger(WhatsAppClone.class.getName());
         sessions = new ConcurrentArrayList<>();
         onConnect = () -> {
+            controleChatsAsync.clearAllChats();
+            driver.getFunctions().subscribeToLowBattery(onLowBaterry);
             driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
             driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD, false);
             driver.getFunctions().addChatListenner(chat -> {
@@ -221,7 +223,7 @@ public class WhatsAppClone {
             telaWhatsApp.setVisible(true);
             builder.renderInPanel(telaWhatsApp.getPanel());
         }
-        builder.runOnConnect(onConnect);
+        builder.onConnect(onConnect);
         builder.onChangeDriverState(onChangeEstadoDriver);
         builder.customExecutorService(executorServiceSupplier);
         builder.customScheduledExecutorService(scheduledExecutorServiceSupplier);
