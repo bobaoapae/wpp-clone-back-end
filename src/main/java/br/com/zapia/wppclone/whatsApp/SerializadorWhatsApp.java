@@ -118,7 +118,7 @@ public class SerializadorWhatsApp {
 
     private ObjectNode converterParaObjectNode(WhatsappObject whatsappObject) {
         try {
-            return (ObjectNode) objectMapper.readTree(utils.Util.callFunction(whatsappObject.getJsObject(), "toJSON").asObject().toJSONString());
+            return (ObjectNode) objectMapper.readTree(utils.Util.callFunction(whatsappObject.getDriver(), whatsappObject.getJsObject(), "toJSON").asObject().toJSONString());
         } catch (IOException e) {
             log.log(Level.SEVERE, "ConverterParaObjectNode", e);
             return null;

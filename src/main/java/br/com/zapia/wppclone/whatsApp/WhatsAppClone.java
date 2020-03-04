@@ -212,12 +212,12 @@ public class WhatsAppClone {
         };
         usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
         executorServiceSupplier = () -> {
-            return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 100, Integer.MAX_VALUE,
+            return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 10, 20,
                     10L, TimeUnit.SECONDS,
                     new SynchronousQueue<>());
         };
         scheduledExecutorServiceSupplier = () -> {
-            return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 100);
+            return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 10);
         };
         rateLimiter = RateLimiter.create(20);
         WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());

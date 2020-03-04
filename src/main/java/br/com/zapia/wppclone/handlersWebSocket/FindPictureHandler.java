@@ -28,11 +28,11 @@ public class FindPictureHandler extends HandlerWebSocket {
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         FindPictureRequest findPictureRequest = objectMapper.readValue((String) payload, FindPictureRequest.class);
-        return whatsAppClone.getDriver().getFunctions().getChatById(findPictureRequest.getId()).thenCompose(chat -> {
-            if (chat == null) {
+        return whatsAppClone.getDriver().getFunctions().getContactById(findPictureRequest.getId()).thenCompose(contact -> {
+            if (contact == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                return chat.getContact().getThumb(findPictureRequest.isFull()).thenApply(s -> {
+                return contact.getThumb(findPictureRequest.isFull()).thenApply(s -> {
                     if (!Strings.isNullOrEmpty(s)) {
                         try {
                             byte[] dearr = Base64.getDecoder().decode(s.split(",")[1]);
@@ -40,7 +40,7 @@ public class FindPictureHandler extends HandlerWebSocket {
                             MimeTypes allTypes = MimeTypes.getDefaultMimeTypes();
                             MimeType mime = allTypes.forName("image/jpeg");
                             String ex = mime.getExtension();
-                            File f = File.createTempFile(chat.getId(), extension);
+                            File f = File.createTempFile(contact.getId(), extension);
                             try (FileOutputStream fos = new FileOutputStream(f)) {
                                 fos.write(dearr);
                             }
