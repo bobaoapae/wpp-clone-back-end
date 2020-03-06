@@ -214,7 +214,7 @@ public class WhatsAppClone {
         executorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 10, 20,
                     10L, TimeUnit.SECONDS,
-                    new SynchronousQueue<>());
+                    new LinkedBlockingQueue<>());
         };
         scheduledExecutorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 10);

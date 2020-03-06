@@ -14,7 +14,7 @@ public class SeeChatHandler extends HandlerWebSocket {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                return chat.sendSeen().thenApply(aVoid -> {
+                return chat.sendSeen().thenApply(aBoolean -> {
                     return new WebSocketResponse(HttpStatus.OK);
                 });
             }
