@@ -34,4 +34,15 @@ public class ConfiguracaoUsuarioRestController {
         }
     }
 
+    @PostMapping("/toggleOperadorPodeExcluirMsg")
+    public ResponseEntity<?> toggleOperadorPodeExcluirMsg() {
+        Usuario usuario = usuariosService.buscar(this.usuario.getUsuario().getUuid());
+        usuario.getConfiguracao().setOperadorPodeExcluirMsg(!usuario.getConfiguracao().getOperadorPodeExcluirMsg());
+        if (usuariosService.salvar(usuario)) {
+            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 }

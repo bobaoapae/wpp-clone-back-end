@@ -18,7 +18,7 @@ public class DeleteMessageHandler extends HandlerWebSocket {
         return whatsAppClone.getDriver().getFunctions().getMessageById(deleteMessageRequest.getMsgId()).thenCompose(msg -> {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
-            } else {
+            } else if (!usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR") || usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getOperadorPodeExcluirMsg()) {
                 if (deleteMessageRequest.isFromAll()) {
                     return msg.revokeMessage().thenApply(value -> {
                         return new WebSocketResponse(value ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR);
@@ -28,6 +28,8 @@ public class DeleteMessageHandler extends HandlerWebSocket {
                         return new WebSocketResponse(value ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR);
                     });
                 }
+            } else {
+                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.FORBIDDEN));
             }
         });
     }

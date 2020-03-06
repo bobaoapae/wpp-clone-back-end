@@ -6,6 +6,7 @@ public class ConfiguracaoUsuarioResponseDTO {
 
     private UUID uuid;
     private boolean enviarNomeOperadores;
+    private boolean operadorPodeExcluirMsg;
 
     public UUID getUuid() {
         return uuid;
@@ -21,5 +22,13 @@ public class ConfiguracaoUsuarioResponseDTO {
 
     public void setEnviarNomeOperadores(boolean enviarNomeOperadores) {
         this.enviarNomeOperadores = enviarNomeOperadores;
+    }
+
+    public boolean isOperadorPodeExcluirMsg() {
+        return operadorPodeExcluirMsg;
+    }
+
+    public void setOperadorPodeExcluirMsg(boolean operadorPodeExcluirMsg) {
+        this.operadorPodeExcluirMsg = operadorPodeExcluirMsg;
     }
 }

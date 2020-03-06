@@ -14,9 +14,13 @@ public class ConfiguracaoUsuario extends Entidade {
     @NotNull
     @Column(nullable = false, columnDefinition = "boolean default false")
     private Boolean enviarNomeOperadores;
+    @NotNull
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean operadorPodeExcluirMsg;
 
     public ConfiguracaoUsuario() {
         enviarNomeOperadores = false;
+        operadorPodeExcluirMsg = true;
     }
 
     public Usuario getUsuario() {
@@ -33,5 +37,13 @@ public class ConfiguracaoUsuario extends Entidade {
 
     public void setEnviarNomeOperadores(Boolean enviarNomeOperadores) {
         this.enviarNomeOperadores = enviarNomeOperadores;
+    }
+
+    public Boolean getOperadorPodeExcluirMsg() {
+        return operadorPodeExcluirMsg;
+    }
+
+    public void setOperadorPodeExcluirMsg(Boolean operadorPodeExcluirMsg) {
+        this.operadorPodeExcluirMsg = operadorPodeExcluirMsg;
     }
 }

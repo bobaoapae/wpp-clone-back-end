@@ -201,4 +201,11 @@
                                  referencedTableName="usuario"
                                  validate="true"/>
     </changeSet>
+    <changeSet id="06032020-1" author="JOAO">
+        <addColumn tableName="configuracaousuario">
+            <column name="operadorpodeexcluirmsg" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
