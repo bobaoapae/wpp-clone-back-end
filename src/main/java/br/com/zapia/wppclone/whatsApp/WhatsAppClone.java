@@ -3,6 +3,7 @@ package br.com.zapia.wppclone.whatsApp;
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolExecutor;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolScheduler;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocket;
 import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wppclone.modelo.Usuario;
@@ -379,9 +380,9 @@ public class WhatsAppClone {
         }
     }
 
-    @Scheduled(fixedDelay = 120000, initialDelay = 240000)
+    @Scheduled(fixedDelay = 60000, initialDelay = 60000)
     public void finalizarQuandoInativo() {
-        if (!instanciaGeral && (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(10).isBefore(LocalDateTime.now())) || driver.getDriverState() == DriverState.WAITING_QR_CODE_SCAN)) {
+        if (!instanciaGeral && (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(1).isBefore(LocalDateTime.now())) || driver.getDriverState() == DriverState.WAITING_QR_CODE_SCAN)) {
             logger.info("Finalizar Instancia Inativa: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             shutdown();
         }
@@ -405,7 +406,10 @@ public class WhatsAppClone {
     }
 
     private void shutdown() {
-        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+        new Thread(() -> {
+            UsuarioScopedContext.setUsuario(usuarioResponsavelInstancia);
+            ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+        }).start();
     }
 
     public void setForceShutdown(boolean forceShutdown) {
@@ -415,7 +419,6 @@ public class WhatsAppClone {
     @PreDestroy
     public void preDestroy() {
         logger.info("Destroy WhatsAppClone");
-        driver.finalizar();
         if (telaWhatsApp != null) {
             telaWhatsApp.dispose();
         }
@@ -430,6 +433,7 @@ public class WhatsAppClone {
                 }
             }
         }
+        driver.finalizar();
         whatsAppCloneService.removerInstancia(this);
     }
 
