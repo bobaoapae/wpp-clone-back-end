@@ -169,6 +169,11 @@ public class UsuariosRestController {
         }
     }
 
+    @GetMapping("/self")
+    public ResponseEntity<?> verUsuarioLogado() {
+        return ResponseEntity.ok(modelMapper.map(usuariosService.buscar(usuario.getUsuario().getUuid()), UsuarioResponseDTO.class));
+    }
+
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
     @GetMapping
     public ResponseEntity<?> listarTodos() {
