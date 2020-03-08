@@ -1,6 +1,7 @@
 package br.com.zapia.wppclone.whatsApp;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextRunnable;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolExecutor;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolScheduler;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
@@ -222,7 +223,7 @@ public class WhatsAppClone {
 
                 @Override
                 public Thread newThread(Runnable r) {
-                    Thread thread = new Thread(r);
+                    Thread thread = new Thread(new UsuarioContextRunnable(r, usuarioResponsavelInstancia));
                     thread.setName("ExecutorWhatsDriver_" + id.getAndIncrement());
                     return thread;
                 }
