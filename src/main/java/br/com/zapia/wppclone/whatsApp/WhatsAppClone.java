@@ -52,6 +52,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -213,12 +214,22 @@ public class WhatsAppClone {
         };
         usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
         executorServiceSupplier = () -> {
-            return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 10, 20,
-                    10L, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>());
+            return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, Integer.MAX_VALUE, Integer.MAX_VALUE,
+                    10L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>(), new ThreadFactory() {
+
+                private final AtomicInteger id = new AtomicInteger(0);
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread thread = new Thread(r);
+                    thread.setName("ExecutorWhatsDriver_" + id.getAndIncrement());
+                    return thread;
+                }
+            });
         };
         scheduledExecutorServiceSupplier = () -> {
-            return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 10);
+            return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, Integer.MAX_VALUE);
         };
         rateLimiter = RateLimiter.create(20);
         WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
@@ -273,7 +284,7 @@ public class WhatsAppClone {
         WebSocketSession finalSession = buscarWsDecorator(session);
         if (driver.getDriverState() != DriverState.LOGGED) {
             enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
-        } else if (!rateLimiter.tryAcquire(30, TimeUnit.SECONDS)) {
+        } else if (!rateLimiter.tryAcquire()) {
             enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests, max allowed are 20 requests per second")));
         } else {
             try {
