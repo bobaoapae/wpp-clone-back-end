@@ -1,7 +1,6 @@
 package br.com.zapia.wppclone.whatsApp;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
-import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextRunnable;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolExecutor;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolScheduler;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
@@ -53,7 +52,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -217,17 +215,7 @@ public class WhatsAppClone {
         executorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, Integer.MAX_VALUE, Integer.MAX_VALUE,
                     10L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(), new ThreadFactory() {
-
-                private final AtomicInteger id = new AtomicInteger(0);
-
-                @Override
-                public Thread newThread(Runnable r) {
-                    Thread thread = new Thread(new UsuarioContextRunnable(r, usuarioResponsavelInstancia));
-                    thread.setName("ExecutorWhatsDriver_" + id.getAndIncrement());
-                    return thread;
-                }
-            });
+                    new LinkedBlockingQueue<>());
         };
         scheduledExecutorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, Integer.MAX_VALUE);
