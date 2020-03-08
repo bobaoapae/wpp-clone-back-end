@@ -18,7 +18,10 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickReplysHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkRecordingHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.PinChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.PongHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ResetHandler</value>
@@ -78,7 +81,10 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickReplysHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkRecordingHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.PinChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.PongHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ResetHandler</value>
