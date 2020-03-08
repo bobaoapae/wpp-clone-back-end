@@ -52,6 +52,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -215,7 +216,17 @@ public class WhatsAppClone {
         executorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, Integer.MAX_VALUE, Integer.MAX_VALUE,
                     10L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>());
+                    new LinkedBlockingQueue<>(), new ThreadFactory() {
+
+                private final AtomicInteger id = new AtomicInteger(0);
+
+                @Override
+                public Thread newThread(Runnable r) {
+                    Thread thread = new Thread(r);
+                    thread.setName("ExecutorWhatsDriver_" + id.getAndIncrement());
+                    return thread;
+                }
+            });
         };
         scheduledExecutorServiceSupplier = () -> {
             return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, Integer.MAX_VALUE);
