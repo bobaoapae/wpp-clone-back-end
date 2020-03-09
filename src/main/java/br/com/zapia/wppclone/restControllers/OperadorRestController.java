@@ -2,10 +2,7 @@ package br.com.zapia.wppclone.restControllers;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.modelo.dto.DTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioCreateDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioOperadorUpdateDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
+import br.com.zapia.wppclone.modelo.dto.*;
 import br.com.zapia.wppclone.servicos.OperadoresService;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
@@ -43,7 +40,7 @@ public class OperadorRestController {
         usuario.setLogin(usuario.getUsuarioPai().getLogin().concat("/").concat(usuario.getLogin()));
         usuario.setTelefone("000000000"); //TODO remover
         if (usuariosService.salvar(usuario)) {
-            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
+            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -84,7 +81,7 @@ public class OperadorRestController {
     @GetMapping
     public ResponseEntity<?> listarTodos() {
         List<Usuario> listar = usuariosService.listarOperadores(usuario.getUsuario());
-        return ResponseEntity.ok(modelMapper.map(listar, new TypeToken<List<UsuarioResponseDTO>>() {
+        return ResponseEntity.ok(modelMapper.map(listar, new TypeToken<List<UsuarioBasicResponseDTO>>() {
         }.getType()));
     }
 }

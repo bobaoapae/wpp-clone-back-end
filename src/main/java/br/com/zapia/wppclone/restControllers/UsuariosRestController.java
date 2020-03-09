@@ -3,10 +3,7 @@ package br.com.zapia.wppclone.restControllers;
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.modelo.TrocaDeNumero;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.modelo.dto.DTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioCreateDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioUpdateDTO;
+import br.com.zapia.wppclone.modelo.dto.*;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.TrocasDeNumerosService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
@@ -50,7 +47,7 @@ public class UsuariosRestController {
         usuario.setUsuarioPai(this.usuario.getUsuario());
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_USER"));
         if (usuariosService.salvar(usuario)) {
-            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
+            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -60,7 +57,7 @@ public class UsuariosRestController {
     @PutMapping
     public ResponseEntity<?> atualizarUsuario(@DTO(UsuarioUpdateDTO.class) Usuario usuario) {
         if (usuariosService.salvar(usuario)) {
-            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
+            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -171,7 +168,7 @@ public class UsuariosRestController {
 
     @GetMapping("/self")
     public ResponseEntity<?> verUsuarioLogado() {
-        return ResponseEntity.ok(modelMapper.map(usuariosService.buscar(usuario.getUsuario().getUuid()), UsuarioResponseDTO.class));
+        return ResponseEntity.ok(modelMapper.map(usuariosService.buscar(usuario.getUsuario().getUuid()), UsuarioBasicResponseDTO.class));
     }
 
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
