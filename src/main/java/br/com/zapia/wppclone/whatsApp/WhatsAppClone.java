@@ -214,7 +214,7 @@ public class WhatsAppClone {
         };
         usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
         executorServiceSupplier = () -> {
-            return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, Integer.MAX_VALUE, Integer.MAX_VALUE,
+            return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 50, 100,
                     10L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<>(), new ThreadFactory() {
 
@@ -229,7 +229,7 @@ public class WhatsAppClone {
             });
         };
         scheduledExecutorServiceSupplier = () -> {
-            return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, Integer.MAX_VALUE);
+            return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 50);
         };
         rateLimiter = RateLimiter.create(20);
         WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
