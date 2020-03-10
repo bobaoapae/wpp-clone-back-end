@@ -11,6 +11,7 @@ public class UsuarioBasicResponseDTO {
 
     private UUID uuid;
     private String nome;
+    private String login;
     private String telefone;
     private PermissaoResponseDTO permissao;
     private ConfiguracaoUsuarioResponseDTO configuracao;
@@ -72,5 +73,13 @@ public class UsuarioBasicResponseDTO {
 
     public void setConfiguracao(ConfiguracaoUsuarioResponseDTO configuracao) {
         this.configuracao = configuracao;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
     }
 }
