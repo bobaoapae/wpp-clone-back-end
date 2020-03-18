@@ -211,7 +211,7 @@ public class WhatsAppClone {
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
             executorServiceSupplier = () -> {
-                return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 50, 100,
+                return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 100, 200,
                         10L, TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>(), new ThreadFactory() {
 
@@ -235,6 +235,7 @@ public class WhatsAppClone {
             builder.customExecutorService(executorServiceSupplier);
             builder.customScheduledExecutorService(scheduledExecutorServiceSupplier);
             builder.onNeedQrCode(onNeedQrCode);
+            builder.headLess(false);
             builder.addErrorHandler(throwable -> {
                 logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
             });
@@ -283,8 +284,6 @@ public class WhatsAppClone {
         WebSocketSession finalSession = buscarWsDecorator(session);
         if (driver.getDriverState() != DriverState.LOGGED) {
             enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
-        } else if (!rateLimiter.tryAcquire()) {
-            enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.TOO_MANY_REQUESTS, "Too Many Requests, max allowed are 20 requests per second")));
         } else {
             try {
                 processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
