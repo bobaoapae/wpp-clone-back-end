@@ -42,8 +42,6 @@ import org.threadly.concurrent.collections.ConcurrentArrayList;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.mail.MessagingException;
-import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -86,7 +84,6 @@ public class WhatsAppClone {
     private ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch;
     private Runnable onConnect;
     private Runnable onDisconnect;
-    private TelaWhatsApp telaWhatsApp;
     @Value("${pathCacheWebWhats}")
     private String pathCacheWebWhats;
     @Value("${pathLogs}")
@@ -232,12 +229,7 @@ public class WhatsAppClone {
                 return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 50);
             };
             rateLimiter = RateLimiter.create(20);
-            WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
-            if (!headLess) {
-                telaWhatsApp = new TelaWhatsApp();
-                telaWhatsApp.setVisible(true);
-                builder.renderInPanel(telaWhatsApp.getPanel());
-            }
+            WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid(), pathBinarios);
             builder.onConnect(onConnect);
             builder.onChangeDriverState(onChangeEstadoDriver);
             builder.customExecutorService(executorServiceSupplier);
@@ -250,11 +242,8 @@ public class WhatsAppClone {
             whatsAppCloneService.adicionarInstancia(this);
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Init", e);
-            if (telaWhatsApp != null) {
-                telaWhatsApp.dispose();
-                if (driver != null) {
-                    driver.finalizar();
-                }
+            if (driver != null) {
+                driver.finalizar();
             }
             throw e;
         }
@@ -440,9 +429,6 @@ public class WhatsAppClone {
     @PreDestroy
     public void preDestroy() {
         logger.info("Destroy WhatsAppClone");
-        if (telaWhatsApp != null && telaWhatsApp.isVisible()) {
-            telaWhatsApp.dispose();
-        }
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("controleChatsAsync");
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("serializadorWhatsApp");
         for (WebSocketSession webSocketSession : getSessions()) {
@@ -495,28 +481,5 @@ public class WhatsAppClone {
         ERROR,
         CHAT_PICTURE,
         INIT
-    }
-
-    private class TelaWhatsApp extends JFrame {
-
-        private JPanel panel;
-
-        public TelaWhatsApp() {
-            this.setTitle(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getNome() + " - " + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
-            this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-            this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            this.getContentPane().setLayout(new BorderLayout());
-            this.setMinimumSize(new Dimension(800, 600));
-            this.setPreferredSize(new Dimension(800, 600));
-            panel = new JPanel(new BorderLayout());
-            this.add(panel);
-            pack();
-            this.setExtendedState(JFrame.ICONIFIED);
-            this.setLocationRelativeTo(null);
-        }
-
-        public JPanel getPanel() {
-            return panel;
-        }
     }
 }

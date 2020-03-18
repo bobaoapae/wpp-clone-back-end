@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 @HandlerWebSocketEvent(event = "downloadMedia")
 public class DownloadMediaHandler extends HandlerWebSocket {
@@ -21,11 +22,11 @@ public class DownloadMediaHandler extends HandlerWebSocket {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else if (msg instanceof MediaMessage) {
-                return ((MediaMessage) msg).downloadMedia(5).exceptionally(throwable -> {
+                return ((MediaMessage) msg).downloadMedia().orTimeout(5, TimeUnit.SECONDS).exceptionally(throwable -> {
                     return null;
                 }).thenCompose(file -> {
                     if (file == null) {
-                        return ((MediaMessage) msg).downloadMedia(20).exceptionally(throwable -> {
+                        return ((MediaMessage) msg).downloadMedia().orTimeout(1, TimeUnit.MINUTES).exceptionally(throwable -> {
                             return null;
                         });
                     } else {

@@ -9,7 +9,6 @@ import modelo.Message;
 import modelo.WhatsappObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-@Scope("usuario")
 @Service
 public class SerializadorWhatsApp {
 
@@ -40,7 +38,7 @@ public class SerializadorWhatsApp {
     @Async
     public CompletableFuture<ArrayNode> serializarAllQuickReplys() {
         try {
-            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().getBrowser().executeJavaScriptAndReturnValue("Store.QuickReply.toJSON()").asArray().toJSONString()));
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Store.QuickReply.toJSON()"))));
         } catch (JsonProcessingException e) {
             log.log(Level.SEVERE, "SerializarAllQuickReplys", e);
             return CompletableFuture.failedFuture(e);
@@ -50,7 +48,7 @@ public class SerializadorWhatsApp {
     @Async
     public CompletableFuture<ArrayNode> serializarAllChats() {
         try {
-            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().getBrowser().executeJavaScriptAndReturnValue("Store.Chat.toJSON()").asArray().toJSONString()));
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Store.Chat.toJSON()"))));
         } catch (JsonProcessingException e) {
             log.log(Level.SEVERE, "SerializarAllChats", e);
             return CompletableFuture.failedFuture(e);
@@ -60,7 +58,7 @@ public class SerializadorWhatsApp {
     @Async
     public CompletableFuture<ArrayNode> serializarAllContacts() {
         try {
-            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().getBrowser().executeJavaScriptAndReturnValue("Store.Contact.filter(e=> e.isWAContact && e.isMyContact).map(e=> e.toJSON())").asArray().toJSONString()));
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Store.Contact.filter(e=> e.isWAContact && e.isMyContact).map(e=> e.toJSON())"))));
         } catch (JsonProcessingException e) {
             log.log(Level.SEVERE, "SerializarAllContacts", e);
             return CompletableFuture.failedFuture(e);
@@ -118,7 +116,7 @@ public class SerializadorWhatsApp {
 
     private ObjectNode converterParaObjectNode(WhatsappObject whatsappObject) {
         try {
-            return (ObjectNode) objectMapper.readTree(utils.Util.callFunction(whatsappObject.getDriver(), whatsappObject.getJsObject(), "toJSON").asObject().toJSONString());
+            return (ObjectNode) objectMapper.readTree(whatsappObject.toJson());
         } catch (IOException e) {
             log.log(Level.SEVERE, "ConverterParaObjectNode", e);
             return null;

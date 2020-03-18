@@ -10,7 +10,6 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
-        <value>br.com.zapia.wppclone.handlersWebSocket.FindCustomPropertyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
@@ -39,18 +38,6 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent</value>
       </values>
     </entry>
-    <entry>
-      <key>java.lang.Comparable</key>
-      <values>
-        <value>com.fasterxml.jackson.core.type.TypeReference</value>
-      </values>
-    </entry>
-    <entry>
-      <key>com.fasterxml.jackson.core.type.TypeReference</key>
-      <values>
-        <value>br.com.zapia.wppclone.handlersWebSocket.FindCustomPropertyHandler$1</value>
-      </values>
-    </entry>
   </SubTypesScanner>
   <TypeAnnotationsScanner>
     <entry>
@@ -73,7 +60,6 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
-        <value>br.com.zapia.wppclone.handlersWebSocket.FindCustomPropertyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
