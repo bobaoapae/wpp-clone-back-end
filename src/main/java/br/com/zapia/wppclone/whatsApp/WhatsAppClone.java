@@ -137,14 +137,13 @@ public class WhatsAppClone {
             if (!file.exists()) {
                 file.mkdir();
             }
-            System.setProperty("jxbrowser.chromium.dir", pathBinarios);
             logger = Logger.getLogger(WhatsAppClone.class.getName());
             sessions = new ConcurrentArrayList<>();
             onConnect = () -> {
                 controleChatsAsync.clearAllChats();
                 driver.getFunctions().subscribeToLowBattery(onLowBaterry);
                 driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
-                driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD, false);
+                driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD);
                 driver.getFunctions().addChatListenner(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
