@@ -87,6 +87,7 @@ public class ControleChatsAsync {
                 logger.error("Finalizar Chat", e);
             }
         }
+        chats.clear();
     }
 
     public void clearAllChats() {
