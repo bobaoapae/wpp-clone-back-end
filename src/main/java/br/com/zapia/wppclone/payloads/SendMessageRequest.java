@@ -4,15 +4,13 @@ public class SendMessageRequest {
 
     private String chatId;
     private String message;
-    private String media;
-    private String fileName;
+    private String fileUUID;
     private String quotedMsg;
 
     public SendMessageRequest() {
         chatId = "";
         message = "";
-        media = "";
-        fileName = "";
+        fileUUID = "";
         quotedMsg = "";
     }
 
@@ -32,20 +30,12 @@ public class SendMessageRequest {
         this.message = message;
     }
 
-    public String getMedia() {
-        return media;
+    public String getFileUUID() {
+        return fileUUID;
     }
 
-    public void setMedia(String media) {
-        this.media = media;
-    }
-
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFileUUID(String fileUUID) {
+        this.fileUUID = fileUUID;
     }
 
     public String getQuotedMsg() {
