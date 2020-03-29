@@ -6,15 +6,15 @@ import org.springframework.http.HttpStatus;
 
 import java.util.concurrent.CompletableFuture;
 
-@HandlerWebSocketEvent(event = "unPinChat")
-public class UnPinChatHandler extends HandlerWebSocket {
+@HandlerWebSocketEvent(event = "deleteChat")
+public class DeleteChatHandler extends HandlerWebSocket {
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) {
         return whatsAppClone.getDriver().getFunctions().getChatById((String) payload).thenCompose(chat -> {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                return chat.setPin(false).thenApply(aVoid -> {
+                return chat.deleteChat().thenApply(aVoid -> {
                     return new WebSocketResponse(HttpStatus.OK);
                 });
             }
