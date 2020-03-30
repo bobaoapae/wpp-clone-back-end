@@ -2,6 +2,7 @@ package br.com.zapia.wppclone.configs;
 
 import br.com.zapia.wppclone.utils.DTOModelMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -16,16 +17,18 @@ import java.util.List;
 public class WebMvcConfig implements WebMvcConfigurer {
     private final ApplicationContext applicationContext;
     private final EntityManager entityManager;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public WebMvcConfig(ApplicationContext applicationContext, EntityManager entityManager) {
+    public WebMvcConfig(ApplicationContext applicationContext, EntityManager entityManager, ModelMapper modelMapper) {
         this.applicationContext = applicationContext;
         this.entityManager = entityManager;
+        this.modelMapper = modelMapper;
     }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         ObjectMapper objectMapper = Jackson2ObjectMapperBuilder.json().applicationContext(this.applicationContext).build();
-        argumentResolvers.add(new DTOModelMapper(objectMapper, entityManager));
+        argumentResolvers.add(new DTOModelMapper(objectMapper, entityManager, modelMapper));
     }
 }

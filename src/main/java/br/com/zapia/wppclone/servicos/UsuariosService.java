@@ -11,7 +11,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -28,14 +27,15 @@ public class UsuariosService extends CRUDService<Usuario> implements UserDetails
 
     @Override
     public UserDetails loadUserByUsername(String login) throws UsernameNotFoundException {
-        Usuario usuario = usuariosRepository.buscarUsuarioPorLogin(login);
-        UsuarioAuthentication usuarioAuthentication = new UsuarioAuthentication();
-        usuarioAuthentication.setSenha(usuario.getSenha());
-        usuarioAuthentication.setLogin(usuario.getLogin());
-        usuarioAuthentication.setUuid(usuario.getUuid());
-        usuarioAuthentication.setNome(usuario.getNome());
-        usuarioAuthentication.setAuthorities(Arrays.asList(usuario.getPermissao()));
-        return usuarioAuthentication;
+        Usuario usuario = buscarUsuarioPorLogin(login);
+        if (usuario == null) {
+            throw new UsernameNotFoundException(login);
+        }
+        return new UsuarioAuthentication(usuario);
+    }
+
+    public Usuario buscarUsuarioPorLogin(String login) {
+        return usuariosRepository.buscarUsuarioPorLogin(login);
     }
 
     public List<Usuario> listarUsuariosFilhos(Usuario usuarioPai) {

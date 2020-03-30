@@ -1,6 +1,7 @@
 package br.com.zapia.wppclone.restControllers;
 
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
+import br.com.zapia.wppclone.authentication.UsuarioAuthentication;
 import br.com.zapia.wppclone.modelo.Permissao;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.LoginRequest;
@@ -49,7 +50,9 @@ public class AuthenticationRestController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String jwt = tokenProvider.generateToken(authentication);
+        UsuarioAuthentication userPrincipal = (UsuarioAuthentication) authentication.getPrincipal();
+
+        String jwt = tokenProvider.generateToken(userPrincipal);
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setToken(jwt);
         return ResponseEntity.ok(loginResponse);

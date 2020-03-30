@@ -2,10 +2,7 @@ package br.com.zapia.wppclone.restControllers;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.modelo.dto.DTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioCreateDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
-import br.com.zapia.wppclone.modelo.dto.UsuarioUpdateDTO;
+import br.com.zapia.wppclone.modelo.dto.*;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
@@ -42,7 +39,7 @@ public class UsuariosRestController {
         usuario.setUsuarioPai(this.usuario.getUsuario());
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_USER"));
         if (usuariosService.salvar(usuario)) {
-            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
+            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -52,7 +49,7 @@ public class UsuariosRestController {
     @PutMapping
     public ResponseEntity<?> atualizarUsuario(@DTO(UsuarioUpdateDTO.class) Usuario usuario) {
         if (usuariosService.salvar(usuario)) {
-            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
+            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -123,6 +120,11 @@ public class UsuariosRestController {
         }
     }
 
+    @GetMapping("/self")
+    public ResponseEntity<?> verUsuarioLogado() {
+        return ResponseEntity.ok(modelMapper.map(usuariosService.buscar(usuario.getUsuario().getUuid()), UsuarioBasicResponseDTO.class));
+    }
+
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
     @GetMapping
     public ResponseEntity<?> listarTodos() {
@@ -148,7 +150,7 @@ public class UsuariosRestController {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
         } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("A senha atual informada não é válida.");
         }
     }
 }
