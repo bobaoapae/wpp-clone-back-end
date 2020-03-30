@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 @HandlerWebSocketEvent(event = "downloadMedia")
@@ -20,9 +21,13 @@ public class DownloadMediaHandler extends HandlerWebSocket {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else if (msg instanceof MediaMessage) {
-                return ((MediaMessage) msg).downloadMedia(5).thenCompose(file -> {
+                return ((MediaMessage) msg).downloadMedia().orTimeout(5, TimeUnit.SECONDS).exceptionally(throwable -> {
+                    return null;
+                }).thenCompose(file -> {
                     if (file == null) {
-                        return ((MediaMessage) msg).downloadMedia(20);
+                        return ((MediaMessage) msg).downloadMedia().orTimeout(1, TimeUnit.MINUTES).exceptionally(throwable -> {
+                            return null;
+                        });
                     } else {
                         return CompletableFuture.completedFuture(file);
                     }

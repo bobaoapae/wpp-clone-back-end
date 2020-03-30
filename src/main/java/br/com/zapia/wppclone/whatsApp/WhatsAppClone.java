@@ -1,6 +1,9 @@
 package br.com.zapia.wppclone.whatsApp;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolExecutor;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextThreadPoolScheduler;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocket;
 import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wppclone.modelo.Usuario;
@@ -8,14 +11,12 @@ import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
-import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import driver.WebWhatsDriver;
+import driver.WebWhatsDriverBuilder;
 import modelo.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.quartz.Scheduler;
@@ -40,19 +41,16 @@ import org.threadly.concurrent.collections.ConcurrentArrayList;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.mail.MessagingException;
-import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -71,8 +69,6 @@ public class WhatsAppClone {
     @Autowired
     private WhatsAppClone whatsAppClone;
     @Autowired
-    private WebWhatsDriverSpring webWhatsDriverSpring;
-    @Autowired
     private ApplicationContext ap;
     @Autowired
     private WhatsAppCloneService whatsAppCloneService;
@@ -82,15 +78,14 @@ public class WhatsAppClone {
     private Logger logger;
     private StdSchedulerFactory schedulerFactory;
     private WebWhatsDriver driver;
-    private ActionOnNeedQrCode onNeedQrCode;
-    private ActionOnLowBattery onLowBaterry;
-    private ActionOnErrorInDriver onErrorInDriver;
-    private ActionOnChangeEstadoDriver onChangeEstadoDriver;
+    private Consumer<String> onNeedQrCode;
+    private Consumer<Integer> onLowBaterry;
+    private Consumer<Throwable> onErrorInDriver;
+    private Consumer<DriverState> onChangeEstadoDriver;
     private ActionOnWhatsAppVersionMismatch onWhatsAppVersionMismatch;
     private Runnable onConnect;
     private Runnable onDisconnect;
     private Scheduler scheduler;
-    private TelaWhatsApp telaWhatsApp;
     @Value("${pathCacheWebWhats}")
     private String pathCacheWebWhats;
     @Value("${pathLogs}")
@@ -99,117 +94,151 @@ public class WhatsAppClone {
     private String pathBinarios;
     @Value("${headLess}")
     private boolean headLess;
-    @Value("${forceBeta}")
-    private boolean forceBeta;
+    private boolean forceShutdown;
     private ObjectMapper objectMapper;
     private Map<String, HandlerWebSocket> handlers;
     private LocalDateTime lastTimeWithSessions;
+    private Usuario usuarioResponsavelInstancia;
+    private Supplier<ExecutorService> executorServiceSupplier;
+    private Supplier<ScheduledExecutorService> scheduledExecutorServiceSupplier;
 
 
     @PostConstruct
-    public void init() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        objectMapper = new ObjectMapper();
-        handlers = new ConcurrentHashMap<>();
-        Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
-        declaredConstructor.setAccessible(true);
-        declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
-            try {
-                handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), ap.getBean((Class<HandlerWebSocket>) aClass));
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "Init Handlers", e);
-            }
-        });
-        File file = new File(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid());
-        if (!file.exists()) {
-            file.mkdir();
-        }
-        file = new File(pathLogs + usuarioPrincipalAutoWired.getUsuario().getUuid());
-        if (!file.exists()) {
-            file.mkdir();
-        }
-        file = new File(pathBinarios);
-        if (!file.exists()) {
-            file.mkdir();
-        }
-        System.setProperty("jxbrowser.chromium.dir", pathBinarios);
-        logger = Logger.getLogger(WhatsAppClone.class.getName());
-        sessions = new ConcurrentArrayList<>();
-        onConnect = () -> {
-            driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
-            driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD, false);
-            driver.getFunctions().addChatListenner(chat -> {
-                enviarEventoWpp(TipoEventoWpp.NEW_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            }, EventType.ADD);
-            driver.getFunctions().addChatListenner(chat -> {
-                enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime");
-            driver.getFunctions().addChatListenner(chat -> {
-                enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, Util.pegarResultadoFuture(serializadorWhatsApp.serializarChat(chat)));
-            }, EventType.REMOVE);
-            driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
-                @Override
-                public void run(Message m) {
-                    enviarEventoWpp(TipoEventoWpp.NEW_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
-                }
-            }, EventType.ADD);
-            driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
-                @Override
-                public void run(Message m) {
-                    enviarEventoWpp(TipoEventoWpp.REMOVE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
-                }
-            }, EventType.REMOVE);
-            driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
-                @Override
-                public void run(Message m) {
-                    enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, Util.pegarResultadoFuture(serializadorWhatsApp.serializarMsg(m)));
-                }
-            }, EventType.CHANGE, "ack", "isRevoked", "oldId");
-        };
-        onLowBaterry = (e) -> {
-            enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e + "");
-        };
-        onNeedQrCode = (e) -> {
-            enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
-        };
-        onErrorInDriver = (e) -> {
-            logger.log(Level.SEVERE, e.getMessage(), e);
-            enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e));
-        };
-        onChangeEstadoDriver = (e) -> {
-            enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
-        };
-        onWhatsAppVersionMismatch = (min, max, actual) -> {
-            try {
-                sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
-                        "" + usuarioPrincipalAutoWired.getUsuario().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
-                        "\n" +
-                        "Versão Min da Lib: " + min.toString() + "\n" +
-                        "Versão Max da Lib: " + max.toString() + "\n" +
-                        "Versão Atual do WhatsApp: " + actual.toString());
-            } catch (MessagingException e) {
-                logger.log(Level.SEVERE, "Envio de Email", e);
-            }
-        };
-        if (!headLess) {
-            telaWhatsApp = new TelaWhatsApp();
-            telaWhatsApp.setVisible(true);
-            this.driver = webWhatsDriverSpring.initialize(telaWhatsApp.getPanel(), pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
-        } else {
-            this.driver = webWhatsDriverSpring.initialize(pathCacheWebWhats + usuarioPrincipalAutoWired.getUsuario().getUuid(), forceBeta, false, onConnect, onNeedQrCode, onErrorInDriver, onLowBaterry, onDisconnect, onChangeEstadoDriver, onWhatsAppVersionMismatch);
-        }
-        schedulerFactory = new StdSchedulerFactory();
-        Properties properties = new Properties();
-        properties.put("org.quartz.scheduler.instanceName", "WppWebClone" + usuarioPrincipalAutoWired.getUsuario().getUuid());
-        properties.put("org.quartz.scheduler.instanceId", "AUTO");
-        properties.put("org.quartz.threadPool.threadCount", "2");
+    public void init() throws Exception {
         try {
-            schedulerFactory.initialize(properties);
-            scheduler = schedulerFactory.getScheduler();
-            scheduler.start();
+            objectMapper = new ObjectMapper();
+            handlers = new ConcurrentHashMap<>();
+            Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
+            declaredConstructor.setAccessible(true);
+            declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
+                try {
+                    handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), ap.getBean((Class<HandlerWebSocket>) aClass));
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Init Handlers", e);
+                }
+            });
+            File file = new File(pathCacheWebWhats + getUsuario().getUuid());
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            file = new File(pathLogs + getUsuario().getUuid());
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+            file = new File(pathBinarios);
+            if (!file.exists()) {
+                file.mkdir();
+            }
+            logger = Logger.getLogger(WhatsAppClone.class.getName());
+            sessions = new ConcurrentArrayList<>();
+            usuarioResponsavelInstancia = getUsuario();
+            onConnect = () -> {
+                controleChatsAsync.clearAllChats();
+                driver.getFunctions().subscribeToLowBattery(onLowBaterry);
+                driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
+                driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD);
+                driver.getFunctions().addChatListenner(chat -> {
+                    serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
+                        enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
+                    });
+                }, EventType.ADD);
+                driver.getFunctions().addChatListenner(chat -> {
+                    serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
+                        enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, jsonNodes);
+                    });
+                }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime", "customProperties");
+                driver.getFunctions().addChatListenner(chat -> {
+                    serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
+                        enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, jsonNodes);
+                    });
+                }, EventType.REMOVE);
+                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                    @Override
+                    public void run(Message m) {
+                        serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
+                            enviarEventoWpp(TipoEventoWpp.NEW_MSG, jsonNodes);
+                        });
+                    }
+                }, EventType.ADD);
+                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                    @Override
+                    public void run(Message m) {
+                        serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
+                            enviarEventoWpp(TipoEventoWpp.REMOVE_MSG, jsonNodes);
+                        });
+                    }
+                }, EventType.REMOVE);
+                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                    @Override
+                    public void run(Message m) {
+                        serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
+                            enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, jsonNodes);
+                        });
+                    }
+                }, EventType.CHANGE, "ack", "isRevoked", "oldId", "customProperties");
+            };
+            onLowBaterry = (e) -> {
+                enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e);
+            };
+            onNeedQrCode = (e) -> {
+                enviarEventoWpp(TipoEventoWpp.NEED_QRCODE, e);
+            };
+            onChangeEstadoDriver = (e) -> {
+                enviarEventoWpp(TipoEventoWpp.UPDATE_ESTADO, e.name());
+            };
+            onDisconnect = () -> {
+                enviarEventoWpp(TipoEventoWpp.DISCONNECT, "Falha ao Conectar ao Telefone");
+            };
+            onWhatsAppVersionMismatch = (minVersion, maxVersion, actual) -> {
+                try {
+                    sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
+                            "" + usuarioPrincipalAutoWired.getUsuario().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
+                            "\n" +
+                            "Versão Mínima da Lib: " + minVersion.toString() + "\n" +
+                            "Versão Máxima da Lib: " + maxVersion.toString() + "\n" +
+                            "Versão Atual do WhatsApp: " + actual.toString());
+                } catch (MessagingException e) {
+                    logger.log(Level.SEVERE, "Envio de Email", e);
+                }
+            };
+            executorServiceSupplier = () -> {
+                return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 100, 200,
+                        10L, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(), new ThreadFactory() {
+
+                    private final AtomicInteger id = new AtomicInteger(0);
+
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        Thread thread = new Thread(r);
+                        thread.setName("ExecutorWhatsDriver_" + id.getAndIncrement());
+                        return thread;
+                    }
+                });
+            };
+            scheduledExecutorServiceSupplier = () -> {
+                return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 50);
+            };
+            WebWhatsDriverBuilder builder = new WebWhatsDriverBuilder(pathCacheWebWhats + usuarioResponsavelInstancia.getUuid(), pathBinarios);
+            builder.onConnect(onConnect);
+            builder.onChangeDriverState(onChangeEstadoDriver);
+            builder.customExecutorService(executorServiceSupplier);
+            builder.customScheduledExecutorService(scheduledExecutorServiceSupplier);
+            builder.onNeedQrCode(onNeedQrCode);
+            builder.headLess(false);
+            builder.customTitle("WhatsApp Web - " + usuarioResponsavelInstancia.getNome());
+            builder.addErrorHandler(throwable -> {
+                logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
+            });
+            driver = builder.build();
+            whatsAppCloneService.adicionarInstancia(this);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            logger.log(Level.SEVERE, "Init", e);
+            if (driver != null) {
+                driver.finalizar();
+            }
+            throw e;
         }
-        whatsAppCloneService.adicionarInstancia(this);
     }
 
     private void enviarParaWs(WebSocketSession ws, WsMessage message) {
@@ -242,15 +271,25 @@ public class WhatsAppClone {
     @Async
     public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
         lastTimeWithSessions = LocalDateTime.now();
-        if (driver.getEstadoDriver() != EstadoDriver.LOGGED) {
-            enviarParaWs(session, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
+        WebSocketSession finalSession = buscarWsDecorator(session);
+        if (driver.getDriverState() != DriverState.LOGGED) {
+            enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
         } else {
             try {
                 processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
-                    enviarParaWs(session, new WsMessage(webSocketRequest, webSocketResponse));
+                    try {
+                        enviarParaWs(finalSession, new WsMessage(webSocketRequest, webSocketResponse));
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }).exceptionally(throwable -> {
+                    logger.log(Level.SEVERE, "Process WebSocket Msg", throwable);
+                    enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(throwable))));
+                    return null;
                 });
             } catch (Exception e) {
-                enviarEventoWpp(TipoEventoWpp.ERROR, e);
+                logger.log(Level.SEVERE, "Process WebSocket Msg", e);
+                enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, ExceptionUtils.getMessage(e))));
             }
         }
     }
@@ -269,7 +308,6 @@ public class WhatsAppClone {
         }
     }
 
-    @Async
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado) {
         getSessions().forEach(webSocketSession -> whatsAppClone.enviarEventoWpp(tipoEventoWpp, dado, webSocketSession));
     }
@@ -277,49 +315,28 @@ public class WhatsAppClone {
     @Async
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
         enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
-        if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getEstadoDriver() == EstadoDriver.LOGGED) {
+        if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getDriverState() == DriverState.LOGGED) {
             sendInit(ws);
         }
     }
 
-    public void sendInit(WebSocketSession ws) {
-        driver.getFunctions().getMyChat().thenCompose(chat -> {
-            if (chat != null) {
+    private void sendInit(WebSocketSession ws) {
+        try {
+            Chat myChat = driver.getFunctions().getMyChat().get(10, TimeUnit.SECONDS);
+            if (myChat != null) {
+                boolean isBussiness = driver.getFunctions().isBusiness().join();
                 ObjectNode dados = objectMapper.createObjectNode();
-                return serializadorWhatsApp.serializarChat(chat, true).thenAccept(jsonNodes -> {
-                    dados.putObject("self").setAll(jsonNodes);
-                }).thenCompose(aVoid -> driver.getFunctions().isBusiness()).thenCompose(value -> {
-                    if (value) {
-                        return driver.getFunctions().getStoreObjectByName("QuickReply").thenAccept(jsObject -> {
-                            try {
-                                dados.putArray("quickReplys").addAll((ArrayNode) objectMapper.readTree(jsObject.toJSONString()));
-                            } catch (Exception e) {
-                                logger.log(Level.SEVERE, "Serialize QuickReplys", e);
-                            }
-                        });
-                    } else {
-                        return CompletableFuture.completedFuture(null);
-                    }
-                }).thenCompose(aVoid -> {
-                    return serializadorWhatsApp.serializarAllContacts().thenAccept(jsonNodes -> {
-                        dados.putArray("contacts").addAll(jsonNodes);
-                    }).thenCompose(aVoid1 -> serializadorWhatsApp.serializarAllChats()).thenAccept(jsonNodes -> {
-                        dados.putArray("chats").addAll(jsonNodes);
-                    });
-                }).thenApply(aVoid -> {
-                    try {
-                        return objectMapper.writeValueAsString(dados);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                dados.putObject("self").setAll(serializadorWhatsApp.serializarChat(myChat, true).join());
+                dados.put("isBussiness", isBussiness);
+                whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             } else {
                 driver.reiniciar();
-                return CompletableFuture.completedFuture("My Chat null");
+                whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, "My Chat Null", ws);
             }
-        }).thenAccept(s -> {
-            whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, s, ws);
-        });
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "SendInit", e);
+            whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, ExceptionUtils.getStackTrace(e), ws);
+        }
     }
 
     @Async
@@ -328,10 +345,10 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws.setTextMessageSizeLimit(100 * 1024 * 1024);
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 80 * 1024 * 1024);
+        ws.setTextMessageSizeLimit(5 * 1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 10 * 1024 * 1024);
         sessions.add(ws);
-        whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getEstadoDriver().name(), ws);
+        whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getDriverState().name(), ws);
     }
 
     public void removerSession(WebSocketSession ws) {
@@ -345,10 +362,18 @@ public class WhatsAppClone {
         }
     }
 
-    @Scheduled(fixedDelay = 120000, initialDelay = 240000)
+    @Scheduled(fixedDelay = 60000, initialDelay = 60000)
     public void finalizarQuandoInativo() {
-        if (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(10).isBefore(LocalDateTime.now())) || driver.getEstadoDriver() == EstadoDriver.WAITING_QR_CODE_SCAN) {
-            logger.info("Finalizar Instancia Inativa: " + usuarioPrincipalAutoWired.getUsuario().getLogin());
+        if ((getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(5).isBefore(LocalDateTime.now())) || driver.getDriverState() == DriverState.WAITING_QR_CODE_SCAN)) {
+            logger.info("Finalizar Instancia Inativa: " + usuarioResponsavelInstancia.getLogin());
+            shutdown();
+        }
+    }
+
+    @Scheduled(fixedDelay = 10000, initialDelay = 0)
+    public void finalizarSeForcado() {
+        if (!usuarioResponsavelInstancia.isAtivo() || forceShutdown) {
+            logger.info("Finalizar Instancia Forçada: " + usuarioResponsavelInstancia.getLogin());
             shutdown();
         }
     }
@@ -356,26 +381,28 @@ public class WhatsAppClone {
     @Scheduled(fixedDelay = 5000, initialDelay = 5000)
     public void checkPresence() {
         if (getSessions().isEmpty()) {
-            if (driver.getEstadoDriver() == EstadoDriver.LOGGED) {
+            if (driver.getDriverState() == DriverState.LOGGED) {
                 driver.getFunctions().sendPresenceUnavailable();
             }
         }
     }
 
-    public void shutdown() {
-        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+    private void shutdown() {
+        new Thread(() -> {
+            UsuarioScopedContext.setUsuario(usuarioResponsavelInstancia);
+            ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("whatsAppClone");
+        }).start();
+    }
+
+    public void setForceShutdown(boolean forceShutdown) {
+        this.forceShutdown = forceShutdown;
     }
 
     @PreDestroy
     public void preDestroy() {
         logger.info("Destroy WhatsAppClone");
-        driver.finalizar();
-        if (telaWhatsApp != null) {
-            telaWhatsApp.dispose();
-        }
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("controleChatsAsync");
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("serializadorWhatsApp");
-        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("webWhatsDriverSpring");
         for (WebSocketSession webSocketSession : getSessions()) {
             if (webSocketSession.isOpen()) {
                 try {
@@ -385,11 +412,12 @@ public class WhatsAppClone {
                 }
             }
         }
+        driver.finalizar();
         whatsAppCloneService.removerInstancia(this);
     }
 
     public List<WebSocketSession> getSessions() {
-        return Collections.unmodifiableList(sessions);
+        return sessions.stream().filter(WebSocketSession::isOpen).collect(Collectors.toUnmodifiableList());
     }
 
     public WebWhatsDriver getDriver() {
@@ -421,31 +449,9 @@ public class WhatsAppClone {
         LOW_BATTERY,
         NEED_QRCODE,
         UPDATE_ESTADO,
+        DISCONNECT,
         ERROR,
         CHAT_PICTURE,
         INIT
-    }
-
-    private class TelaWhatsApp extends JFrame {
-
-        private JPanel panel;
-
-        public TelaWhatsApp() {
-            this.setTitle(usuarioPrincipalAutoWired.getUsuario().getNome() + " - " + usuarioPrincipalAutoWired.getUsuario().getLogin());
-            this.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-            this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            this.getContentPane().setLayout(new BorderLayout());
-            this.setMinimumSize(new Dimension(800, 600));
-            this.setPreferredSize(new Dimension(800, 600));
-            panel = new JPanel(new BorderLayout());
-            this.add(panel);
-            pack();
-            this.setExtendedState(JFrame.ICONIFIED);
-            this.setLocationRelativeTo(null);
-        }
-
-        public JPanel getPanel() {
-            return panel;
-        }
     }
 }

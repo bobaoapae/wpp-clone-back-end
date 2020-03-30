@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 public class ResetHandler extends HandlerWebSocket {
     @Override
     public CompletableFuture<WebSocketResponse> handle(Object payload) {
-        whatsAppClone.shutdown();
+        whatsAppClone.setForceShutdown(true);
         return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.OK));
     }
 }
