@@ -7,6 +7,7 @@
       <values>
         <value>br.com.zapia.wppclone.handlersWebSocket.AddCustomPropertyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ChangeProfilePicHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
@@ -58,7 +59,8 @@
       <values>
         <value>br.com.zapia.wppclone.handlersWebSocket.AddCustomPropertyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ChangeProfilePicHandler</value>
-          <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
