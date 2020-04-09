@@ -235,7 +235,6 @@ public class WhatsAppClone {
             builder.customScheduledExecutorService(scheduledExecutorServiceSupplier);
             builder.onNeedQrCode(onNeedQrCode);
             builder.headLess(headLess);
-            builder.forceBeta(true);
             builder.addErrorHandler(throwable -> {
                 logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
             });
