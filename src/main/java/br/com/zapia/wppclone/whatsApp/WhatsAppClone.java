@@ -41,7 +41,6 @@ import org.threadly.concurrent.collections.ConcurrentArrayList;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.mail.MessagingException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -204,7 +203,7 @@ public class WhatsAppClone {
                             "Versão Mínima da Lib: " + minVersion.toString() + "\n" +
                             "Versão Máxima da Lib: " + maxVersion.toString() + "\n" +
                             "Versão Atual do WhatsApp: " + actual.toString());
-                } catch (MessagingException e) {
+                } catch (Exception e) {
                     logger.log(Level.SEVERE, "Envio de Email", e);
                 }
             };
