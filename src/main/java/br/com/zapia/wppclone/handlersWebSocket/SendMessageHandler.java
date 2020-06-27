@@ -50,7 +50,11 @@ public class SendMessageHandler extends HandlerWebSocket {
                             });
                         } else {
                             File file = uploadFileService.getFileUploaded(sendMessageRequest.getFileUUID());
-                            return chat.sendFile(file, file.getName().split("#")[0], captionImage).thenCompose(mediaMessage -> {
+                            String fileName = file.getName().split("#")[0];
+                            if (sendMessageRequest.getMessage().equalsIgnoreCase("sticker")) {
+                                fileName += ".webp";
+                            }
+                            return chat.sendFile(file, fileName, captionImage).thenCompose(mediaMessage -> {
                                 uploadFileService.removeFileUploaded(sendMessageRequest.getFileUUID());
                                 return mediaMessage.addCustomProperty("usuario", usuario.getUuid().toString()).thenApply(jsValue -> {
                                     return new WebSocketResponse(HttpStatus.OK, mediaMessage.toJson());
