@@ -40,7 +40,7 @@ public class SerializadorWhatsApp {
     @Async
     public CompletableFuture<ArrayNode> serializarAllQuickReplys() {
         try {
-            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Store.QuickReply.toJSON()"))));
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Array.from(Store.QuickReply.toJSON())"))));
         } catch (JsonProcessingException e) {
             log.log(Level.SEVERE, "SerializarAllQuickReplys", e);
             return CompletableFuture.failedFuture(e);
