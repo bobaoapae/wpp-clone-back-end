@@ -140,7 +140,7 @@ public class WhatsAppClone {
             sessions = new ConcurrentArrayList<>();
             onConnect = () -> {
                 try {
-                    Thread.sleep(8000);
+                    Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "OnConnect", e);
                 }
