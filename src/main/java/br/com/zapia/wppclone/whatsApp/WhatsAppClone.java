@@ -139,6 +139,11 @@ public class WhatsAppClone {
             logger = Logger.getLogger(WhatsAppClone.class.getName());
             sessions = new ConcurrentArrayList<>();
             onConnect = () -> {
+                try {
+                    Thread.sleep(8000);
+                } catch (InterruptedException e) {
+                    logger.log(Level.SEVERE, "OnConnect", e);
+                }
                 controleChatsAsync.clearAllChats();
                 driver.getFunctions().subscribeToLowBattery(onLowBaterry);
                 driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
@@ -371,8 +376,8 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws.setTextMessageSizeLimit(5 * 1024 * 1024);
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 10 * 1024 * 1024);
+        ws.setTextMessageSizeLimit(20 * 1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 40 * 1024 * 1024);
         sessions.add(ws);
         whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getDriverState().name(), ws);
     }
