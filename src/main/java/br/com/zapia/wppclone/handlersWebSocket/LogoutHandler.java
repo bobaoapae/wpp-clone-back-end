@@ -11,6 +11,7 @@ public class LogoutHandler extends HandlerWebSocket {
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) {
         return whatsAppClone.logout().thenApply(aVoid -> {
+            whatsAppClone.setForceShutdown(true);
             return new WebSocketResponse(HttpStatus.OK);
         });
     }

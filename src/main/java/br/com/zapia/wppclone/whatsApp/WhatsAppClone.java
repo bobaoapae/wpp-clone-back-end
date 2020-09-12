@@ -286,7 +286,7 @@ public class WhatsAppClone {
     public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
         lastTimeWithSessions = LocalDateTime.now();
         WebSocketSession finalSession = buscarWsDecorator(session);
-        if (driver.getDriverState() != DriverState.LOGGED) {
+        if (driver.getDriverState() != DriverState.LOGGED && !webSocketRequest.getWebSocketRequestPayLoad().getEvent().equals("logout")) {
             enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
         } else {
             try {
@@ -401,9 +401,10 @@ public class WhatsAppClone {
         }
     }
 
-    @Scheduled(fixedDelay = 10000, initialDelay = 0)
+    @Scheduled(fixedDelay = 1000, initialDelay = 0)
     public void finalizarSeForcado() {
         if (!getUsuario().getUsuarioResponsavelPelaInstancia().isAtivo() || forceShutdown) {
+            forceShutdown = false;
             logger.info("Finalizar Instancia Forçada: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             shutdown();
         }
