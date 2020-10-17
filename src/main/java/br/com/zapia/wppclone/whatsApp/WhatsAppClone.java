@@ -93,8 +93,8 @@ public class WhatsAppClone {
     private String loginWhatsAppGeral;
     @Value("${headLess}")
     private boolean headLess;
-    @Value("${forceBeta}")
-    private boolean forceBeta;
+    @Value("${debug}")
+    private boolean debug;
     private boolean forceShutdown;
     private boolean instanciaGeral;
     private ObjectMapper objectMapper;
@@ -243,6 +243,7 @@ public class WhatsAppClone {
             builder.addErrorHandler(throwable -> {
                 logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
             });
+            builder.autoOpenDevTools(debug);
             driver = builder.build();
             whatsAppCloneService.adicionarInstancia(this);
         } catch (Exception e) {
