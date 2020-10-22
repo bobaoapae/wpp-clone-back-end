@@ -45,7 +45,7 @@ public class DownloadFileRestController {
                 headers.add("Filename", filenameUtf);
                 headers.add("Content-Type", new Tika().detect(file));
                 downloadFileService.removeFileToDownload(key);
-                return new ResponseEntity(streamingResponseBody, headers, HttpStatus.OK);
+                return ResponseEntity.ok().headers(headers).body(streamingResponseBody);
             } else {
                 return ResponseEntity.notFound().build();
             }
