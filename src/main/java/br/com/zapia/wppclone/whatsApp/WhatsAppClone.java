@@ -13,7 +13,6 @@ import br.com.zapia.wppclone.payloads.WebSocketResponseFrame;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
-import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -61,8 +60,6 @@ public class WhatsAppClone {
 
     @Autowired
     private UsuarioPrincipalAutoWired usuarioPrincipalAutoWired;
-    @Autowired
-    private ControleChatsAsync controleChatsAsync;
     @Autowired
     private SerializadorWhatsApp serializadorWhatsApp;
     @Lazy
@@ -144,10 +141,7 @@ public class WhatsAppClone {
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "OnConnect", e);
                 }
-                controleChatsAsync.clearAllChats();
                 driver.getFunctions().subscribeToLowBattery(onLowBaterry);
-                driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
-                driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD);
                 driver.getFunctions().addChatListenner(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
