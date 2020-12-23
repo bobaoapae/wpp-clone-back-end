@@ -196,12 +196,15 @@ public class WhatsAppClone {
             };
             onWhatsAppVersionMismatch = (minVersion, maxVersion, actual) -> {
                 try {
-                    sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
-                            "" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
-                            "\n" +
-                            "Versão Mínima da Lib: " + minVersion.toString() + "\n" +
-                            "Versão Máxima da Lib: " + maxVersion.toString() + "\n" +
-                            "Versão Atual do WhatsApp: " + actual.toString());
+                    if (whatsAppCloneService.canSendWarningVersion()) {
+                        whatsAppCloneService.setSendWarningVersion();
+                        sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
+                                "" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
+                                "\n" +
+                                "Versão Mínima da Lib: " + minVersion.toString() + "\n" +
+                                "Versão Máxima da Lib: " + maxVersion.toString() + "\n" +
+                                "Versão Atual do WhatsApp: " + actual.toString());
+                    }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Envio de Email", e);
                 }

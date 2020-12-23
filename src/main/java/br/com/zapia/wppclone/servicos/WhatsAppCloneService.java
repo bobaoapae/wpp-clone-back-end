@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,6 +19,7 @@ public class WhatsAppCloneService {
     private final Map<Usuario, WhatsAppClone> instanciasAtivas;
     private WhatsAppClone instanciaGeral;
     private final ReentrantLock lock;
+    private LocalDateTime lastWarningVersion;
 
     public WhatsAppCloneService() {
         instanciasAtivas = new LinkedHashMap<>();
@@ -80,5 +82,13 @@ public class WhatsAppCloneService {
 
     public void setInstanciaGeral(WhatsAppClone instanciaGeral) {
         this.instanciaGeral = instanciaGeral;
+    }
+
+    public boolean canSendWarningVersion(){
+        return lastWarningVersion == null || lastWarningVersion.plusHours(2).isBefore(LocalDateTime.now());
+    }
+
+    public void setSendWarningVersion(){
+        lastWarningVersion = LocalDateTime.now();
     }
 }
