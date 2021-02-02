@@ -9,8 +9,10 @@ import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.payloads.WebSocketRequest;
 import br.com.zapia.wppclone.payloads.WebSocketResponse;
+import br.com.zapia.wppclone.payloads.WebSocketResponseFrame;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
+import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,8 +64,6 @@ public class WhatsAppClone {
     @Autowired
     private UsuarioPrincipalAutoWired usuarioPrincipalAutoWired;
     @Autowired
-    private ControleChatsAsync controleChatsAsync;
-    @Autowired
     private SerializadorWhatsApp serializadorWhatsApp;
     @Lazy
     @Autowired
@@ -101,6 +101,7 @@ public class WhatsAppClone {
     private Usuario usuarioResponsavelInstancia;
     private Supplier<ExecutorService> executorServiceSupplier;
     private Supplier<ScheduledExecutorService> scheduledExecutorServiceSupplier;
+    private Object LOCK_SEND_WS = new Object();
 
 
     @PostConstruct
@@ -133,10 +134,12 @@ public class WhatsAppClone {
             sessions = new ConcurrentArrayList<>();
             usuarioResponsavelInstancia = getUsuario();
             onConnect = () -> {
-                controleChatsAsync.clearAllChats();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    logger.log(Level.SEVERE, "OnConnect", e);
+                }
                 driver.getFunctions().subscribeToLowBattery(onLowBaterry);
-                driver.getFunctions().getAllChats(true).thenAccept(chats -> chats.forEach(controleChatsAsync::addChat));
-                driver.getFunctions().addChatListenner(c -> controleChatsAsync.addChat(c), EventType.ADD);
                 driver.getFunctions().addChatListenner(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
@@ -240,7 +243,8 @@ public class WhatsAppClone {
         }
     }
 
-    private void enviarParaWs(WebSocketSession ws, WsMessage message) {
+    @Async
+    public void enviarParaWs(WebSocketSession ws, WsMessage message) {
         if (!(ws instanceof ConcurrentWebSocketSessionDecorator)) {
             ws = buscarWsDecorator(ws);
         }
@@ -271,13 +275,30 @@ public class WhatsAppClone {
     public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
         lastTimeWithSessions = LocalDateTime.now();
         WebSocketSession finalSession = buscarWsDecorator(session);
-        if (driver.getDriverState() != DriverState.LOGGED) {
+        if (driver.getDriverState() != DriverState.LOGGED && !webSocketRequest.getWebSocketRequestPayLoad().getEvent().equals("logout")) {
             enviarParaWs(finalSession, new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FAILED_DEPENDENCY, "WhatsApp Not Logged")));
         } else {
             try {
                 processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
                     try {
-                        enviarParaWs(finalSession, new WsMessage(webSocketRequest, webSocketResponse));
+                        String dado;
+                        if (webSocketResponse.getResponse() instanceof String) {
+                            dado = (String) webSocketResponse.getResponse();
+                        } else {
+                            dado = objectMapper.writeValueAsString(webSocketResponse.getResponse());
+                        }
+                        int maxKb = 1024 * 1024;
+                        if (dado.getBytes().length >= maxKb) {
+                            List<String> partials = Util.splitStringByByteLength(dado, maxKb);
+                            for (int x = 0; x < partials.size(); x++) {
+                                WebSocketResponseFrame frame = new WebSocketResponseFrame(webSocketResponse.getStatus(), partials.get(x));
+                                frame.setFrameId(x + 1);
+                                frame.setQtdFrames(partials.size());
+                                whatsAppClone.enviarParaWs(finalSession, new WsMessage(webSocketRequest, frame));
+                            }
+                        } else {
+                            enviarParaWs(finalSession, new WsMessage(webSocketRequest, webSocketResponse));
+                        }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -344,8 +365,8 @@ public class WhatsAppClone {
     }
 
     public void adicionarSession(WebSocketSession ws) {
-        ws.setTextMessageSizeLimit(5 * 1024 * 1024);
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 10 * 1024 * 1024);
+        ws.setTextMessageSizeLimit(20 * 1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 40 * 1024 * 1024);
         sessions.add(ws);
         whatsAppClone.enviarEventoWpp(WhatsAppClone.TipoEventoWpp.UPDATE_ESTADO, whatsAppClone.getDriver().getDriverState().name(), ws);
     }
@@ -369,7 +390,7 @@ public class WhatsAppClone {
         }
     }
 
-    @Scheduled(fixedDelay = 10000, initialDelay = 0)
+    @Scheduled(fixedDelay = 1000, initialDelay = 0)
     public void finalizarSeForcado() {
         if (!usuarioResponsavelInstancia.isAtivo() || forceShutdown) {
             logger.info("Finalizar Instancia Forçada: " + usuarioResponsavelInstancia.getLogin());
@@ -400,7 +421,6 @@ public class WhatsAppClone {
     @PreDestroy
     public void preDestroy() {
         logger.info("Destroy WhatsAppClone");
-        ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("controleChatsAsync");
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("serializadorWhatsApp");
         for (WebSocketSession webSocketSession : getSessions()) {
             if (webSocketSession.isOpen()) {
