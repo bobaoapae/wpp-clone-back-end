@@ -241,6 +241,7 @@ public class WhatsAppClone {
                 logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
             });
             builder.autoOpenDevTools(debug);
+            builder.autoRebootOnStuck(!debug);
             driver = builder.build();
             whatsAppCloneService.adicionarInstancia(this);
         } catch (Exception e) {
