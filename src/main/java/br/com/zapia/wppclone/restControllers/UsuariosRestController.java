@@ -206,9 +206,10 @@ public class UsuariosRestController {
     public ResponseEntity<?> resetarSenha(@PathVariable("uuid") String uuid) {
         Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
         if (usuario != null) {
-            usuario.setSenha(Util.gerarSenha(10, false));
+            String novaSenha = Util.gerarSenha(10, false);
+            usuario.setSenha(novaSenha);
             if (usuariosService.salvar(usuario)) {
-                return ResponseEntity.ok().build();
+                return ResponseEntity.ok().body(novaSenha);
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
