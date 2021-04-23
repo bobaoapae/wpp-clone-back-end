@@ -8,6 +8,7 @@ import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.TrocasDeNumerosService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
+import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import modelo.Chat;
 import modelo.DriverState;
@@ -197,6 +198,22 @@ public class UsuariosRestController {
             }
         } else {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("A senha atual informada não é válida.");
+        }
+    }
+
+    @Secured({"ROLE_SUPER_ADMIN"})
+    @GetMapping("/resetarSenha/{uuid}")
+    public ResponseEntity<?> resetarSenha(@PathVariable("uuid") String uuid) {
+        Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
+        if (usuario != null) {
+            usuario.setSenha(Util.gerarSenha(10, false));
+            if (usuariosService.salvar(usuario)) {
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 }
