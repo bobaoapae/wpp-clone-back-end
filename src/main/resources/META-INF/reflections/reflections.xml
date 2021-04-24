@@ -11,6 +11,7 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
@@ -63,6 +64,7 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
