@@ -18,6 +18,8 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickReplysHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
@@ -71,6 +73,8 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickReplysHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>

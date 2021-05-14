@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import modelo.Chat;
+import modelo.GroupJoinMetadata;
 import modelo.Message;
 import modelo.WhatsappObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -114,6 +116,12 @@ public class SerializadorWhatsApp {
             }
         });
         return CompletableFuture.completedFuture(arrayNode);
+    }
+
+    @Async
+    public CompletableFuture<ObjectNode> serializarGroupInviteLinkInfo(GroupJoinMetadata inviteInfo) {
+        ObjectNode msgNode = Objects.requireNonNull(converterParaObjectNode(inviteInfo));
+        return CompletableFuture.completedFuture(msgNode);
     }
 
     private ObjectNode converterParaObjectNode(WhatsappObject whatsappObject) {

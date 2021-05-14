@@ -61,10 +61,10 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
                         session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED)).toString()));
                     }
                 } else {
-                    Object usuario = session.getAttributes().get("usuario");
+                    Object usuarioObj = session.getAttributes().get("usuario");
                     boolean result = false;
-                    if (usuario instanceof Usuario && ((Usuario) usuario).isAtivo()) {
-                        UsuarioScopedContext.setUsuario((Usuario) usuario);
+                    if (usuarioObj instanceof Usuario usuario && usuario.isAtivo()) {
+                        UsuarioScopedContext.setUsuario(usuario);
                         result = true;
                     } else if (tokenProvider.validateTokenWs((String) session.getAttributes().get("token"))) {
                         result = true;
@@ -112,18 +112,18 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         try {
-            Object usuario = session.getAttributes().get("usuario");
+            Object usuarioObj = session.getAttributes().get("usuario");
             boolean result = false;
-            if (usuario instanceof Usuario && ((Usuario) usuario).isAtivo()) {
-                UsuarioScopedContext.setUsuario((Usuario) usuario);
+            if (usuarioObj instanceof Usuario usuario && usuario.isAtivo()) {
+                UsuarioScopedContext.setUsuario((Usuario) usuarioObj);
                 result = true;
             } else if (tokenProvider.validateTokenWs((String) session.getAttributes().get("token"))) {
                 result = true;
-                usuario = UsuarioScopedContext.getUsuario();
+                usuarioObj = UsuarioScopedContext.getUsuario();
             }
             if (result) {
                 if (!status.equals(CloseStatus.GOING_AWAY)) {
-                    if (((Usuario) usuario).getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
+                    if (((Usuario) usuarioObj).getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
                         operadoresService.removerSessao(session);
                     }
                     getWhatsAppClone().removerSession(session);
