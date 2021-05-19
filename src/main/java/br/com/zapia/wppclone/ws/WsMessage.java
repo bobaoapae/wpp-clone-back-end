@@ -1,6 +1,6 @@
 package br.com.zapia.wppclone.ws;
 
-import br.com.zapia.wppclone.payloads.WebSocketRequest;
+import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -53,7 +53,7 @@ public class WsMessage {
             }
             return tag.toLowerCase() + "," + dado;
         } catch (JsonProcessingException e) {
-            return "error, " + e.toString();
+            return "error, " + e;
         }
     }
 }

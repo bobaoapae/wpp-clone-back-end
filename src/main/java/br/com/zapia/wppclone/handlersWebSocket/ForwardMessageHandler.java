@@ -1,12 +1,11 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
+import br.com.zapia.wpp.api.model.payloads.ForwardMessagesRequest;
+import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
+import br.com.zapia.wpp.client.docker.model.Chat;
+import br.com.zapia.wpp.client.docker.model.Message;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.payloads.ForwardMessagesRequest;
-import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import modelo.Chat;
-import modelo.Message;
 import org.springframework.http.HttpStatus;
 
 import java.util.ArrayList;
@@ -14,20 +13,18 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 @HandlerWebSocketEvent(event = "forwardMessage")
-public class ForwardMessageHandler extends HandlerWebSocket {
+public class ForwardMessageHandler extends HandlerWebSocket<ForwardMessagesRequest> {
     @Override
-    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ForwardMessagesRequest forwardMessagesRequest = objectMapper.readValue((String) payload, ForwardMessagesRequest.class);
+    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, ForwardMessagesRequest forwardMessagesRequest) throws JsonProcessingException {
         List<Chat> chats = new ArrayList<>();
         List<Message> msgs = new ArrayList<>();
         List<CompletableFuture<Message>> futuresMessage = new ArrayList<>();
         List<CompletableFuture<Chat>> futuresChat = new ArrayList<>();
         for (String idMsg : forwardMessagesRequest.getIdsMsgs()) {
-            futuresMessage.add(whatsAppClone.getDriver().getFunctions().getMessageById(idMsg));
+            futuresMessage.add(whatsAppClone.getWhatsAppClient().findMessage(idMsg));
         }
         for (String idChat : forwardMessagesRequest.getIdsChats()) {
-            futuresChat.add(whatsAppClone.getDriver().getFunctions().getChatById(idChat));
+            futuresChat.add(whatsAppClone.getWhatsAppClient().findChatById(idChat));
         }
         return CompletableFuture.allOf(futuresMessage.toArray(new CompletableFuture[0])).thenCompose(aVoid -> {
             return CompletableFuture.allOf(futuresChat.toArray(new CompletableFuture[0])).thenAccept(aVoid1 -> {
@@ -45,13 +42,20 @@ public class ForwardMessageHandler extends HandlerWebSocket {
                 }
             });
         }).thenCompose(aVoid -> {
-            if (chats.size() > 0 && msgs.size() > 0) {
-                return msgs.get(0).getChat().forwardMessage(msgs.toArray(Message[]::new), chats.toArray(Chat[]::new)).thenApply(jsValue -> {
-                    return new WebSocketResponse(HttpStatus.OK);
-                });
-            } else {
-                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST));
-            }
+            return whatsAppClone.getWhatsAppClient().findChatById(msgs.get(0).getContact().getId()).thenCompose(chat -> {
+                if (chats.size() > 0 && msgs.size() > 0) {
+                    return chat.forwardMessages(chats.toArray(Chat[]::new), msgs.toArray(Message[]::new)).thenApply(jsValue -> {
+                        return new WebSocketResponse(HttpStatus.OK.value());
+                    });
+                } else {
+                    return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST.value()));
+                }
+            });
         });
+    }
+
+    @Override
+    public Class<ForwardMessagesRequest> getClassType() {
+        return ForwardMessagesRequest.class;
     }
 }

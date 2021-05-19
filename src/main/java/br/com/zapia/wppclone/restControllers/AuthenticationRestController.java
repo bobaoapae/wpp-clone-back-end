@@ -3,7 +3,6 @@ package br.com.zapia.wppclone.restControllers;
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
 import br.com.zapia.wppclone.authentication.UsuarioAuthentication;
 import br.com.zapia.wppclone.modelo.TrocaDeNumero;
-import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.modelo.dto.TrocaDeNumeroDTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
 import br.com.zapia.wppclone.payloads.LoginRequest;
@@ -11,12 +10,6 @@ import br.com.zapia.wppclone.payloads.LoginResponse;
 import br.com.zapia.wppclone.servicos.TrocasDeNumerosService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
-import br.com.zapia.wppclone.utils.Util;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
-import modelo.Chat;
-import modelo.DriverState;
-import modelo.Message;
-import modelo.MessageBuilder;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -101,14 +94,14 @@ public class AuthenticationRestController {
         }
     }
 
-    @PutMapping("/resetPassword")
-    public ResponseEntity<?> resetarSenha(@RequestParam("login") String login) {
+    /*@PutMapping("/resetPassword")
+    public ResponseEntity<?> resetarSenha(@RequestParam("login") String login) throws ExecutionException, InterruptedException {
         Usuario usuario = usuariosService.buscarUsuarioPorLogin(login);
         if (usuario != null) {
             String novaSenha = Util.gerarSenha(10, false);
             WhatsAppClone instanciaGeral = whatsAppCloneService.getInstanciaGeral();
-            if (instanciaGeral != null && instanciaGeral.getDriver().getDriverState() == DriverState.LOGGED) {
-                Chat chat = instanciaGeral.getDriver().getFunctions().getChatByNumber(usuario.getTelefone()).join();
+            if (instanciaGeral != null && instanciaGeral.getDriver().getDriverState().get() == DriverState.LOGGED) {
+                Chat chat = instanciaGeral.getDriver().findChatByNumber(usuario.getTelefone()).join();
                 if (chat != null) {
                     String oldHash = usuario.getSenha();
                     usuario.setSenha(novaSenha);
@@ -139,5 +132,5 @@ public class AuthenticationRestController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    }
+    }*/
 }

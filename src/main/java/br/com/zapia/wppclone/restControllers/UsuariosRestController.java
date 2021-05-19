@@ -1,7 +1,6 @@
 package br.com.zapia.wppclone.restControllers;
 
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
-import br.com.zapia.wppclone.modelo.TrocaDeNumero;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.modelo.dto.*;
 import br.com.zapia.wppclone.servicos.PermissoesService;
@@ -9,10 +8,6 @@ import br.com.zapia.wppclone.servicos.TrocasDeNumerosService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
-import modelo.Chat;
-import modelo.DriverState;
-import modelo.MessageBuilder;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,11 +59,12 @@ public class UsuariosRestController {
         }
     }
 
-    @PutMapping("/alterarNumero")
+    //TODO: alterarNumero
+    /*@PutMapping("/alterarNumero")
     public ResponseEntity<?> alterarNumero(@RequestParam("telefone") String telefone) {
         WhatsAppClone instanciaGeral = whatsAppCloneService.getInstanciaGeral();
         if (instanciaGeral != null && instanciaGeral.getDriver().getDriverState() == DriverState.LOGGED) {
-            Chat novoNumero = instanciaGeral.getDriver().getFunctions().getChatByNumber(telefone).join();
+            Chat novoNumero = instanciaGeral.getDriver().getChatByNumber(telefone).join();
             if (novoNumero != null) {
                 TrocaDeNumero trocaDeNumero = new TrocaDeNumero();
                 trocaDeNumero.setUsuario(usuario.getUsuario());
@@ -83,7 +79,7 @@ public class UsuariosRestController {
                         novoNumero.sendWebSite("https://wpp.zapia.com.br/confirmchangenumber?token=" + trocaDeNumero.getUuid(), messageBuilder.build()).join();
                         return ResponseEntity.ok().build();
                     } else {
-                        Chat numeroAtual = instanciaGeral.getDriver().getFunctions().getChatByNumber(usuario.getUsuario().getTelefone()).join();
+                        Chat numeroAtual = instanciaGeral.getDriver().getChatByNumber(usuario.getUsuario().getTelefone()).join();
                         if (numeroAtual != null) {
                             numeroAtual.sendWebSite("https://wpp.zapia.com.br/confirmchangenumber?token=" + trocaDeNumero.getUuid(), messageBuilder.build()).join();
                             return ResponseEntity.ok().build();
@@ -100,7 +96,7 @@ public class UsuariosRestController {
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Falha ao enviar nova senha por WhatsApp, tente novamente mais tarde.");
         }
-    }
+    }*/
 
     @Secured({"ROLE_SUPER_ADMIN"})
     @DeleteMapping("/{uuid}")

@@ -1,30 +1,33 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
+import br.com.zapia.wpp.api.model.payloads.ClearChatRequest;
+import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.payloads.ClearChatRequest;
-import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 
 import java.util.concurrent.CompletableFuture;
 
 @HandlerWebSocketEvent(event = "clearChat")
-public class ClearChatHandler extends HandlerWebSocket {
+public class ClearChatHandler extends HandlerWebSocket<ClearChatRequest> {
+
     @Override
-    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ClearChatRequest clearChatRequest = objectMapper.readValue((String) payload, ClearChatRequest.class);
-        return whatsAppClone.getDriver().getFunctions().getChatById(clearChatRequest.getChatId()).thenCompose(chat -> {
+    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, ClearChatRequest clearChatRequest) throws JsonProcessingException {
+        return whatsAppClone.getWhatsAppClient().findChatById(clearChatRequest.getChatId()).thenCompose(chat -> {
             if (chat == null) {
-                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
+                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value()));
             } else if (!usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR") || usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getOperadorPodeExcluirMsg()) {
-                return chat.clearChat(clearChatRequest.isKeepFavorites()).thenApply(aVoid -> {
-                    return new WebSocketResponse(HttpStatus.OK);
+                return chat.clearMessages(clearChatRequest.isKeepFavorites()).thenApply(aVoid -> {
+                    return new WebSocketResponse(HttpStatus.OK.value());
                 });
             } else {
-                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.FORBIDDEN));
+                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.FORBIDDEN.value()));
             }
         });
+    }
+
+    @Override
+    public Class<ClearChatRequest> getClassType() {
+        return ClearChatRequest.class;
     }
 }

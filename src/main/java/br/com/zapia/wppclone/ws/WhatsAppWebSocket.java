@@ -1,15 +1,16 @@
 package br.com.zapia.wppclone.ws;
 
+import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
+import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.authentication.JwtAuthenticationFilter;
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.payloads.WebSocketRequest;
-import br.com.zapia.wppclone.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.servicos.OperadoresService;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.AbstractWebSocketHandler;
-import org.threadly.util.ExceptionUtils;
 
 import java.io.IOException;
 
@@ -40,25 +40,24 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
         try {
             try {
                 WebSocketRequest webSocketRequest = mapper.readValue(message.getPayload(), WebSocketRequest.class);
-                webSocketRequest.setWebSocketSession(session);
                 if (webSocketRequest.getWebSocketRequestPayLoad().getEvent().equalsIgnoreCase("token")) {
                     if (tokenProvider.validateTokenWs(webSocketRequest.getWebSocketRequestPayLoad().getPayload())) {
                         Usuario usuario = UsuarioScopedContext.getUsuario();
                         if (!usuario.getUsuarioResponsavelPelaInstancia().equals(usuario) && !usuario.getUsuarioResponsavelPelaInstancia().isAtivo()) {
-                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FORBIDDEN, "Usuário Principal Inativado")).toString()));
+                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FORBIDDEN.value(), "Usuário Principal Inativado")).toString()));
                         } else if (usuario.isAtivo()) {
                             session.getAttributes().put("token", webSocketRequest.getWebSocketRequestPayLoad().getPayload());
                             session.getAttributes().put("usuario", usuario);
                             if (usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
                                 operadoresService.adicionarSessao(session);
                             }
-                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.OK)).toString()));
+                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.OK.value())).toString()));
                             getWhatsAppClone().adicionarSession(session);
                         } else {
-                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FORBIDDEN, "Usuário Inativado")).toString()));
+                            session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.FORBIDDEN.value(), "Usuário Inativado")).toString()));
                         }
                     } else {
-                        session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED)).toString()));
+                        session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED.value())).toString()));
                     }
                 } else {
                     Object usuarioObj = session.getAttributes().get("usuario");
@@ -72,11 +71,11 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
                     if (result) {
                         getWhatsAppClone().processWebSocketMsg(session, webSocketRequest);
                     } else {
-                        session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED)).toString()));
+                        session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED.value())).toString()));
                     }
                 }
             } catch (JsonProcessingException e) {
-                session.sendMessage(new TextMessage(new WsMessage("error", ExceptionUtils.stackToString(e)).toString()));
+                session.sendMessage(new TextMessage(new WsMessage("error", ExceptionUtils.getStackTrace(e)).toString()));
                 throw e;
             }
         } catch (IOException e) {
