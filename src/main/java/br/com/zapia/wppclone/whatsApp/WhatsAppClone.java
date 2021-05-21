@@ -202,13 +202,16 @@ public class WhatsAppClone {
                     .onInit(onConnect)
                     .onUpdateDriverState(onChangeEstadoDriver)
                     .onNeedQrCode(onNeedQrCode)
+                    .onLowBattery(onLowBaterry)
+                    .onPhoneDisconnect(onDisconnect)
                     .onError(throwable -> {
                         logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
                     })
                     .callableFactory(callable -> {
                         return new UsuarioContextCallable(callable, usuarioResponsavelInstancia);
                     })
-                    .runnableFactory(runnable -> new UsuarioContextRunnable(runnable, usuarioResponsavelInstancia));
+                    .runnableFactory(runnable -> new UsuarioContextRunnable(runnable, usuarioResponsavelInstancia))
+                    .maxMemoryMB(800);
             whatsAppClient = builder.builder();
             whatsAppClient.start().thenAccept(aBoolean -> {
                 logger.log(Level.INFO, "WhatsAppClient Start::" + aBoolean);

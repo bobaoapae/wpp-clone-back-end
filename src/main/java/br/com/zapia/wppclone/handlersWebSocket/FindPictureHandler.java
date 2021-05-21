@@ -18,18 +18,12 @@ public class FindPictureHandler extends HandlerWebSocket<FindPictureRequest> {
 
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, FindPictureRequest findPictureRequest) throws JsonProcessingException {
-        return whatsAppClone.getWhatsAppClient().findChatById(findPictureRequest.getId()).thenCompose(chat -> {
-            if (chat == null) {
-                return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value()));
+        return whatsAppClone.getWhatsAppClient().getProfilePic(findPictureRequest.getId(), findPictureRequest.isFull()).thenApply(file -> {
+            if (file != null) {
+                String key = downloadFileService.addFileToFutureDownload(file);
+                return new WebSocketResponse(HttpStatus.OK.value(), key);
             } else {
-                return chat.getContact().getProfilePic(findPictureRequest.isFull()).thenApply(file -> {
-                    if (file != null) {
-                        String key = downloadFileService.addFileToFutureDownload(file);
-                        return new WebSocketResponse(HttpStatus.OK.value(), key);
-                    } else {
-                        return new WebSocketResponse(HttpStatus.OK.value(), "");
-                    }
-                });
+                return new WebSocketResponse(HttpStatus.OK.value(), "");
             }
         });
     }
