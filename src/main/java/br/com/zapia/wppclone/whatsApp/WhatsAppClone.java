@@ -1,5 +1,7 @@
 package br.com.zapia.wppclone.whatsApp;
 
+import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
+import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponseFrame;
@@ -7,8 +9,9 @@ import br.com.zapia.wpp.client.docker.WhatsAppClient;
 import br.com.zapia.wpp.client.docker.WhatsAppClientBuilder;
 import br.com.zapia.wpp.client.docker.model.DriverState;
 import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
-import br.com.zapia.wppclone.authentication.scopeInjectionHandler.*;
-import br.com.zapia.wppclone.handlersWebSocket.HandlerWebSocketEvent;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextCallable;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextRunnable;
+import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.handlersWebSocket.IHandlerWebSocketSpring;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.servicos.SendEmailService;
@@ -16,7 +19,6 @@ import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.RateLimiter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +44,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -72,27 +74,16 @@ public class WhatsAppClone {
     private Consumer<DriverState> onChangeEstadoDriver;
     private Runnable onConnect;
     private Runnable onDisconnect;
-    @Value("${pathCacheWebWhats}")
-    private String pathCacheWebWhats;
     @Value("${pathLogs}")
     private String pathLogs;
-    @Value("${pathBinarios}")
-    private String pathBinarios;
     @Value("${loginWhatsAppGeral}")
     private String loginWhatsAppGeral;
-    @Value("${headLess}")
-    private boolean headLess;
-    @Value("${debug}")
-    private boolean debug;
     private boolean forceShutdown;
     private boolean instanciaGeral;
     private ObjectMapper objectMapper;
-    private Map<String, IHandlerWebSocketSpring> handlers;
+    private Map<EventWebSocket, IHandlerWebSocketSpring> handlers;
     private LocalDateTime lastTimeWithSessions;
     private Usuario usuarioResponsavelInstancia;
-    private Supplier<ExecutorService> executorServiceSupplier;
-    private Supplier<ScheduledExecutorService> scheduledExecutorServiceSupplier;
-    private RateLimiter rateLimiter;
 
 
     @PostConstruct
@@ -115,17 +106,9 @@ public class WhatsAppClone {
                     logger.log(Level.SEVERE, "Init Handlers", e);
                 }
             });
-            File file = new File(pathCacheWebWhats + getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
+            File file = new File(pathLogs + getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
             if (!file.exists()) {
                 file.mkdirs();
-            }
-            file = new File(pathLogs + getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
-            if (!file.exists()) {
-                file.mkdirs();
-            }
-            file = new File(pathBinarios);
-            if (!file.exists()) {
-                file.mkdir();
             }
             sessions = new ArrayList<>();
             onConnect = () -> {
@@ -178,25 +161,6 @@ public class WhatsAppClone {
                 enviarEventoWpp(TypeEventWhatsApp.DISCONNECT, "Falha ao Conectar ao Telefone");
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
-            executorServiceSupplier = () -> {
-                return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 100, 200,
-                        10L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<>(), new ThreadFactory() {
-
-                    private final AtomicInteger id = new AtomicInteger(0);
-
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        Thread thread = new Thread(r);
-                        thread.setName("ExecutorWhatsDriver_" + id.getAndIncrement());
-                        return thread;
-                    }
-                });
-            };
-            scheduledExecutorServiceSupplier = () -> {
-                return new UsuarioContextThreadPoolScheduler(usuarioResponsavelInstancia, 50);
-            };
-            rateLimiter = RateLimiter.create(20);
             WhatsAppClientBuilder builder = new WhatsAppClientBuilder("docker.joaoiot.com.br", 2375, false, "/home/docker/zapia/wpp-client-docker/caches", usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString());
             builder
                     .onInit(onConnect)

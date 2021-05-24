@@ -1,5 +1,6 @@
 package br.com.zapia.wppclone.ws;
 
+import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
 import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.authentication.JwtAuthenticationFilter;
@@ -26,7 +27,6 @@ import java.io.IOException;
 public class WhatsAppWebSocket extends AbstractWebSocketHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -34,13 +34,15 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
     private JwtTokenProvider tokenProvider;
     @Autowired
     private OperadoresService operadoresService;
+    @Autowired
+    private ObjectMapper mapper;
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
             try {
                 WebSocketRequest webSocketRequest = mapper.readValue(message.getPayload(), WebSocketRequest.class);
-                if (webSocketRequest.getWebSocketRequestPayLoad().getEvent().equalsIgnoreCase("token")) {
+                if (webSocketRequest.getWebSocketRequestPayLoad().getEvent() == EventWebSocket.Token) {
                     if (tokenProvider.validateTokenWs(webSocketRequest.getWebSocketRequestPayLoad().getPayload())) {
                         Usuario usuario = UsuarioScopedContext.getUsuario();
                         if (!usuario.getUsuarioResponsavelPelaInstancia().equals(usuario) && !usuario.getUsuarioResponsavelPelaInstancia().isAtivo()) {

@@ -1,5 +1,7 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
+import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
+import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wpp.api.model.payloads.SendMessageRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wpp.client.docker.model.Message;
@@ -8,12 +10,16 @@ import br.com.zapia.wppclone.servicos.UploadFileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 
-@HandlerWebSocketEvent(event = "sendMessage")
+@Component
+@Scope("usuario")
+@HandlerWebSocketEvent(event = EventWebSocket.SendMessage)
 public class SendMessageHandler extends HandlerWebSocket<SendMessageRequest> {
 
     @Autowired
