@@ -15,7 +15,7 @@
     <description>Clone WhatsApp Web</description>
 
     <properties>
-        <java.version>13</java.version>
+        <java.version>16</java.version>
     </properties>
 
     <dependencies>
@@ -95,7 +95,7 @@
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>BotWhatsApp</artifactId>
-            <version>16.0</version>
+            <version>22.4</version>
             <exclusions>
                 <exclusion>
                     <groupId>br.com.zapia</groupId>
@@ -106,7 +106,7 @@
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>WebWhatsAppLib-ivelox</artifactId>
-            <version>2.9</version>
+            <version>3.0</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
