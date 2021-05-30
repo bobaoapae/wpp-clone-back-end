@@ -5,6 +5,7 @@ import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponseFrame;
+import br.com.zapia.wpp.client.docker.DockerConfigBuilder;
 import br.com.zapia.wpp.client.docker.WhatsAppClient;
 import br.com.zapia.wpp.client.docker.WhatsAppClientBuilder;
 import br.com.zapia.wpp.client.docker.model.DriverState;
@@ -161,7 +162,11 @@ public class WhatsAppClone {
                 enviarEventoWpp(TypeEventWhatsApp.DISCONNECT, "Falha ao Conectar ao Telefone");
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
-            WhatsAppClientBuilder builder = new WhatsAppClientBuilder("docker.joaoiot.com.br", 2375, false, "/home/docker/zapia/wpp-client-docker/caches", usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString());
+            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString(), "docker.joaoiot.com.br")
+                    .withAutoUpdateBaseImage(true)
+                    .withMaxMemoryMB(800)
+                    .build();
+            WhatsAppClientBuilder builder = new WhatsAppClientBuilder(dockerConfig);
             builder
                     .onInit(onConnect)
                     .onUpdateDriverState(onChangeEstadoDriver)
@@ -174,8 +179,7 @@ public class WhatsAppClone {
                     .callableFactory(callable -> {
                         return new UsuarioContextCallable(callable, usuarioResponsavelInstancia);
                     })
-                    .runnableFactory(runnable -> new UsuarioContextRunnable(runnable, usuarioResponsavelInstancia))
-                    .maxMemoryMB(800);
+                    .runnableFactory(runnable -> new UsuarioContextRunnable(runnable, usuarioResponsavelInstancia));
             whatsAppClient = builder.builder();
             whatsAppClient.start().thenAccept(aBoolean -> {
                 logger.log(Level.INFO, "WhatsAppClient Start::" + aBoolean);
