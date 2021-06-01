@@ -179,6 +179,11 @@ public class WhatsAppClone {
                     .callableFactory(callable -> {
                         return new UsuarioContextCallable(callable, usuarioResponsavelInstancia);
                     })
+                    .onWsDisconnect((code, reason, remote) -> {
+                        whatsAppClient.stop();
+                        whatsAppClient.start();
+                        logger.log(Level.SEVERE, "RemoteWs Disconnect::" + reason);
+                    })
                     .runnableFactory(runnable -> new UsuarioContextRunnable(runnable, usuarioResponsavelInstancia));
             whatsAppClient = builder.builder();
             whatsAppClient.start().thenAccept(aBoolean -> {
