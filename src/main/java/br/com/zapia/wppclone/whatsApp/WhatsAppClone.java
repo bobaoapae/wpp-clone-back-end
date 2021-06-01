@@ -292,7 +292,9 @@ public class WhatsAppClone {
 
     @Async
     public CompletableFuture<Void> logout() {
-        return whatsAppClient.stop();
+        return whatsAppClient.logout().thenCompose(aBoolean -> {
+            return whatsAppClient.stop();
+        });
     }
 
     public void adicionarSession(WebSocketSession ws) {
