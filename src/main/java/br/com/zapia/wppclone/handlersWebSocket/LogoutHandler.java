@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Scope("usuario")
-@HandlerWebSocketEvent(event = EventWebSocket.Logout)
+@HandlerWebSocketEvent(event = EventWebSocket.Logout, needLogged = false)
 public class LogoutHandler extends HandlerWebSocket<Void> {
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Void unused) {
