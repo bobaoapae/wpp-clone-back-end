@@ -84,6 +84,7 @@ public class WhatsAppClone {
     private ObjectMapper objectMapper;
     private Map<EventWebSocket, IHandlerWebSocketSpring> handlers;
     private LocalDateTime lastTimeWithSessions;
+    private LocalDateTime lastPingRemoteApi;
     private Usuario usuarioResponsavelInstancia;
 
 
@@ -326,9 +327,13 @@ public class WhatsAppClone {
         }
     }
 
+    public void ping() {
+        lastPingRemoteApi = LocalDateTime.now();
+    }
+
     @Scheduled(fixedDelay = 60000, initialDelay = 60000)
     public void finalizarQuandoInativo() throws ExecutionException, InterruptedException {
-        if (!instanciaGeral && (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(5).isBefore(LocalDateTime.now())) || whatsAppClient.getDriverState().get() == DriverState.WAITING_QR_CODE_SCAN)) {
+        if (!instanciaGeral && (lastPingRemoteApi == null || lastPingRemoteApi.plusMinutes(5).isBefore(LocalDateTime.now())) && (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(5).isBefore(LocalDateTime.now())) || whatsAppClient.getDriverState().get() == DriverState.WAITING_QR_CODE_SCAN)) {
             logger.info("Finalizar Instancia Inativa: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             shutdown();
         }
