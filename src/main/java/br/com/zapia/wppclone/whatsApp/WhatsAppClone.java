@@ -181,7 +181,6 @@ public class WhatsAppClone {
                         return new UsuarioContextCallable(callable, usuarioResponsavelInstancia);
                     })
                     .onWsDisconnect((code, reason, remote) -> {
-                        whatsAppClient.stop();
                         whatsAppClient.start();
                         logger.log(Level.SEVERE, "RemoteWs Disconnect::" + reason);
                     })
