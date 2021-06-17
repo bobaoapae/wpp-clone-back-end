@@ -208,4 +208,9 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet id="17062021-1" author="JOAO">
+        <addColumn tableName="usuario">
+            <column name="maxmemory" type="int" defaultValueNumeric="800"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

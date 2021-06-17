@@ -23,6 +23,7 @@ public class Usuario extends Entidade {
     @NotBlank
     @Column(nullable = false)
     private String senha;
+    private int maxMemory;
     @ManyToOne(optional = false)
     private Permissao permissao;
     @NotNull
@@ -140,5 +141,13 @@ public class Usuario extends Entidade {
         } else {
             return this;
         }
+    }
+
+    public int getMaxMemory() {
+        return maxMemory;
+    }
+
+    public void setMaxMemory(int maxMemory) {
+        this.maxMemory = maxMemory;
     }
 }

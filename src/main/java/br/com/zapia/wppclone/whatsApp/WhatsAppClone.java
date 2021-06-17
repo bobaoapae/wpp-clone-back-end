@@ -77,10 +77,9 @@ public class WhatsAppClone {
     private Runnable onDisconnect;
     @Value("${pathLogs}")
     private String pathLogs;
-    @Value("${loginWhatsAppGeral}")
-    private String loginWhatsAppGeral;
+    @Value("${dockerEndPoint}")
+    private String dockerEndPoint;
     private boolean forceShutdown;
-    private boolean instanciaGeral;
     private ObjectMapper objectMapper;
     private Map<EventWebSocket, IHandlerWebSocketSpring> handlers;
     private LocalDateTime lastTimeWithSessions;
@@ -94,7 +93,6 @@ public class WhatsAppClone {
             if (!getUsuario().getUsuarioResponsavelPelaInstancia().isAtivo()) {
                 throw new InstantiationException("Usuário Responsável Inativo");
             }
-            instanciaGeral = getUsuario().getLogin().equals(loginWhatsAppGeral);
             objectMapper = new ObjectMapper();
             handlers = new ConcurrentHashMap<>();
             Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
@@ -163,9 +161,9 @@ public class WhatsAppClone {
                 enviarEventoWpp(TypeEventWhatsApp.DISCONNECT, "Falha ao Conectar ao Telefone");
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
-            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString(), "docker.joaoiot.com.br")
+            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString(), dockerEndPoint)
                     .withAutoUpdateBaseImage(true)
-                    .withMaxMemoryMB(800)
+                    .withMaxMemoryMB(usuarioResponsavelInstancia.getMaxMemory())
                     .build();
             WhatsAppClientBuilder builder = new WhatsAppClientBuilder(dockerConfig);
             builder
@@ -332,7 +330,7 @@ public class WhatsAppClone {
 
     @Scheduled(fixedDelay = 60000, initialDelay = 60000)
     public void finalizarQuandoInativo() throws ExecutionException, InterruptedException {
-        if (!instanciaGeral && (lastPingRemoteApi == null || lastPingRemoteApi.plusMinutes(5).isBefore(LocalDateTime.now())) && (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(5).isBefore(LocalDateTime.now())) || whatsAppClient.getDriverState().get() == DriverState.WAITING_QR_CODE_SCAN)) {
+        if ((lastPingRemoteApi == null || lastPingRemoteApi.plusMinutes(5).isBefore(LocalDateTime.now())) && (getSessions().isEmpty() && (lastTimeWithSessions == null || lastTimeWithSessions.plusMinutes(5).isBefore(LocalDateTime.now())) || whatsAppClient.getDriverState().get() == DriverState.WAITING_QR_CODE_SCAN)) {
             logger.info("Finalizar Instancia Inativa: " + getUsuario().getUsuarioResponsavelPelaInstancia().getLogin());
             shutdown();
         }

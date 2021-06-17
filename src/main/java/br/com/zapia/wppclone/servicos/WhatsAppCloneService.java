@@ -17,7 +17,6 @@ public class WhatsAppCloneService {
 
     private static final Logger log = LoggerFactory.getLogger(WhatsAppCloneService.class);
     private final Map<Usuario, WhatsAppClone> instanciasAtivas;
-    private WhatsAppClone instanciaGeral;
     private final ReentrantLock lock;
     private LocalDateTime lastWarningVersion;
 
@@ -74,14 +73,6 @@ public class WhatsAppCloneService {
             lock.unlock();
         }
         return null;
-    }
-
-    public WhatsAppClone getInstanciaGeral() {
-        return instanciaGeral;
-    }
-
-    public void setInstanciaGeral(WhatsAppClone instanciaGeral) {
-        this.instanciaGeral = instanciaGeral;
     }
 
     public boolean canSendWarningVersion(){
