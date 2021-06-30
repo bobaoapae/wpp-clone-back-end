@@ -185,6 +185,7 @@ public class WhatsAppClone {
                     .runnableFactory(runnable -> new UsuarioContextRunnable(runnable, usuarioResponsavelInstancia));
             whatsAppClient = builder.builder();
             whatsAppClient.start().thenAccept(aBoolean -> {
+                ping();
                 logger.log(Level.INFO, "WhatsAppClient Start::" + aBoolean);
             });
             whatsAppCloneService.adicionarInstancia(this);

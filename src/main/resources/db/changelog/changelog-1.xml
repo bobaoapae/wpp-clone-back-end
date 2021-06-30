@@ -213,4 +213,13 @@
             <column name="maxmemory" type="int" defaultValueNumeric="800"/>
         </addColumn>
     </changeSet>
+    <changeSet id="30062021-1" author="JOAO">
+        <dropColumn tableName="usuario" columnName="maxmemory"/>
+    </changeSet>
+
+    <changeSet id="30062021-2" author="JOAO">
+        <addColumn tableName="usuario">
+            <column name="maxmemory" type="int" defaultValueNumeric="1024"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

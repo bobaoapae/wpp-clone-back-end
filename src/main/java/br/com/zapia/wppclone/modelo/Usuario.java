@@ -44,6 +44,7 @@ public class Usuario extends Entidade {
     public Usuario() {
         configuracao = new ConfiguracaoUsuario();
         configuracao.setUsuario(this);
+        maxMemory = 1024;
     }
 
     public String getNome() {
