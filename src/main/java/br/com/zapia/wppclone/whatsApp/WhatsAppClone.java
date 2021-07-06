@@ -79,6 +79,8 @@ public class WhatsAppClone {
     private String pathLogs;
     @Value("${dockerEndPoint}")
     private String dockerEndPoint;
+    @Value("${updateDockerImage}")
+    private boolean autoUpdateDockerImage;
     private boolean forceShutdown;
     private ObjectMapper objectMapper;
     private Map<EventWebSocket, IHandlerWebSocketSpring> handlers;
@@ -162,7 +164,7 @@ public class WhatsAppClone {
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
             var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString(), dockerEndPoint)
-                    .withAutoUpdateBaseImage(false)
+                    .withAutoUpdateBaseImage(autoUpdateDockerImage)
                     .withMaxMemoryMB(usuarioResponsavelInstancia.getMaxMemory())
                     .build();
             WhatsAppClientBuilder builder = new WhatsAppClientBuilder(dockerConfig);
