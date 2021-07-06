@@ -305,7 +305,7 @@ public class WhatsAppClone {
 
     public void adicionarSession(WebSocketSession ws) {
         ws.setTextMessageSizeLimit(20 * 1024 * 1024);
-        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 40 * 1024 * 1024);
+        ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 60 * 1024 * 1024, ConcurrentWebSocketSessionDecorator.OverflowStrategy.DROP);
         sessions.add(ws);
         try {
             enviarEventoWpp(TypeEventWebSocket.UPDATE_STATE, whatsAppClient.getDriverState().get().toString(), ws);
