@@ -35,7 +35,7 @@ public class DownloadFileRestController {
                 Path path = Paths.get(file.getAbsolutePath());
                 StreamingResponseBody streamingResponseBody = outputStream -> outputStream.write(Files.readAllBytes(path));
                 HttpHeaders headers = new HttpHeaders();
-                String filenameUtf = URLEncoder.encode(file.getName().split("#")[0], StandardCharsets.UTF_8);
+                String filenameUtf = URLEncoder.encode(file.getName().split("#")[0], StandardCharsets.UTF_8).replace("+", " ");
                 headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filenameUtf + "; filename=" + filenameUtf);
                 headers.add(HttpHeaders.CONTENT_LENGTH, String.valueOf(file.length()));
                 headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Filename");

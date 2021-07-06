@@ -57,6 +57,7 @@ public class WhatsAppCloneApplication implements AsyncConfigurer, SchedulingConf
     public ModelMapper modelMapper() {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+        modelMapper.getConfiguration().setSkipNullEnabled(true);
         return modelMapper;
     }
 

@@ -13,7 +13,7 @@ public class UsuarioUpdateDTO {
     private String nome;
     @DTORelation(classEntidade = Permissao.class, key = Permissao_.PERMISSAO)
     private String permissao;
-    private int maxMemory;
+    private Integer maxMemory;
 
     public UUID getUuid() {
         return uuid;
@@ -39,11 +39,11 @@ public class UsuarioUpdateDTO {
         this.permissao = permissao;
     }
 
-    public int getMaxMemory() {
+    public Integer getMaxMemory() {
         return maxMemory;
     }
 
-    public void setMaxMemory(int maxMemory) {
+    public void setMaxMemory(Integer maxMemory) {
         this.maxMemory = maxMemory;
     }
 }

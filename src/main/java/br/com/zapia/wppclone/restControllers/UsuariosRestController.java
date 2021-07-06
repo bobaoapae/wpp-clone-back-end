@@ -177,7 +177,7 @@ public class UsuariosRestController {
         } else {
             listar = usuariosService.listarUsuariosFilhos(usuario.getUsuario());
         }
-        return ResponseEntity.ok(modelMapper.map(listar, new TypeToken<List<UsuarioResponseDTO>>() {
+        return ResponseEntity.ok(modelMapper.map(listar, new TypeToken<List<UsuarioBasicResponseDTO>>() {
         }.getType()));
     }
 

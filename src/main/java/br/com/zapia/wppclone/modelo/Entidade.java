@@ -1,6 +1,6 @@
 package br.com.zapia.wppclone.modelo;
 
-import br.com.zapia.wppclone.modelo.listenners.EntidadeListenner;
+import br.com.zapia.wppclone.modelo.listenners.EntidadeListener;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-@EntityListeners(EntidadeListenner.class)
+@EntityListeners(EntidadeListener.class)
 @MappedSuperclass
 public abstract class Entidade implements Serializable {
 

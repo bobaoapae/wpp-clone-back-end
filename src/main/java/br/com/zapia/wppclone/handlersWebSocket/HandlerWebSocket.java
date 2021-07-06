@@ -7,8 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 public abstract class HandlerWebSocket<T> implements IHandlerWebSocketSpring<T> {
+
+    protected static Logger logger = Logger.getLogger(HandlerWebSocket.class.getName());
 
     @Autowired
     @Lazy

@@ -4,7 +4,7 @@ import br.com.zapia.wppclone.modelo.Entidade;
 
 import javax.persistence.PostRemove;
 
-public class EntidadeListenner {
+public class EntidadeListener {
 
     @PostRemove
     public void postRemove(Entidade entidade) {

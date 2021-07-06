@@ -6,6 +6,7 @@ import br.com.zapia.wppclone.modelo.dto.*;
 import br.com.zapia.wppclone.servicos.OperadoresService;
 import br.com.zapia.wppclone.servicos.PermissoesService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
+import br.com.zapia.wppclone.servicos.WhatsAppObjectWithPropertyService;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ public class OperadorRestController {
     private OperadoresService operadoresService;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private WhatsAppObjectWithPropertyService whatsAppObjectWithPropertyService;
 
     @PostMapping
     public ResponseEntity<?> criarNovoOperador(@DTO(UsuarioCreateDTO.class) Usuario usuario) {

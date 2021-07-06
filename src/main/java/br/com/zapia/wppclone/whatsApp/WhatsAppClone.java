@@ -119,50 +119,50 @@ public class WhatsAppClone {
                 }
                 whatsAppClient.addNewChatListener(chat -> {
                     whatsAppSerializer.serializeChat(chat).thenAccept(jsonNodes -> {
-                        enviarEventoWpp(TypeEventWhatsApp.NEW_CHAT, jsonNodes);
+                        enviarEventoWpp(TypeEventWebSocket.NEW_CHAT, jsonNodes);
                     });
                 });
                 whatsAppClient.addUpdateChatListener(chat -> {
                     whatsAppSerializer.serializeChat(chat).thenAccept(jsonNodes -> {
-                        enviarEventoWpp(TypeEventWhatsApp.UPDATE_CHAT, jsonNodes);
+                        enviarEventoWpp(TypeEventWebSocket.UPDATE_CHAT, jsonNodes);
                     });
                 });
                 whatsAppClient.addRemoveChatListener(chat -> {
                     whatsAppSerializer.serializeChat(chat).thenAccept(jsonNodes -> {
-                        enviarEventoWpp(TypeEventWhatsApp.REMOVE_CHAT, jsonNodes);
+                        enviarEventoWpp(TypeEventWebSocket.REMOVE_CHAT, jsonNodes);
                     });
                 });
                 whatsAppClient.addNewMessageListener(message -> {
                     whatsAppSerializer.serializeMsg(message).thenAccept(jsonNodes -> {
-                        enviarEventoWpp(TypeEventWhatsApp.NEW_MSG, jsonNodes);
+                        enviarEventoWpp(TypeEventWebSocket.NEW_MSG, jsonNodes);
                     });
                 });
                 whatsAppClient.addUpdateMessageListener(message -> {
                     whatsAppSerializer.serializeMsg(message).thenAccept(jsonNodes -> {
-                        enviarEventoWpp(TypeEventWhatsApp.UPDATE_MSG, jsonNodes);
+                        enviarEventoWpp(TypeEventWebSocket.UPDATE_MSG, jsonNodes);
                     });
                 });
                 whatsAppClient.addRemoveMessageListener(message -> {
                     whatsAppSerializer.serializeMsg(message).thenAccept(jsonNodes -> {
-                        enviarEventoWpp(TypeEventWhatsApp.REMOVE_MSG, jsonNodes);
+                        enviarEventoWpp(TypeEventWebSocket.REMOVE_MSG, jsonNodes);
                     });
                 });
             };
             onLowBaterry = (e) -> {
-                enviarEventoWpp(TypeEventWhatsApp.LOW_BATTERY, e);
+                enviarEventoWpp(TypeEventWebSocket.LOW_BATTERY, e);
             };
             onNeedQrCode = (e) -> {
-                enviarEventoWpp(TypeEventWhatsApp.NEED_QRCODE, e);
+                enviarEventoWpp(TypeEventWebSocket.NEED_QRCODE, e);
             };
             onChangeEstadoDriver = (e) -> {
-                enviarEventoWpp(TypeEventWhatsApp.UPDATE_STATE, e.name());
+                enviarEventoWpp(TypeEventWebSocket.UPDATE_STATE, e.name());
             };
             onDisconnect = () -> {
-                enviarEventoWpp(TypeEventWhatsApp.DISCONNECT, "Falha ao Conectar ao Telefone");
+                enviarEventoWpp(TypeEventWebSocket.DISCONNECT, "Falha ao Conectar ao Telefone");
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
             var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString(), dockerEndPoint)
-                    .withAutoUpdateBaseImage(true)
+                    .withAutoUpdateBaseImage(false)
                     .withMaxMemoryMB(usuarioResponsavelInstancia.getMaxMemory())
                     .build();
             WhatsAppClientBuilder builder = new WhatsAppClientBuilder(dockerConfig);
@@ -285,13 +285,13 @@ public class WhatsAppClone {
         }
     }
 
-    public void enviarEventoWpp(TypeEventWhatsApp typeEventWhatsApp, Object dado) {
-        getSessions().forEach(webSocketSession -> enviarEventoWpp(typeEventWhatsApp, dado, webSocketSession));
+    public void enviarEventoWpp(TypeEventWebSocket typeEventWebSocket, Object dado) {
+        getSessions().forEach(webSocketSession -> enviarEventoWpp(typeEventWebSocket, dado, webSocketSession));
     }
 
     @Async
-    public void enviarEventoWpp(TypeEventWhatsApp typeEventWhatsApp, Object dado, WebSocketSession ws) {
-        enviarParaWs(ws, new WsMessage(typeEventWhatsApp.name().replace("_", "-"), dado));
+    public void enviarEventoWpp(TypeEventWebSocket typeEventWebSocket, Object dado, WebSocketSession ws) {
+        enviarParaWs(ws, new WsMessage(typeEventWebSocket.name().replace("_", "-"), dado));
     }
 
     @Async
@@ -306,7 +306,7 @@ public class WhatsAppClone {
         ws = new ConcurrentWebSocketSessionDecorator(ws, 60000, 40 * 1024 * 1024);
         sessions.add(ws);
         try {
-            enviarEventoWpp(TypeEventWhatsApp.UPDATE_STATE, whatsAppClient.getDriverState().get().toString(), ws);
+            enviarEventoWpp(TypeEventWebSocket.UPDATE_STATE, whatsAppClient.getDriverState().get().toString(), ws);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
@@ -403,21 +403,18 @@ public class WhatsAppClone {
         return usuarioPrincipalAutoWired.getUsuario();
     }
 
-    public enum TypeEventWhatsApp {
+    public enum TypeEventWebSocket {
         UPDATE_CHAT,
         REMOVE_CHAT,
         NEW_CHAT,
         NEW_MSG,
-        NEW_MSG_V3,
         UPDATE_MSG,
         REMOVE_MSG,
-        REMOVE_MSG_V3,
-        UPDATE_MSG_V3,
         LOW_BATTERY,
         NEED_QRCODE,
         UPDATE_STATE,
         DISCONNECT,
         ERROR,
-        CHAT_PICTURE
+        CHANGE_PROPERTY_CHAT
     }
 }

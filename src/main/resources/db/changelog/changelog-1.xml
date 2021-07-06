@@ -216,10 +216,41 @@
     <changeSet id="30062021-1" author="JOAO">
         <dropColumn tableName="usuario" columnName="maxmemory"/>
     </changeSet>
-
     <changeSet id="30062021-2" author="JOAO">
         <addColumn tableName="usuario">
             <column name="maxmemory" type="int" defaultValueNumeric="1024"/>
         </addColumn>
+    </changeSet>
+    <changeSet id="05072021-1" author="JOAO">
+        <createTable tableName="whatsappobjectwithidproperty">
+            <column name="uuid" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_WHATSAPPOBJECTWITHIDPROPERTY"/>
+            </column>
+            <column defaultValueBoolean="false" name="ativo" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="atualizadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="criadoem" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="whatsappid" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="05072021-2" author="JOAO">
+        <createIndex tableName="whatsappobjectwithidproperty" indexName="IDX_WHATSAPPOBJECTWITHIDPROPERTY_WHATSAPPID">
+            <column name="whatsappid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet id="05072021-3" author="JOAO">
+        <addUniqueConstraint tableName="whatsappobjectwithidproperty" columnNames="whatsappid,type,key"/>
     </changeSet>
 </databaseChangeLog>

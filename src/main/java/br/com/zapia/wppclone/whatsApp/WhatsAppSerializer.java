@@ -38,14 +38,11 @@ public class WhatsAppSerializer {
 
     @Async
     public CompletableFuture<ArrayNode> serializeAllQuickReplies() {
-        //TODO: respostas rapidas
-        /*try {
-            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Array.from(Store.QuickReply.toJSON())"))));
-        } catch (JsonProcessingException e) {
-            log.log(Level.SEVERE, "SerializarAllQuickReplys", e);
-            return CompletableFuture.failedFuture(e);
-        }*/
-        return null;
+        return whatsAppClone.getWhatsAppClient().getAllQuickReplies().thenApply(quickReplies -> {
+            ArrayNode arrayNode = objectMapper.createArrayNode();
+            quickReplies.forEach(quickReply -> arrayNode.add(quickReply.getJsonNode()));
+            return arrayNode;
+        });
     }
 
     @Async
