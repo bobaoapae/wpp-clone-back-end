@@ -35,6 +35,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
+import utils.Utils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -245,9 +246,20 @@ public class WhatsAppClone {
                     if (dado.getBytes().length >= maxKb) {
                         List<String> partials = Util.splitStringByByteLength(dado, maxKb);
                         for (int x = 0; x < partials.size(); x++) {
-                            WebSocketResponseFrame frame = new WebSocketResponseFrame(webSocketResponse.getStatus(), partials.get(x));
+                            String data = partials.get(x);
+                            boolean isCompressed = false;
+                            try {
+                                data = Utils.compressAndReturnB64(data);
+                                isCompressed = true;
+                            } catch (Exception e) {
+                                logger.log(Level.SEVERE, "Compress Response Frame", e);
+                            }
+                            WebSocketResponseFrame frame = new WebSocketResponseFrame(webSocketResponse.getStatus(), data);
                             frame.setFrameId(x + 1);
                             frame.setQtdFrames(partials.size());
+                            if (isCompressed) {
+                                frame.setCompressionAlgorithm("ZLIB");
+                            }
                             enviarParaWs(finalSession, new WsMessage(webSocketRequest, frame));
                         }
                     } else {
