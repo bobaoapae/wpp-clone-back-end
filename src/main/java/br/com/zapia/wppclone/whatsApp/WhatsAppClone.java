@@ -242,7 +242,7 @@ public class WhatsAppClone {
                     } else {
                         dado = objectMapper.writeValueAsString(webSocketResponse.getResponse());
                     }
-                    int maxKb = 1024 * 1024;
+                    int maxKb = 128 * 1024;
                     if (dado.getBytes().length >= maxKb) {
                         List<String> partials = Util.splitStringByByteLength(dado, maxKb);
                         for (int x = 0; x < partials.size(); x++) {
