@@ -82,9 +82,9 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
-          <value>br.com.zapia.wppclone.handlersWebSocket.MarkReadHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkReadHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkRecordingHandler</value>
-          <value>br.com.zapia.wppclone.handlersWebSocket.MarkUnReadHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkUnReadHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.PinChatHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.PongHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.ResetHandler</value>

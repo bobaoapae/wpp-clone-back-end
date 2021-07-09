@@ -94,8 +94,8 @@
 
         <dependency>
             <groupId>br.com.zapia</groupId>
-            <artifactId>BotWhatsApp</artifactId>
-            <version>22.7</version>
+            <artifactId>WebWhatsAppLib</artifactId>
+            <version>20.0</version>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
