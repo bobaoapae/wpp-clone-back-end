@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Scope("usuario")
-@HandlerWebSocketEvent(event = EventWebSocket.DeleteChat)
+@HandlerWebSocketEvent(event = EventWebSocket.ClearChat)
 public class ClearChatHandler extends HandlerWebSocket<ClearChatRequest> {
 
     @Override
