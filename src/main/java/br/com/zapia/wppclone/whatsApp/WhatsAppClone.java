@@ -2,7 +2,7 @@ package br.com.zapia.wppclone.whatsApp;
 
 import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
 import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
-import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
+import br.com.zapia.wpp.api.model.handlersWebSocket.IHandlerWebSocket;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponseFrame;
 import br.com.zapia.wpp.client.docker.DockerConfigBuilder;
@@ -13,11 +13,12 @@ import br.com.zapia.wppclone.authentication.UsuarioPrincipalAutoWired;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextCallable;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextRunnable;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
-import br.com.zapia.wppclone.handlersWebSocket.IHandlerWebSocketSpring;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
+import br.com.zapia.wppclone.ws.WebSocketRequestSession;
+import br.com.zapia.wppclone.ws.WebSocketSender;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -32,7 +33,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
-import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import utils.Utils;
@@ -42,6 +42,7 @@ import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +69,8 @@ public class WhatsAppClone {
     private WhatsAppCloneService whatsAppCloneService;
     @Autowired
     private SendEmailService sendEmailService;
+    @Autowired
+    private WebSocketSender webSocketSender;
     private List<WebSocketSession> sessions;
     private final Logger logger = Logger.getLogger(WhatsAppClone.class.getName());
     private WhatsAppClient whatsAppClient;
@@ -84,7 +87,7 @@ public class WhatsAppClone {
     private boolean autoUpdateDockerImage;
     private boolean forceShutdown;
     private ObjectMapper objectMapper;
-    private Map<EventWebSocket, IHandlerWebSocketSpring> handlers;
+    private Map<EventWebSocket, IHandlerWebSocket> handlers;
     private LocalDateTime lastTimeWithSessions;
     private LocalDateTime lastPingRemoteApi;
     private Usuario usuarioResponsavelInstancia;
@@ -100,13 +103,15 @@ public class WhatsAppClone {
             handlers = new ConcurrentHashMap<>();
             Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
             declaredConstructor.setAccessible(true);
-            declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
-                try {
-                    String className = aClass.getSimpleName();
-                    className = Character.toLowerCase(className.charAt(0)) + className.substring(1);
-                    handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), (IHandlerWebSocketSpring) ap.getBean(className));
-                } catch (Exception e) {
-                    logger.log(Level.SEVERE, "Init Handlers", e);
+            declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getSubTypesOf(IHandlerWebSocket.class).forEach(aClass -> {
+                if (!Modifier.isAbstract(aClass.getModifiers())) {
+                    try {
+                        String className = aClass.getSimpleName();
+                        className = Character.toLowerCase(className.charAt(0)) + className.substring(1);
+                        handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), (IHandlerWebSocket) ap.getBean(className));
+                    } catch (Exception e) {
+                        logger.log(Level.SEVERE, "Init Handlers", e);
+                    }
                 }
             });
             File file = new File(pathLogs + getUsuario().getUsuarioResponsavelPelaInstancia().getUuid());
@@ -115,11 +120,6 @@ public class WhatsAppClone {
             }
             sessions = new ArrayList<>();
             onConnect = () -> {
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    logger.log(Level.SEVERE, "OnConnect", e);
-                }
                 whatsAppClient.addNewChatListener(chat -> {
                     whatsAppSerializer.serializeChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TypeEventWebSocket.NEW_CHAT, jsonNodes);
@@ -201,22 +201,15 @@ public class WhatsAppClone {
         }
     }
 
-    @Async
-    public void enviarParaWs(WebSocketSession ws, WsMessage message) {
+    private void enviarParaWs(WebSocketSession ws, WsMessage message) {
         if (!(ws instanceof ConcurrentWebSocketSessionDecorator)) {
             ws = buscarWsDecorator(ws);
         }
         if (ws.isOpen()) {
-            try {
-                ws.sendMessage(new TextMessage(message.toString()));
-            } catch (Exception e) {
-                logger.log(Level.SEVERE, "EnviarParaWs", e);
-                try {
-                    ws.close(CloseStatus.SESSION_NOT_RELIABLE);
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, "CloseWs", ex);
-                }
-            }
+            webSocketSender.sendToWs(ws, message).exceptionally(throwable -> {
+                logger.log(Level.SEVERE, "EnviarParaWs", throwable);
+                return null;
+            });
         } else {
             removerSession(ws);
         }
@@ -230,11 +223,11 @@ public class WhatsAppClone {
     }
 
     @Async
-    public void processWebSocketMsg(WebSocketSession session, WebSocketRequest webSocketRequest) {
+    public void processWebSocketMsg(WebSocketSession session, WebSocketRequestSession webSocketRequest) {
         lastTimeWithSessions = LocalDateTime.now();
         WebSocketSession finalSession = buscarWsDecorator(session);
         try {
-            processWebSocketResponse((Usuario) session.getAttributes().get("usuario"), webSocketRequest).thenAccept(webSocketResponse -> {
+            processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
                 try {
                     String dado;
                     if (webSocketResponse.getResponse() instanceof String) {
@@ -279,16 +272,16 @@ public class WhatsAppClone {
         }
     }
 
-    private CompletableFuture<WebSocketResponse> processWebSocketResponse(Usuario usuario, WebSocketRequest webSocketRequest) {
+    private CompletableFuture<WebSocketResponse> processWebSocketResponse(WebSocketRequestSession webSocketRequest) {
         try {
-            IHandlerWebSocketSpring handlerWebSocket = handlers.get(webSocketRequest.getWebSocketRequestPayLoad().getEvent());
+            IHandlerWebSocket handlerWebSocket = handlers.get(webSocketRequest.getWebSocketRequestPayLoad().getEvent());
             if (handlerWebSocket != null) {
                 if (handlerWebSocket.getClassType().isAssignableFrom(String.class)) {
-                    return handlerWebSocket.handle(usuario, webSocketRequest.getWebSocketRequestPayLoad().getPayload().toString());
+                    return handlerWebSocket.handle(webSocketRequest, webSocketRequest.getWebSocketRequestPayLoad().getPayload().toString());
                 } else if (!handlerWebSocket.getClassType().isAssignableFrom(Void.class)) {
-                    return handlerWebSocket.handle(usuario, objectMapper.readValue(webSocketRequest.getWebSocketRequestPayLoad().getPayload().toString(), handlerWebSocket.getClassType()));
+                    return handlerWebSocket.handle(webSocketRequest, objectMapper.readValue(webSocketRequest.getWebSocketRequestPayLoad().getPayload().toString(), handlerWebSocket.getClassType()));
                 } else {
-                    return handlerWebSocket.handle(usuario, null);
+                    return handlerWebSocket.handle(webSocketRequest, null);
                 }
             } else {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_IMPLEMENTED.value()));

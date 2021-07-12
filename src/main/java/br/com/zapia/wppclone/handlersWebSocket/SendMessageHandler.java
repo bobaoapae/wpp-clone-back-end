@@ -1,21 +1,21 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
-import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
-import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
+import br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSendMessageHandler;
 import br.com.zapia.wpp.api.model.payloads.SendMessageRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wpp.client.docker.model.Message;
-import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.modelo.WhatsAppObjectWithIdProperty;
 import br.com.zapia.wppclone.modelo.dto.WhatsAppObjectWithIdPropertyResponseDTO;
 import br.com.zapia.wppclone.modelo.enums.WhatsAppObjectWithIdType;
 import br.com.zapia.wppclone.servicos.UploadFileService;
 import br.com.zapia.wppclone.servicos.WhatsAppObjectWithPropertyService;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
+import br.com.zapia.wppclone.ws.WebSocketRequestSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -23,12 +23,17 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 @Scope("usuario")
-@HandlerWebSocketEvent(event = EventWebSocket.SendMessage)
-public class SendMessageHandler extends HandlerWebSocket<SendMessageRequest> {
+public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequestSession> {
 
+    private static final Logger logger = Logger.getLogger(SendMessageHandler.class.getName());
+
+    @Autowired
+    @Lazy
+    protected WhatsAppClone whatsAppClone;
     @Autowired
     private UploadFileService uploadFileService;
     @Autowired
@@ -37,7 +42,8 @@ public class SendMessageHandler extends HandlerWebSocket<SendMessageRequest> {
     private ModelMapper modelMapper;
 
     @Override
-    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, SendMessageRequest sendMessageRequest) throws JsonProcessingException {
+    public CompletableFuture<WebSocketResponse> handle(WebSocketRequestSession webSocketRequestSession, SendMessageRequest sendMessageRequest) throws JsonProcessingException {
+        var usuario = webSocketRequestSession.getUsuario();
         return whatsAppClone.getWhatsAppClient().findChatById(sendMessageRequest.getChatId()).thenCompose(chat -> {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value()));
@@ -112,10 +118,5 @@ public class SendMessageHandler extends HandlerWebSocket<SendMessageRequest> {
                 }
             }
         });
-    }
-
-    @Override
-    public Class<SendMessageRequest> getClassType() {
-        return SendMessageRequest.class;
     }
 }

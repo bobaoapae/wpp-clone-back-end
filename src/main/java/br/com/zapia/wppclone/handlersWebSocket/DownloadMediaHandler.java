@@ -1,12 +1,13 @@
 package br.com.zapia.wppclone.handlersWebSocket;
 
-import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
-import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
+import br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDownloadMediaHandler;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wpp.client.docker.model.MediaMessage;
-import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.servicos.DownloadFileService;
+import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
+import br.com.zapia.wppclone.ws.WebSocketRequestSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -15,14 +16,16 @@ import java.util.concurrent.CompletableFuture;
 
 @Component
 @Scope("usuario")
-@HandlerWebSocketEvent(event = EventWebSocket.DownloadMedia)
-public class DownloadMediaHandler extends HandlerWebSocket<String> {
+public class DownloadMediaHandler extends AbstractDownloadMediaHandler<WebSocketRequestSession> {
 
+    @Autowired
+    @Lazy
+    protected WhatsAppClone whatsAppClone;
     @Autowired
     private DownloadFileService downloadFileService;
 
     @Override
-    public CompletableFuture<WebSocketResponse> handle(Usuario usuario, String msgId) {
+    public CompletableFuture<WebSocketResponse> handle(WebSocketRequestSession webSocketRequestSession, String msgId) {
         return whatsAppClone.getWhatsAppClient().findMessage(msgId).thenCompose(msg -> {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value()));
@@ -39,10 +42,5 @@ public class DownloadMediaHandler extends HandlerWebSocket<String> {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.BAD_REQUEST.value()));
             }
         });
-    }
-
-    @Override
-    public Class<String> getClassType() {
-        return String.class;
     }
 }

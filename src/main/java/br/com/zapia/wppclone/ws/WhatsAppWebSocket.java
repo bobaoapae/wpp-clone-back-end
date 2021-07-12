@@ -1,7 +1,6 @@
 package br.com.zapia.wppclone.ws;
 
 import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
-import br.com.zapia.wpp.api.model.payloads.WebSocketRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
 import br.com.zapia.wppclone.authentication.JwtAuthenticationFilter;
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
@@ -41,7 +40,7 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
             try {
-                WebSocketRequest webSocketRequest = mapper.readValue(message.getPayload(), WebSocketRequest.class);
+                WebSocketRequestSession webSocketRequest = mapper.readValue(message.getPayload(), WebSocketRequestSession.class);
                 if (webSocketRequest.getWebSocketRequestPayLoad().getEvent() == EventWebSocket.Token) {
                     if (tokenProvider.validateTokenWs(webSocketRequest.getWebSocketRequestPayLoad().getPayload())) {
                         Usuario usuario = UsuarioScopedContext.getUsuario();
@@ -71,6 +70,7 @@ public class WhatsAppWebSocket extends AbstractWebSocketHandler {
                         result = true;
                     }
                     if (result) {
+                        webSocketRequest.setUsuario((Usuario) session.getAttributes().get("usuario"));
                         getWhatsAppClone().processWebSocketMsg(session, webSocketRequest);
                     } else {
                         session.sendMessage(new TextMessage(new WsMessage(webSocketRequest, new WebSocketResponse(HttpStatus.UNAUTHORIZED.value())).toString()));
