@@ -4,7 +4,6 @@ import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
 import br.com.zapia.wpp.api.model.handlersWebSocket.HandlerWebSocketEvent;
 import br.com.zapia.wpp.api.model.handlersWebSocket.IHandlerWebSocket;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
-import br.com.zapia.wpp.api.model.payloads.WebSocketResponseFrame;
 import br.com.zapia.wpp.client.docker.DockerConfigBuilder;
 import br.com.zapia.wpp.client.docker.WhatsAppClient;
 import br.com.zapia.wpp.client.docker.WhatsAppClientBuilder;
@@ -16,7 +15,6 @@ import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedC
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
-import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.ws.WebSocketRequestSession;
 import br.com.zapia.wppclone.ws.WebSocketSender;
 import br.com.zapia.wppclone.ws.WsMessage;
@@ -35,7 +33,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
-import utils.Utils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -120,6 +117,11 @@ public class WhatsAppClone {
             }
             sessions = new ArrayList<>();
             onConnect = () -> {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    logger.log(Level.SEVERE, "Wait on Connect", e);
+                }
                 whatsAppClient.addNewChatListener(chat -> {
                     whatsAppSerializer.serializeChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TypeEventWebSocket.NEW_CHAT, jsonNodes);
@@ -229,35 +231,7 @@ public class WhatsAppClone {
         try {
             processWebSocketResponse(webSocketRequest).thenAccept(webSocketResponse -> {
                 try {
-                    String dado;
-                    if (webSocketResponse.getResponse() instanceof String) {
-                        dado = (String) webSocketResponse.getResponse();
-                    } else {
-                        dado = objectMapper.writeValueAsString(webSocketResponse.getResponse());
-                    }
-                    int maxKb = 128 * 1024;
-                    if (dado.getBytes().length >= maxKb) {
-                        List<String> partials = Util.splitStringByByteLength(dado, maxKb);
-                        for (int x = 0; x < partials.size(); x++) {
-                            String data = partials.get(x);
-                            boolean isCompressed = false;
-                            try {
-                                data = Utils.compressAndReturnB64(data);
-                                isCompressed = true;
-                            } catch (Exception e) {
-                                logger.log(Level.SEVERE, "Compress Response Frame", e);
-                            }
-                            WebSocketResponseFrame frame = new WebSocketResponseFrame(webSocketResponse.getStatus(), data);
-                            frame.setFrameId(x + 1);
-                            frame.setQtdFrames(partials.size());
-                            if (isCompressed) {
-                                frame.setCompressionAlgorithm("ZLIB");
-                            }
-                            enviarParaWs(finalSession, new WsMessage(webSocketRequest, frame));
-                        }
-                    } else {
-                        enviarParaWs(finalSession, new WsMessage(webSocketRequest, webSocketResponse));
-                    }
+                    enviarParaWs(finalSession, new WsMessage(webSocketRequest, webSocketResponse));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
