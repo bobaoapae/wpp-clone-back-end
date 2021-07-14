@@ -42,15 +42,15 @@
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkComposingHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDeleteMessageHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetAllQuickRepliesHandler</value>
-          <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactHandler</value>
+        <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPausedHandler</value>
-          <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPlayedHandler</value>
+        <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPlayedHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkUnReadHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindPictureHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindChatHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSendMessageHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSeeChatHandler</value>
-          <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactByNumberHandler</value>
+        <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactByNumberHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractClearChatHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractPongHandler</value>
         <value>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDeleteChatHandler</value>
@@ -81,32 +81,32 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
       </values>
     </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetSelfInfoHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetAllContactsHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindChatByNumberHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkComposingHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDeleteMessageHandler</key>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetSelfInfoHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetAllContactsHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindChatByNumberHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkComposingHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDeleteMessageHandler</key>
       <values>
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
       </values>
@@ -118,34 +118,34 @@
       </values>
     </entry>
     <entry>
-        <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactHandler</key>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactHandler</key>
       <values>
-          <value>br.com.zapia.wppclone.handlersWebSocket.FindContactHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindContactHandler</value>
       </values>
     </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPausedHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPlayedHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkUnReadHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.MarkUnReadHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindPictureHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
-          </values>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPausedHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkPlayedHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkUnReadHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkUnReadHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindPictureHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
+      </values>
     </entry>
     <entry>
       <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindChatHandler</key>
@@ -156,32 +156,32 @@
     <entry>
       <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSendMessageHandler</key>
       <values>
-          <value>br.com.zapia.wppclone.handlersWebSocket.SendMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.SendMessageHandler</value>
       </values>
     </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSeeChatHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.SeeChatHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactByNumberHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.FindContactByNumberHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractClearChatHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractPongHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.PongHandler</value>
-          </values>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSeeChatHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.SeeChatHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractFindContactByNumberHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindContactByNumberHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractClearChatHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractPongHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.PongHandler</value>
+      </values>
     </entry>
     <entry>
       <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDeleteChatHandler</key>
@@ -235,25 +235,25 @@
   <TypeAnnotationsScanner>
     <entry>
       <key>org.springframework.stereotype.Component</key>
-        <values>
-            <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindContactByNumberHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindContactHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickRepliesHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindContactByNumberHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindContactHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickRepliesHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
@@ -272,25 +272,25 @@
     </entry>
     <entry>
       <key>org.springframework.context.annotation.Scope</key>
-        <values>
-            <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindContactByNumberHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindContactHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickRepliesHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
-            <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ClearChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DeleteMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatByNumberHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindChatHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindContactByNumberHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindContactHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.FindPictureHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.ForwardMessageHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllChatsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickRepliesHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkComposingHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPausedHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.MarkPlayedHandler</value>
