@@ -1,9 +1,6 @@
 package br.com.zapia.wppclone.whatsApp;
 
-import br.com.zapia.wpp.client.docker.model.Chat;
-import br.com.zapia.wpp.client.docker.model.GroupInviteLinkInfo;
-import br.com.zapia.wpp.client.docker.model.Message;
-import br.com.zapia.wpp.client.docker.model.WhatsAppObjectWithId;
+import br.com.zapia.wpp.client.docker.model.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -64,21 +61,15 @@ public class WhatsAppSerializer {
     }
 
     @Async
-    public CompletableFuture<ObjectNode> serializeChat(Chat chat) {
-        return serializeChat(chat, false);
+    public CompletableFuture<ObjectNode> serializeContact(Contact contact) {
+        var objectNode = Objects.requireNonNull(converterParaObjectNode(contact));
+        return CompletableFuture.completedFuture(objectNode);
     }
 
     @Async
-    public CompletableFuture<ObjectNode> serializeChat(Chat chat, boolean withPicture) {
-        ObjectNode chatNode = Objects.requireNonNull(converterParaObjectNode(chat));
-        //TODO: convertBase64
-        /*if (withPicture) {
-            return chat.getContact().getProfilePic().thenApply(s -> {
-                chatNode.put("picture", s);
-                return chatNode;
-            });
-        }*/
-        return CompletableFuture.completedFuture(chatNode);
+    public CompletableFuture<ObjectNode> serializeChat(Chat chat) {
+        var objectNode = Objects.requireNonNull(converterParaObjectNode(chat));
+        return CompletableFuture.completedFuture(objectNode);
     }
 
     @Async
