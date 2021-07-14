@@ -136,28 +136,29 @@ public class WhatsAppClone {
             logger = Logger.getLogger(WhatsAppClone.class.getName());
             sessions = new ConcurrentArrayList<>();
             onConnect = () -> {
+                driver.executeJavaScript("window.Store.Msg.modelClass.prototype.__props.push(\"senderObj\");");
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "OnConnect", e);
                 }
                 driver.getFunctions().subscribeToLowBattery(onLowBaterry);
-                driver.getFunctions().addChatListenner(chat -> {
+                driver.getFunctions().addChatListener(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
                     });
                 }, EventType.ADD);
-                driver.getFunctions().addChatListenner(chat -> {
+                driver.getFunctions().addChatListener(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, jsonNodes);
                     });
                 }, EventType.CHANGE, "formattedTitle", "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime", "customProperties");
-                driver.getFunctions().addChatListenner(chat -> {
+                driver.getFunctions().addChatListener(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, jsonNodes);
                     });
                 }, EventType.REMOVE);
-                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                driver.getFunctions().addMsgListener(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                     @Override
                     public void run(Message m) {
                         serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
@@ -165,7 +166,7 @@ public class WhatsAppClone {
                         });
                     }
                 }, EventType.ADD);
-                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                driver.getFunctions().addMsgListener(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                     @Override
                     public void run(Message m) {
                         serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
@@ -173,7 +174,7 @@ public class WhatsAppClone {
                         });
                     }
                 }, EventType.REMOVE);
-                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                driver.getFunctions().addMsgListener(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                     @Override
                     public void run(Message m) {
                         serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
