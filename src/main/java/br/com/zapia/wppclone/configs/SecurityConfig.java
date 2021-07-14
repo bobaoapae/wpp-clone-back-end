@@ -82,11 +82,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter implements WebM
                         "/**/*.css",
                         "/**/*.js")
                 .permitAll()
-                .antMatchers("/api/auth/**", "/api/ws/**")
-                .permitAll()
-                .antMatchers("/api/maintenance/resetDatabase")
-                .permitAll()
-                .antMatchers("/api/hotmart/**")
+                .antMatchers("/api/auth/**", "/api/ws/**", "/api/maintenance/resetDatabase")
                 .permitAll()
                 .anyRequest()
                 .authenticated();

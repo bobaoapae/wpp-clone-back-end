@@ -11,14 +11,13 @@ import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Scope("usuario")
 @RestController
 @RequestMapping("/api/properties")
 public class WhatsAppObjectPropertiesRestController {
@@ -27,6 +26,7 @@ public class WhatsAppObjectPropertiesRestController {
     private WhatsAppObjectWithPropertyService whatsAppObjectWithPropertyService;
     @Autowired
     private ModelMapper modelMapper;
+    @Lazy
     @Autowired
     private WhatsAppClone whatsAppClone;
 

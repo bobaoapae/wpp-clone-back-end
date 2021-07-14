@@ -2,7 +2,6 @@ package br.com.zapia.wppclone.ws;
 
 import br.com.zapia.wpp.api.model.handlersWebSocket.EventWebSocket;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
-import br.com.zapia.wppclone.authentication.JwtAuthenticationFilter;
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.modelo.Usuario;
@@ -25,7 +24,7 @@ import java.io.IOException;
 @Service
 public class WhatsAppWebSocket extends AbstractWebSocketHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(WhatsAppWebSocket.class);
 
     @Autowired
     private ApplicationContext applicationContext;
