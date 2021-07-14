@@ -54,7 +54,7 @@ public class ForwardMessageHandler extends AbstractForwardMessageHandler<WebSock
                 }
             });
         }).thenCompose(aVoid -> {
-            return whatsAppClone.getWhatsAppClient().findChatById(msgs.get(0).getContact().getId()).thenCompose(chat -> {
+            return whatsAppClone.getWhatsAppClient().findChatById(msgs.get(0).getSenderId()).thenCompose(chat -> {
                 if (chats.size() > 0 && msgs.size() > 0) {
                     return chat.forwardMessages(chats.toArray(Chat[]::new), msgs.toArray(Message[]::new)).thenApply(jsValue -> {
                         return new WebSocketResponse(HttpStatus.OK.value());
