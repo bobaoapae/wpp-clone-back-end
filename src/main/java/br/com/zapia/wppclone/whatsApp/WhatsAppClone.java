@@ -168,7 +168,7 @@ public class WhatsAppClone {
                 enviarEventoWpp(TypeEventWebSocket.DISCONNECT, "Falha ao Conectar ao Telefone");
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
-            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString(), dockerEndPoint)
+            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString() + "-" + usuarioPrincipalAutoWired.getUsuario().getLogin(), dockerEndPoint)
                     .withAutoUpdateBaseImage(autoUpdateDockerImage)
                     .withMaxMemoryMB(usuarioResponsavelInstancia.getMaxMemory())
                     .build();
