@@ -137,6 +137,7 @@ public class WhatsAppClone {
             sessions = new ConcurrentArrayList<>();
             onConnect = () -> {
                 driver.executeJavaScript("window.Store.Msg.modelClass.prototype.__props.push(\"senderObj\");");
+                driver.executeJavaScript("window.Store.Chat.modelClass.prototype.__props.push(\"contact\");");
                 try {
                     Thread.sleep(2000);
                 } catch (InterruptedException e) {
