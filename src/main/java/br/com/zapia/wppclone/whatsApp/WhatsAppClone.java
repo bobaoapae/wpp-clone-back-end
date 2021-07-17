@@ -249,7 +249,7 @@ public class WhatsAppClone {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Init", e);
             if (driver != null) {
-                driver.finalizar();
+                driver.stop();
             }
             throw e;
         }
@@ -362,7 +362,7 @@ public class WhatsAppClone {
                 dados.put("isBussiness", isBussiness);
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             } else {
-                driver.reiniciar();
+                driver.restartDriver(100, "Fail on build init");
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, "My Chat Null", ws);
             }
         } catch (Exception e) {
@@ -444,7 +444,7 @@ public class WhatsAppClone {
                 }
             }
         }
-        driver.finalizar();
+        driver.stop();
         whatsAppCloneService.removerInstancia(this);
     }
 
