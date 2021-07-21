@@ -54,12 +54,10 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                 var flagAppend = lastMessage == null || lastUserSendMessageProperty == null || !lastUserSendMessageProperty.getValue().equals(usuario.getUuid().toString());
                 String textMsg;
                 if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    textMsg = "*".concat(usuario.getNome()).concat(" diz:* ").concat(sendMessageRequest.getText());
-                } else {
-                    textMsg = sendMessageRequest.getText();
-                }
-                if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    textMsg = "*Enviado por: ".concat(usuario.getNome()).concat("*");
+                    textMsg = "*".concat(usuario.getNome()).concat(" diz:*");
+                    if (sendMessageRequest.getFile() == null) {
+                        textMsg = textMsg.concat(" " + sendMessageRequest.getText());
+                    }
                 } else {
                     textMsg = sendMessageRequest.getText();
                 }
