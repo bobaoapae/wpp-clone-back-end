@@ -38,11 +38,8 @@ public class UploadFileService {
         return key;
     }
 
-    public File getFileUploaded(String key) {
-        return filesUploaded.getOrDefault(key, null);
+    public File getAndRemoveFileUploaded(String key) {
+        return filesUploaded.remove(key);
     }
 
-    public void removeFileUploaded(String key) {
-        filesUploaded.remove(key);
-    }
 }
