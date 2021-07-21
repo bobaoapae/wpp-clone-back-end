@@ -49,36 +49,37 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value()));
             } else {
-                Message lastMessage = chat.getLastMsg();
-                var lastUserSendMessageProperty = whatsAppObjectWithPropertyService.buscarPropriedade(WhatsAppObjectWithIdType.CHAT, chat.getId(), "lastUserSendMessage");
-                var flagAppend = lastMessage == null || lastUserSendMessageProperty == null || !lastUserSendMessageProperty.getValue().equals(usuario.getUuid().toString());
-                String textMsg;
-                if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    textMsg = "*".concat(usuario.getNome()).concat(" diz:*");
-                    if (sendMessageRequest.getFile() == null) {
-                        textMsg = textMsg.concat(" " + sendMessageRequest.getText());
-                    }
-                } else {
-                    textMsg = sendMessageRequest.getText();
-                }
-                if (flagAppend) {
-                    if (lastUserSendMessageProperty == null) {
-                        lastUserSendMessageProperty = new WhatsAppObjectWithIdProperty();
-                        lastUserSendMessageProperty.setType(WhatsAppObjectWithIdType.CHAT);
-                        lastUserSendMessageProperty.setWhatsAppId(chat.getId());
-                        lastUserSendMessageProperty.setKey("lastUserSendMessage");
-                        lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
-                        if (!whatsAppObjectWithPropertyService.salvar(lastUserSendMessageProperty)) {
-                            logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
-                        }
-                    } else {
-                        if (!whatsAppObjectWithPropertyService.alterarValor(lastUserSendMessageProperty.getUuid(), usuario.getUuid().toString())) {
-                            logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
-                        }
 
-                        lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
+                var isSendOperatorNameEnabled = usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR");
+                var textMsg = sendMessageRequest.getText();
+                if (isSendOperatorNameEnabled) {
+                    Message lastMessage = chat.getLastMsg();
+                    var lastUserSendMessageProperty = whatsAppObjectWithPropertyService.buscarPropriedade(WhatsAppObjectWithIdType.CHAT, chat.getId(), "lastUserSendMessage");
+                    var flagAppend = lastMessage == null || lastUserSendMessageProperty == null || !lastUserSendMessageProperty.getValue().equals(usuario.getUuid().toString());
+                    if (flagAppend) {
+                        if (sendMessageRequest.getFile() == null) {
+                            textMsg = "*".concat(usuario.getNome()).concat(" diz:* ".concat(sendMessageRequest.getText()));
+                        } else {
+                            textMsg = "* Enviado por: ".concat(usuario.getNome()).concat("* \n".concat(sendMessageRequest.getText()));
+                        }
+                        if (lastUserSendMessageProperty == null) {
+                            lastUserSendMessageProperty = new WhatsAppObjectWithIdProperty();
+                            lastUserSendMessageProperty.setType(WhatsAppObjectWithIdType.CHAT);
+                            lastUserSendMessageProperty.setWhatsAppId(chat.getId());
+                            lastUserSendMessageProperty.setKey("lastUserSendMessage");
+                            lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
+                            if (!whatsAppObjectWithPropertyService.salvar(lastUserSendMessageProperty)) {
+                                logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
+                            }
+                        } else {
+                            if (!whatsAppObjectWithPropertyService.alterarValor(lastUserSendMessageProperty.getUuid(), usuario.getUuid().toString())) {
+                                logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
+                            }
+
+                            lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
+                        }
+                        whatsAppClone.enviarEventoWpp(WhatsAppClone.TypeEventWebSocket.CHANGE_PROPERTY_CHAT, modelMapper.map(lastUserSendMessageProperty, WhatsAppObjectWithIdPropertyResponseDTO.class));
                     }
-                    whatsAppClone.enviarEventoWpp(WhatsAppClone.TypeEventWebSocket.CHANGE_PROPERTY_CHAT, modelMapper.map(lastUserSendMessageProperty, WhatsAppObjectWithIdPropertyResponseDTO.class));
                 }
 
 
