@@ -182,7 +182,7 @@ public class WhatsAppClone {
                             enviarEventoWpp(TipoEventoWpp.UPDATE_MSG, jsonNodes);
                         });
                     }
-                }, EventType.CHANGE, "ack", "isRevoked", "oldId", "customProperties");
+                }, EventType.CHANGE, "ack", "isRevoked", "oldId", "noEarlierMsgs");
             };
             onLowBaterry = (e) -> {
                 enviarEventoWpp(TipoEventoWpp.LOW_BATTERY, e);
