@@ -22,7 +22,7 @@ public class Util {
         return encoder.encode(password);
     }
 
-    public static String gerarSenha(int length, boolean specialChars) {
+    public static String generateRandomString(int length, boolean specialChars) {
         PasswordGenerator gen = new PasswordGenerator();
         CharacterData lowerCaseChars = EnglishCharacterData.LowerCase;
         CharacterRule lowerCaseRule = new CharacterRule(lowerCaseChars);

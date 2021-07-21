@@ -42,6 +42,7 @@ public class UsuariosRestController {
     public ResponseEntity<?> criarNovoUsuario(@DTO(UsuarioCreateDTO.class) Usuario usuario) {
         usuario.setUsuarioPai(this.usuario.getUsuario());
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_USER"));
+        usuario.setMaxMemory(1024);
         if (usuariosService.salvar(usuario)) {
             return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
@@ -202,7 +203,7 @@ public class UsuariosRestController {
     public ResponseEntity<?> resetarSenha(@PathVariable("uuid") String uuid) {
         Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
         if (usuario != null) {
-            String novaSenha = Util.gerarSenha(10, false);
+            String novaSenha = Util.generateRandomString(10, false);
             usuario.setSenha(novaSenha);
             if (usuariosService.salvar(usuario)) {
                 return ResponseEntity.ok().body(novaSenha);

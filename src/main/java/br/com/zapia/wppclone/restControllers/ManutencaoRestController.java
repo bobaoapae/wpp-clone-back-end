@@ -42,7 +42,7 @@ public class ManutencaoRestController {
             permissoesService.salvar(new Permissao("ROLE_USER"));
             permissoesService.salvar(new Permissao("ROLE_ADMIN"));
             permissoesService.salvar(new Permissao("ROLE_SUPER_ADMIN"));
-            String password = Util.gerarSenha(20, true);
+            String password = Util.generateRandomString(20, true);
             Usuario usuario = new Usuario();
             usuario.setLogin("admin");
             usuario.setSenha(password);
