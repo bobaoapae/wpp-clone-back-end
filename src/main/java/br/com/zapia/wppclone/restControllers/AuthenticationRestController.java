@@ -3,7 +3,6 @@ package br.com.zapia.wppclone.restControllers;
 import br.com.zapia.wppclone.authentication.JwtTokenProvider;
 import br.com.zapia.wppclone.authentication.UsuarioAuthentication;
 import br.com.zapia.wppclone.modelo.TrocaDeNumero;
-import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.modelo.dto.TrocaDeNumeroDTO;
 import br.com.zapia.wppclone.modelo.dto.UsuarioResponseDTO;
 import br.com.zapia.wppclone.payloads.LoginRequest;
@@ -11,12 +10,6 @@ import br.com.zapia.wppclone.payloads.LoginResponse;
 import br.com.zapia.wppclone.servicos.TrocasDeNumerosService;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
-import br.com.zapia.wppclone.utils.Util;
-import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
-import modelo.Chat;
-import modelo.DriverState;
-import modelo.Message;
-import modelo.MessageBuilder;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -95,46 +88,6 @@ public class AuthenticationRestController {
                 }
             } else {
                 return ResponseEntity.badRequest().body("Token expirado, realize uma nova solicitação.");
-            }
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-    }
-
-    @PutMapping("/resetPassword")
-    public ResponseEntity<?> resetarSenha(@RequestParam("login") String login) {
-        Usuario usuario = usuariosService.buscarUsuarioPorLogin(login);
-        if (usuario != null) {
-            String novaSenha = Util.gerarSenha(10, false);
-            WhatsAppClone instanciaGeral = whatsAppCloneService.getInstanciaGeral();
-            if (instanciaGeral != null && instanciaGeral.getDriver().getDriverState() == DriverState.LOGGED) {
-                Chat chat = instanciaGeral.getDriver().getFunctions().getChatByNumber(usuario.getTelefone()).join();
-                if (chat != null) {
-                    String oldHash = usuario.getSenha();
-                    usuario.setSenha(novaSenha);
-                    if (usuariosService.salvar(usuario)) {
-                        MessageBuilder messageBuilder = new MessageBuilder();
-                        messageBuilder.text("Olá ").textBold(usuario.getNome()).text(".")
-                                .newLine()
-                                .newLine()
-                                .text("Sua nova senha de acesso é: ").newLine().newLine().textBold(novaSenha);
-                        Message sendMessage = chat.sendWebSite("https://wpp.zapia.com.br/login", messageBuilder.build()).join();
-                        if (sendMessage != null) {
-                            return ResponseEntity.ok(modelMapper.map(usuario, UsuarioResponseDTO.class));
-                        } else {
-                            usuario.setSenha(oldHash);
-                            usuario.setUpdateSenha(false);
-                            usuariosService.salvar(usuario);
-                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Falha ao enviar a mensagem contendo a nova senha, tente novamente mais tarde.");
-                        }
-                    } else {
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Falha ao salvar usuário, tente novamente mais tarde.");
-                    }
-                } else {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Não foi possível encontrar uma conta do WhatsApp com o número cadastrado para esse usuário.");
-                }
-            } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Falha ao enviar nova senha por WhatsApp, tente novamente mais tarde.");
             }
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
