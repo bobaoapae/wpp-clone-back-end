@@ -31,17 +31,13 @@ public class SendMessageHandler extends HandlerWebSocket {
                     boolean flagAppend = lastMessage == null || !usuario.getUuid().toString().equals(lastMessage.getCustomProperty("usuario").join());
                     String textMsg;
                     if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                        textMsg = "*".concat(usuario.getNome()).concat(" diz:* ").concat(sendMessageRequest.getMessage());
+                        textMsg = "*".concat(usuario.getNome()).concat(" diz:*");
+                        if (Strings.isNullOrEmpty(sendMessageRequest.getFileUUID())) {
+                            textMsg = textMsg.concat(" " + sendMessageRequest.getMessage());
+                        }
                     } else {
                         textMsg = sendMessageRequest.getMessage();
                     }
-                    String captionImage;
-                    if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                        textMsg = "*Enviado por: ".concat(usuario.getNome()).concat("*");
-                    } else {
-                        textMsg = sendMessageRequest.getMessage();
-                    }
-
 
                     var msgBuilder = new MessageOptions.Builder();
 
