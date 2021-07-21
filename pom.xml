@@ -95,7 +95,7 @@
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>wpp-client-docker</artifactId>
-            <version>3.7</version>
+            <version>3.8</version>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>

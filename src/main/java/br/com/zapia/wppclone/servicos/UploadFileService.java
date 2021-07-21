@@ -1,5 +1,6 @@
 package br.com.zapia.wppclone.servicos;
 
+import br.com.zapia.wppclone.TemporaryFileHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class UploadFileService {
 
-    private final Map<String, File> filesUploaded;
+    private final Map<String, TemporaryFileHolder> filesUploaded;
 
     public UploadFileService() {
         filesUploaded = new ConcurrentHashMap<>();
@@ -29,20 +30,16 @@ public class UploadFileService {
             throw new IllegalArgumentException("Sorry! Filename contains invalid path sequence " + fileName);
         }
 
-        File file = File.createTempFile(multipartFile.getOriginalFilename() + "#", ".tmp");
+        File file = File.createTempFile(multipartFile.getOriginalFilename(), ".tmp");
 
         Files.copy(multipartFile.getInputStream(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
-        filesUploaded.put(key, file);
+        filesUploaded.put(key, new TemporaryFileHolder(file, fileName));
 
         return key;
     }
 
-    public File getFileUploaded(String key) {
-        return filesUploaded.getOrDefault(key, null);
-    }
-
-    public void removeFileUploaded(String key) {
-        filesUploaded.remove(key);
+    public TemporaryFileHolder getAndRemoveFileUploaded(String key) {
+        return filesUploaded.remove(key);
     }
 }

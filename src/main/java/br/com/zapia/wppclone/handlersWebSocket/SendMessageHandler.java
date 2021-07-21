@@ -3,6 +3,7 @@ package br.com.zapia.wppclone.handlersWebSocket;
 import br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSendMessageHandler;
 import br.com.zapia.wpp.api.model.payloads.SendMessageRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
+import br.com.zapia.wpp.client.docker.model.GroupChat;
 import br.com.zapia.wpp.client.docker.model.Message;
 import br.com.zapia.wppclone.modelo.WhatsAppObjectWithIdProperty;
 import br.com.zapia.wppclone.modelo.dto.WhatsAppObjectWithIdPropertyResponseDTO;
@@ -20,7 +21,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,15 +54,14 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                 var flagAppend = lastMessage == null || lastUserSendMessageProperty == null || !lastUserSendMessageProperty.getValue().equals(usuario.getUuid().toString());
                 String textMsg;
                 if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    textMsg = "*".concat(usuario.getNome()).concat(" diz:* ").concat(sendMessageRequest.getMessage());
+                    textMsg = "*".concat(usuario.getNome()).concat(" diz:* ").concat(sendMessageRequest.getText());
                 } else {
-                    textMsg = sendMessageRequest.getMessage();
+                    textMsg = sendMessageRequest.getText();
                 }
-                String captionImage;
                 if (flagAppend && usuario.getUsuarioResponsavelPelaInstancia().getConfiguracao().getEnviarNomeOperadores() && usuario.getPermissao().getPermissao().equals("ROLE_OPERATOR")) {
-                    captionImage = "*Enviado por: ".concat(usuario.getNome()).concat("*");
+                    textMsg = "*Enviado por: ".concat(usuario.getNome()).concat("*");
                 } else {
-                    captionImage = sendMessageRequest.getMessage();
+                    textMsg = sendMessageRequest.getText();
                 }
                 if (flagAppend) {
                     if (lastUserSendMessageProperty == null) {
@@ -70,52 +70,80 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                         lastUserSendMessageProperty.setWhatsAppId(chat.getId());
                         lastUserSendMessageProperty.setKey("lastUserSendMessage");
                         lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
-                        whatsAppObjectWithPropertyService.salvar(lastUserSendMessageProperty);
+                        if (!whatsAppObjectWithPropertyService.salvar(lastUserSendMessageProperty)) {
+                            logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
+                        }
                     } else {
                         if (!whatsAppObjectWithPropertyService.alterarValor(lastUserSendMessageProperty.getUuid(), usuario.getUuid().toString())) {
                             logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
-                        } else {
-                            lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
                         }
+
+                        lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
                     }
                     whatsAppClone.enviarEventoWpp(WhatsAppClone.TypeEventWebSocket.CHANGE_PROPERTY_CHAT, modelMapper.map(lastUserSendMessageProperty, WhatsAppObjectWithIdPropertyResponseDTO.class));
                 }
-                if (Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
-                    if (Strings.isNullOrEmpty(sendMessageRequest.getFileUUID())) {
-                        return chat.sendMessage(textMsg).thenApply(message -> {
-                            return new WebSocketResponse(HttpStatus.OK.value(), whatsAppClone.getWhatsAppSerializer().serializeMsg(message).join());
-                        });
-                    } else {
-                        File file = uploadFileService.getFileUploaded(sendMessageRequest.getFileUUID());
-                        String fileName = file.getName().split("#")[0];
-                        if (sendMessageRequest.getMessage().equalsIgnoreCase("sticker")) {
-                            fileName += ".webp";
-                        }
-                        return chat.sendMessage(file, fileName, captionImage).thenApply(mediaMessage -> {
-                            uploadFileService.removeFileUploaded(sendMessageRequest.getFileUUID());
-                            return new WebSocketResponse(HttpStatus.OK.value(), whatsAppClone.getWhatsAppSerializer().serializeMsg(mediaMessage).join());
 
-                        });
+
+                var msgBuilder = new SendMessageRequest.Builder(chat.getId());
+
+                msgBuilder.withText(textMsg);
+
+                if (!Strings.isNullOrEmpty(sendMessageRequest.getQuotedMsg())) {
+                    msgBuilder.withQuotedMsg(sendMessageRequest.getQuotedMsg());
+                }
+
+                if (sendMessageRequest.getFile() != null) {
+                    var file = uploadFileService.getAndRemoveFileUploaded(sendMessageRequest.getFile().getUuid());
+                    if (file != null) {
+                        var uuidUpload = whatsAppClone.getWhatsAppClient().uploadFile(file.getOriginalName(), file.getTempFile()).join();
+                        msgBuilder.withFile(uuidUpload, fileBuilder -> fileBuilder.withCaption(sendMessageRequest.getText()).withForceDocument(sendMessageRequest.getFile().isForceDocument()));
                     }
-                } else {
-                    return whatsAppClone.getWhatsAppClient().findMessage(sendMessageRequest.getQuotedMsg()).thenCompose(message -> {
-                        if (message != null) {
-                            if (Strings.isNullOrEmpty(sendMessageRequest.getFileUUID())) {
-                                return message.reply(textMsg).thenApply(message1 -> {
-                                    return new WebSocketResponse(HttpStatus.OK.value(), whatsAppClone.getWhatsAppSerializer().serializeMsg(message1).join());
-                                });
-                            } else {
-                                File file = uploadFileService.getFileUploaded(sendMessageRequest.getFileUUID());
-                                return message.reply(file, file.getName().split("#")[0], captionImage).thenApply(mediaMessage -> {
-                                    uploadFileService.removeFileUploaded(sendMessageRequest.getFileUUID());
-                                    return new WebSocketResponse(HttpStatus.OK.value(), whatsAppClone.getWhatsAppSerializer().serializeMsg(mediaMessage).join());
-                                });
-                            }
-                        } else {
-                            return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value(), "Quoted Message"));
+                }
+
+                if (sendMessageRequest.getLocation() != null) {
+                    msgBuilder.withLocation(sendMessageRequest.getLocation().getLat(), sendMessageRequest.getLocation().getLng(), locationBuilder -> locationBuilder.withName(sendMessageRequest.getLocation().getName()));
+                }
+
+                if (chat instanceof GroupChat && sendMessageRequest.getMentionedContacts() != null) {
+                    for (String mentionedContact : sendMessageRequest.getMentionedContacts()) {
+                        msgBuilder.withMentionToContact(mentionedContact);
+                    }
+                }
+
+                if (sendMessageRequest.getvCard() != null) {
+                    msgBuilder.withVCard(sendMessageRequest.getvCard().getName(), sendMessageRequest.getvCard().getTelephone());
+                }
+
+                if (sendMessageRequest.getWebSite() != null) {
+                    msgBuilder.withWebSite(sendMessageRequest.getWebSite());
+                }
+
+                if (sendMessageRequest.getButtons() != null) {
+                    msgBuilder.withButtons(sendMessageRequest.getButtons().getTitle(), sendMessageRequest.getButtons().getFooter(), buttonsBuilder -> {
+                        Arrays.stream(sendMessageRequest.getButtons().getButtons()).forEach(buttonsBuilder::withButton);
+                    });
+                }
+
+                if (sendMessageRequest.getWhatsAppList() != null) {
+                    msgBuilder.withList(listBuilder -> {
+                        listBuilder
+                                .withTitle(sendMessageRequest.getWhatsAppList().getTitle())
+                                .withDescription(sendMessageRequest.getWhatsAppList().getDescription())
+                                .withFooter(sendMessageRequest.getWhatsAppList().getFooter())
+                                .withButtonText(sendMessageRequest.getWhatsAppList().getButtonText());
+                        for (SendMessageRequest.Section section : sendMessageRequest.getWhatsAppList().getSections()) {
+                            listBuilder.withSection(section.getTitle(), sectionBuilder -> {
+                                for (SendMessageRequest.SectionItem row : section.getRows()) {
+                                    sectionBuilder.withRow(row.getTitle(), row.getDescription()).build();
+                                }
+                            });
                         }
                     });
                 }
+
+                return chat.sendMessage(msgBuilder.build()).thenApply(message -> {
+                    return new WebSocketResponse(org.eclipse.jetty.http.HttpStatus.OK_200, whatsAppClone.getWhatsAppSerializer().serializeMsg(message));
+                });
             }
         });
     }
