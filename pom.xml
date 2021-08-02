@@ -99,19 +99,8 @@
 
         <dependency>
             <groupId>br.com.zapia</groupId>
-            <artifactId>BotWhatsApp</artifactId>
-            <version>22.4</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>br.com.zapia</groupId>
-                    <artifactId>WebWhatsAppLib</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>br.com.zapia</groupId>
             <artifactId>WebWhatsAppLib-ivelox</artifactId>
-            <version>3.3</version>
+            <version>3.4</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
