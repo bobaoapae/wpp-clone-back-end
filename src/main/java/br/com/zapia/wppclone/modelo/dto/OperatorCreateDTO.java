@@ -3,7 +3,7 @@ package br.com.zapia.wppclone.modelo.dto;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
-public class UsuarioCreateDTO {
+public class OperatorCreateDTO {
 
     @NotBlank
     @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Only alphanumeric characters are allowed")
@@ -12,9 +12,6 @@ public class UsuarioCreateDTO {
     private String senha;
     @NotBlank
     private String nome;
-    @Pattern(regexp = "^[0-9]+$", message = "Only numbers are allowed")
-    @NotBlank
-    private String telefone;
 
     public String getLogin() {
         return login;
@@ -38,13 +35,5 @@ public class UsuarioCreateDTO {
 
     public void setNome(String nome) {
         this.nome = nome;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public void setTelefone(String telefone) {
-        this.telefone = telefone;
     }
 }

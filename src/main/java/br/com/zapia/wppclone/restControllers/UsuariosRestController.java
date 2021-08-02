@@ -17,6 +17,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,7 +40,7 @@ public class UsuariosRestController {
 
     @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
     @PostMapping
-    public ResponseEntity<?> criarNovoUsuario(@DTO(UsuarioCreateDTO.class) Usuario usuario) {
+    public ResponseEntity<?> criarNovoUsuario(@Valid @DTO(UsuarioCreateDTO.class) Usuario usuario) {
         usuario.setUsuarioPai(this.usuario.getUsuario());
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_USER"));
         usuario.setMaxMemory(1024);
@@ -52,7 +53,7 @@ public class UsuariosRestController {
 
     @Secured({"ROLE_SUPER_ADMIN"})
     @PutMapping
-    public ResponseEntity<?> atualizarUsuario(@DTO(UsuarioUpdateDTO.class) Usuario usuario) {
+    public ResponseEntity<?> atualizarUsuario(@Valid @DTO(UsuarioUpdateDTO.class) Usuario usuario) {
         if (usuariosService.salvar(usuario)) {
             return ResponseEntity.ok(modelMapper.map(usuario, UsuarioBasicResponseDTO.class));
         } else {
@@ -99,16 +100,20 @@ public class UsuariosRestController {
         }
     }*/
 
-    @Secured({"ROLE_SUPER_ADMIN"})
+    @Secured({"ROLE_SUPER_ADMIN", "ROLE_ADMIN"})
     @DeleteMapping("/{uuid}")
     public ResponseEntity<?> deletarUsuario(@PathVariable("uuid") String uuid) {
         Usuario usuario = usuariosService.buscar(UUID.fromString(uuid));
         if (usuario != null) {
-            if (usuariosService.remover(usuario)) {
-                whatsAppCloneService.finalizarInstanciaDoUsuarioSeEstiverAtiva(usuario);
-                return ResponseEntity.ok().build();
+            if (this.usuario.isSuperAdmin() || usuario.getUsuarioPai().equals(this.usuario.getUsuario())) {
+                if (usuariosService.remover(usuario)) {
+                    whatsAppCloneService.finalizarInstanciaDoUsuarioSeEstiverAtiva(usuario);
+                    return ResponseEntity.ok().build();
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                }
             } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
         } else {
             return ResponseEntity.notFound().build();

@@ -4,6 +4,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -22,7 +24,22 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         body.put("timestamp", new Date());
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("error", ex.getCause().getCause().getLocalizedMessage());
-        return handleExceptionInternal(ex, body,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", new Date());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        Map<String, Object> fieldsError = new LinkedHashMap<>();
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+
+            String fieldName = ((FieldError) error).getField();
+            String message = error.getDefaultMessage();
+            fieldsError.put(fieldName, message);
+        });
+        body.put("error", fieldsError);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }

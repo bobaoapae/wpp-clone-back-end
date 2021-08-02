@@ -6,7 +6,7 @@ import br.com.zapia.wppclone.utils.Util;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
-public class PasswordUsuariosListenner {
+public class PasswordUsuariosListener {
 
     @PrePersist
     public void prePersist(Usuario usuario) {

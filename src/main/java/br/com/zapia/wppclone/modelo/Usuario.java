@@ -1,19 +1,21 @@
 package br.com.zapia.wppclone.modelo;
 
-import br.com.zapia.wppclone.modelo.listenners.PasswordUsuariosListenner;
+import br.com.zapia.wppclone.modelo.listenners.PasswordUsuariosListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.util.List;
 
 @Entity
-@EntityListeners(PasswordUsuariosListenner.class)
+@EntityListeners(PasswordUsuariosListener.class)
 public class Usuario extends Entidade {
 
     @NotBlank
     @Column(nullable = false)
     private String nome;
+    @Pattern(regexp = "^[a-zA-Z0-9]+$", message = "Only alphanumeric characters")
     @NotBlank
     @Column(unique = true, nullable = false)
     private String login;
