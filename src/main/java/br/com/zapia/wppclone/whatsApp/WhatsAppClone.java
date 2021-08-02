@@ -13,7 +13,6 @@ import br.com.zapia.wppclone.payloads.WebSocketResponseFrame;
 import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
-import br.com.zapia.wppclone.whatsApp.controle.ControleChatsAsync;
 import br.com.zapia.wppclone.ws.WsMessage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -101,7 +100,7 @@ public class WhatsAppClone {
     private Usuario usuarioResponsavelInstancia;
     private Supplier<ExecutorService> executorServiceSupplier;
     private Supplier<ScheduledExecutorService> scheduledExecutorServiceSupplier;
-    private Object LOCK_SEND_WS = new Object();
+    private final Object LOCK_SEND_WS = new Object();
 
 
     @PostConstruct
@@ -139,23 +138,25 @@ public class WhatsAppClone {
                 } catch (InterruptedException e) {
                     logger.log(Level.SEVERE, "OnConnect", e);
                 }
+                driver.executeJavaScript("window.Store.Msg.modelClass.prototype.__props.push(\"senderObj\");");
+                driver.executeJavaScript("window.Store.Chat.modelClass.prototype.__props.push(\"contact\");");
                 driver.getFunctions().subscribeToLowBattery(onLowBaterry);
-                driver.getFunctions().addChatListenner(chat -> {
+                driver.getFunctions().addChatListener(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.NEW_CHAT, jsonNodes);
                     });
                 }, EventType.ADD);
-                driver.getFunctions().addChatListenner(chat -> {
+                driver.getFunctions().addChatListener(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.UPDATE_CHAT, jsonNodes);
                     });
                 }, EventType.CHANGE, "unreadCount", "pin", "presenceType", "shouldAppearInList", "lastPresenceAvailableTime", "customProperties");
-                driver.getFunctions().addChatListenner(chat -> {
+                driver.getFunctions().addChatListener(chat -> {
                     serializadorWhatsApp.serializarChat(chat).thenAccept(jsonNodes -> {
                         enviarEventoWpp(TipoEventoWpp.REMOVE_CHAT, jsonNodes);
                     });
                 }, EventType.REMOVE);
-                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                driver.getFunctions().addMsgListener(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                     @Override
                     public void run(Message m) {
                         serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
@@ -163,7 +164,7 @@ public class WhatsAppClone {
                         });
                     }
                 }, EventType.ADD);
-                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                driver.getFunctions().addMsgListener(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                     @Override
                     public void run(Message m) {
                         serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
@@ -171,7 +172,7 @@ public class WhatsAppClone {
                         });
                     }
                 }, EventType.REMOVE);
-                driver.getFunctions().addMsgListenner(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
+                driver.getFunctions().addMsgListener(new MessageObserverIncludeMe(MessageObserver.MsgType.CHAT) {
                     @Override
                     public void run(Message m) {
                         serializadorWhatsApp.serializarMsg(m).thenAccept(jsonNodes -> {
@@ -237,7 +238,7 @@ public class WhatsAppClone {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Init", e);
             if (driver != null) {
-                driver.finalizar();
+                driver.stop();
             }
             throw e;
         }
@@ -350,7 +351,7 @@ public class WhatsAppClone {
                 dados.put("isBussiness", isBussiness);
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.INIT, objectMapper.writeValueAsString(dados), ws);
             } else {
-                driver.reiniciar();
+                driver.restartDriver(100, "My Chat Null");
                 whatsAppClone.enviarEventoWpp(TipoEventoWpp.ERROR, "My Chat Null", ws);
             }
         } catch (Exception e) {
@@ -431,7 +432,7 @@ public class WhatsAppClone {
                 }
             }
         }
-        driver.finalizar();
+        driver.stop();
         whatsAppCloneService.removerInstancia(this);
     }
 

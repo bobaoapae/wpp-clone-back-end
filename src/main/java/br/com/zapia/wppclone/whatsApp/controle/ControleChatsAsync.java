@@ -22,7 +22,7 @@ import java.util.List;
 public class ControleChatsAsync {
 
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final List<ChatBotWppCloneSpring> chats;
     @Autowired
     private ApplicationContext applicationContext;
@@ -51,7 +51,7 @@ public class ControleChatsAsync {
                 logger.error("EnvioEmailErroBindMsg", e);
             }
         } catch (Exception ex) {
-            chat.getDriver().onError(ex);
+            chat.getDriver().onError("", ex);
         }
         return null;
     }
