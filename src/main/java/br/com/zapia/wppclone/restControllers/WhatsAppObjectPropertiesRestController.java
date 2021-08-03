@@ -40,6 +40,21 @@ public class WhatsAppObjectPropertiesRestController {
         }
     }
 
+    @DeleteMapping("/chat/{chatId}/{key}")
+    public ResponseEntity<?> removeChatProperty(@PathVariable("chatId") String chatId, @PathVariable("key") String key) {
+        WhatsAppObjectWithIdProperty lastUserSendMessageProperty = whatsAppObjectWithPropertyService.buscarPropriedade(WhatsAppObjectWithIdType.CHAT, chatId, key);
+        if (lastUserSendMessageProperty != null) {
+            if (whatsAppObjectWithPropertyService.remover(lastUserSendMessageProperty)) {
+                whatsAppClone.enviarEventoWpp(WhatsAppClone.TypeEventWebSocket.REMOVE_PROPERTY_CHAT, modelMapper.map(lastUserSendMessageProperty, WhatsAppObjectWithIdPropertyResponseDTO.class));
+                return ResponseEntity.ok().build();
+            } else {
+                return ResponseEntity.internalServerError().build();
+            }
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/chat/{chatId}")
     public ResponseEntity<?> getChatProperties(@PathVariable("chatId") String chatId) {
         return ResponseEntity.ok(modelMapper.map(whatsAppObjectWithPropertyService.buscarPropriedades(WhatsAppObjectWithIdType.CHAT, chatId), new TypeToken<List<WhatsAppObjectWithIdPropertyResponseDTO>>() {

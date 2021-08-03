@@ -416,6 +416,7 @@ public class WhatsAppClone {
         UPDATE_STATE,
         DISCONNECT,
         ERROR,
-        CHANGE_PROPERTY_CHAT
+        CHANGE_PROPERTY_CHAT,
+        REMOVE_PROPERTY_CHAT,
     }
 }

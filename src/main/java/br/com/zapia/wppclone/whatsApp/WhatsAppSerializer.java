@@ -67,6 +67,26 @@ public class WhatsAppSerializer {
     }
 
     @Async
+    public CompletableFuture<ArrayNode> serializeContact(List<Contact> contacts) {
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        contacts.forEach(contact -> arrayNode.add(contact.getJsonNode()));
+        return CompletableFuture.completedFuture(arrayNode);
+    }
+
+    @Async
+    public CompletableFuture<ObjectNode> serializeParticipant(GroupParticipant participant) {
+        var objectNode = Objects.requireNonNull(converterParaObjectNode(participant));
+        return CompletableFuture.completedFuture(objectNode);
+    }
+
+    @Async
+    public CompletableFuture<ArrayNode> serializeParticipant(List<GroupParticipant> participants) {
+        ArrayNode arrayNode = objectMapper.createArrayNode();
+        participants.forEach(contact -> arrayNode.add(contact.getJsonNode()));
+        return CompletableFuture.completedFuture(arrayNode);
+    }
+
+    @Async
     public CompletableFuture<ObjectNode> serializeChat(Chat chat) {
         var objectNode = Objects.requireNonNull(converterParaObjectNode(chat));
         return CompletableFuture.completedFuture(objectNode);
