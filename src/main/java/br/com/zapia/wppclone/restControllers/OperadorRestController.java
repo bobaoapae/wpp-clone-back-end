@@ -41,7 +41,6 @@ public class OperadorRestController {
     public ResponseEntity<?> criarNovoOperador(@Valid @DTO(OperatorCreateDTO.class) Usuario usuario) {
         usuario.setUsuarioPai(this.usuario.getUsuario());
         usuario.setPermissao(permissoesService.buscarPermissaoPorNome("ROLE_OPERATOR"));
-        usuario.setLogin(usuario.getLogin().replace(usuario.getUsuarioPai().getLogin().concat("/"), ""));
         usuario.setLogin(usuario.getUsuarioPai().getLogin().concat("/").concat(usuario.getLogin()));
         usuario.setTelefone("000000000"); //TODO remover
         if (usuariosService.salvar(usuario)) {
