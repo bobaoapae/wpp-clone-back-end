@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.context.ApplicationPidFileWriter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -34,7 +35,9 @@ public class WhatsAppCloneApplication implements AsyncConfigurer, SchedulingConf
 
     public static void main(String[] args) {
         SpringApplicationBuilder builder = new SpringApplicationBuilder(WhatsAppCloneApplication.class);
-        builder.headless(false).run(args);
+        var app = builder.headless(false).build();
+        app.addListeners(new ApplicationPidFileWriter(".pid"));
+        app.run(args);
     }
 
     @Bean
