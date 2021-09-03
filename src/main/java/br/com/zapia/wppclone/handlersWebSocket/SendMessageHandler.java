@@ -60,7 +60,10 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                         if (sendMessageRequest.getFile() == null) {
                             textMsg = "*".concat(usuario.getNome()).concat(" diz:* ".concat(sendMessageRequest.getText()));
                         } else {
-                            textMsg = "* Enviado por: ".concat(usuario.getNome()).concat("* \n".concat(sendMessageRequest.getText()));
+                            textMsg = "* Enviado por: ".concat(usuario.getNome()).concat("*");
+                            if (sendMessageRequest.getText() != null) {
+                                textMsg = textMsg.concat(" \n").concat(sendMessageRequest.getText());
+                            }
                         }
                         if (lastUserSendMessageProperty == null) {
                             lastUserSendMessageProperty = new WhatsAppObjectWithIdProperty();
