@@ -93,6 +93,8 @@ public class WhatsAppClone {
     private String pathBinarios;
     @Value("${headLess}")
     private boolean headLess;
+    @Value("${autoExtractBinaries}")
+    private boolean autoExtractBinaries;
     private boolean forceShutdown;
     private ObjectMapper objectMapper;
     private Map<String, HandlerWebSocket> handlers;
@@ -230,6 +232,7 @@ public class WhatsAppClone {
             builder.customScheduledExecutorService(scheduledExecutorServiceSupplier);
             builder.onNeedQrCode(onNeedQrCode);
             builder.headLess(false);
+            builder.autoExtractBinaries(autoExtractBinaries);
             builder.addErrorHandler(throwable -> {
                 logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
             });
