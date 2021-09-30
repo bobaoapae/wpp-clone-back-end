@@ -3,6 +3,7 @@ package br.com.zapia.wppclone.handlersWebSocket;
 import br.com.zapia.wpp.api.model.handlersWebSocket.AbstractClearChatHandler;
 import br.com.zapia.wpp.api.model.payloads.ClearChatRequest;
 import br.com.zapia.wpp.api.model.payloads.WebSocketResponse;
+import br.com.zapia.wppclone.servicos.LogUsuarioService;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import br.com.zapia.wppclone.ws.WebSocketRequestSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,6 +22,9 @@ public class ClearChatHandler extends AbstractClearChatHandler<WebSocketRequestS
     @Lazy
     @Autowired
     private WhatsAppClone whatsAppClone;
+    @Autowired
+    @Lazy
+    private LogUsuarioService logUsuarioService;
 
     @Override
     public CompletableFuture<WebSocketResponse> handle(WebSocketRequestSession webSocketRequestSession, ClearChatRequest clearChatRequest) throws JsonProcessingException {
@@ -28,6 +32,7 @@ public class ClearChatHandler extends AbstractClearChatHandler<WebSocketRequestS
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND.value()));
             } else if (!webSocketRequestSession.getUsuario().getPermissao().getPermissao().equals("ROLE_OPERATOR") || webSocketRequestSession.getUsuario().getUsuarioResponsavelPelaInstancia().getConfiguracao().getOperadorPodeExcluirMsg()) {
+                logUsuarioService.registrarLog(webSocketRequestSession.getUsuario(), "Limpou a conversa %s".formatted(clearChatRequest.getChatId()));
                 return chat.clearMessages(clearChatRequest.isKeepFavorites()).thenApply(aVoid -> {
                     return new WebSocketResponse(HttpStatus.OK.value());
                 });

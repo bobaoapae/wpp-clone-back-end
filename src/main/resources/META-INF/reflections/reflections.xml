@@ -190,32 +190,32 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.DeleteChatHandler</value>
       </values>
     </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractLogoutHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSubscribePresenceHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.SubscribePresenceHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetGroupParticipants</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupParticipants</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkRecordingHandler</key>
-          <values>
-              <value>br.com.zapia.wppclone.handlersWebSocket.MarkRecordingHandler</value>
-          </values>
-      </entry>
-      <entry>
-          <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDownloadMediaHandler</key>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractLogoutHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.LogoutHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractSubscribePresenceHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.SubscribePresenceHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractGetGroupParticipants</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupParticipants</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractMarkRecordingHandler</key>
+      <values>
+        <value>br.com.zapia.wppclone.handlersWebSocket.MarkRecordingHandler</value>
+      </values>
+    </entry>
+    <entry>
+      <key>br.com.zapia.wpp.api.model.handlersWebSocket.AbstractDownloadMediaHandler</key>
       <values>
         <value>br.com.zapia.wppclone.handlersWebSocket.DownloadMediaHandler</value>
       </values>
@@ -257,7 +257,7 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickRepliesHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
-          <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupParticipants</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupParticipants</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>
@@ -295,7 +295,7 @@
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllContactsHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetAllQuickRepliesHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupInviteInfoHandler</value>
-          <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupParticipants</value>
+        <value>br.com.zapia.wppclone.handlersWebSocket.GetGroupParticipants</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.GetSelfInfoHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.JoinGroupByInviteLinkHandler</value>
         <value>br.com.zapia.wppclone.handlersWebSocket.LoadEarlyHandler</value>

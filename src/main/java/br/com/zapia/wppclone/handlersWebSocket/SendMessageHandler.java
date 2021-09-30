@@ -22,8 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Component
@@ -54,9 +54,8 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                 var textMsg = sendMessageRequest.getText();
                 if (isSendOperatorNameEnabled) {
                     Message lastMessage = chat.getLastMsg();
-                    var lastUserSendMessageProperty = whatsAppObjectWithPropertyService.buscarPropriedade(WhatsAppObjectWithIdType.CHAT, chat.getId(), "lastUserSendMessage");
-                    var flagAppend = lastMessage == null || lastUserSendMessageProperty == null || !lastUserSendMessageProperty.getValue().equals(usuario.getUuid().toString());
-                    if (flagAppend) {
+                    var lastUserSendMessage = lastMessage == null ? null : whatsAppObjectWithPropertyService.buscarPropriedade(WhatsAppObjectWithIdType.MESSAGE, lastMessage.getId(), "userSendMessage");
+                    if (lastMessage == null || !usuario.getUuid().equals(UUID.fromString(lastUserSendMessage.getValue()))) {
                         if (sendMessageRequest.getFile() == null) {
                             textMsg = "*".concat(usuario.getNome()).concat(" diz:* ".concat(sendMessageRequest.getText()));
                         } else {
@@ -65,23 +64,6 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                                 textMsg = textMsg.concat(" \n").concat(sendMessageRequest.getText());
                             }
                         }
-                        if (lastUserSendMessageProperty == null) {
-                            lastUserSendMessageProperty = new WhatsAppObjectWithIdProperty();
-                            lastUserSendMessageProperty.setType(WhatsAppObjectWithIdType.CHAT);
-                            lastUserSendMessageProperty.setWhatsAppId(chat.getId());
-                            lastUserSendMessageProperty.setKey("lastUserSendMessage");
-                            lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
-                            if (!whatsAppObjectWithPropertyService.salvar(lastUserSendMessageProperty)) {
-                                logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
-                            }
-                        } else {
-                            if (!whatsAppObjectWithPropertyService.alterarValor(lastUserSendMessageProperty.getUuid(), usuario.getUuid().toString())) {
-                                logger.log(Level.SEVERE, "Fail on update lastUserSendMessage property of chat {" + chat.getId() + "} to value {" + usuario.getUuid().toString() + "}");
-                            }
-
-                            lastUserSendMessageProperty.setValue(usuario.getUuid().toString());
-                        }
-                        whatsAppClone.enviarEventoWpp(WhatsAppClone.TypeEventWebSocket.CHANGE_PROPERTY_CHAT, modelMapper.map(lastUserSendMessageProperty, WhatsAppObjectWithIdPropertyResponseDTO.class));
                     }
                 }
 
@@ -144,6 +126,14 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                 }
 
                 return chat.sendMessage(msgBuilder.build()).thenApply(message -> {
+                    var userSendMessage = new WhatsAppObjectWithIdProperty();
+                    userSendMessage.setType(WhatsAppObjectWithIdType.MESSAGE);
+                    userSendMessage.setWhatsAppId(message.getId());
+                    userSendMessage.setKey("userSendMessage");
+                    userSendMessage.setValue(usuario.getUuid().toString());
+                    if (whatsAppObjectWithPropertyService.salvar(userSendMessage)) {
+                        whatsAppClone.enviarEventoWpp(WhatsAppClone.TypeEventWebSocket.CHANGE_PROPERTY_MESSAGE, modelMapper.map(userSendMessage, WhatsAppObjectWithIdPropertyResponseDTO.class));
+                    }
                     return new WebSocketResponse(org.eclipse.jetty.http.HttpStatus.OK_200, whatsAppClone.getWhatsAppSerializer().serializeMsg(message));
                 });
             }

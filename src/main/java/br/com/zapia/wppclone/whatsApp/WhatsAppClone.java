@@ -418,5 +418,6 @@ public class WhatsAppClone {
         ERROR,
         CHANGE_PROPERTY_CHAT,
         REMOVE_PROPERTY_CHAT,
+        CHANGE_PROPERTY_MESSAGE
     }
 }
