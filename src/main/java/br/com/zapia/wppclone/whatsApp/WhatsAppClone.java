@@ -231,8 +231,14 @@ public class WhatsAppClone {
             builder.customExecutorService(executorServiceSupplier);
             builder.customScheduledExecutorService(scheduledExecutorServiceSupplier);
             builder.onNeedQrCode(onNeedQrCode);
-            builder.headLess(false);
+            builder.headLess(headLess);
             builder.autoExtractBinaries(autoExtractBinaries);
+            builder.addChromeSwitch("remote-debugging-port", 9222);
+            builder.addChromeSwitch("remote-debugging-address", "0.0.0.0");
+            builder.addChromeSwitch("single-process", true);
+            builder.addChromeSwitch("disable-threaded-scrolling", true);
+            builder.addChromeSwitch("disable-plugins-discovery", true);
+            builder.addChromeSwitch("disable-plugins", true);
             builder.addErrorHandler(throwable -> {
                 logger.log(Level.SEVERE, "Error Driver WhatsApp " + usuarioResponsavelInstancia.getLogin(), throwable);
             });
