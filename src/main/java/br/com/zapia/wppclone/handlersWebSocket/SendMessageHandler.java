@@ -55,7 +55,7 @@ public class SendMessageHandler extends AbstractSendMessageHandler<WebSocketRequ
                 if (isSendOperatorNameEnabled) {
                     Message lastMessage = chat.getLastMsg();
                     var lastUserSendMessage = lastMessage == null ? null : whatsAppObjectWithPropertyService.buscarPropriedade(WhatsAppObjectWithIdType.MESSAGE, lastMessage.getId(), "userSendMessage");
-                    if (lastMessage == null || !usuario.getUuid().equals(UUID.fromString(lastUserSendMessage.getValue()))) {
+                    if (lastMessage == null || lastUserSendMessage == null || !usuario.getUuid().equals(UUID.fromString(lastUserSendMessage.getValue()))) {
                         if (sendMessageRequest.getFile() == null) {
                             textMsg = "*".concat(usuario.getNome()).concat(" diz:* ".concat(sendMessageRequest.getText()));
                         } else {
