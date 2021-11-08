@@ -14,7 +14,7 @@ public class LoadEarlyHandler extends HandlerWebSocket {
             if (chat == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else {
-                return chat.loadEarlierMsgsSimple().thenApply(messages -> {
+                return chat.loadEarlierMsgs().thenApply(messages -> {
                     return new WebSocketResponse(HttpStatus.OK);
                 });
             }
