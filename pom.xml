@@ -99,8 +99,8 @@
 
         <dependency>
             <groupId>br.com.zapia</groupId>
-            <artifactId>WebWhatsAppLib</artifactId>
-            <version>23.1</version>
+            <artifactId>web-whatsapp-lib</artifactId>
+            <version>23.2</version>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
