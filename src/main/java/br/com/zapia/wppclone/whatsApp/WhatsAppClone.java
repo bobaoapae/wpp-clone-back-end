@@ -42,7 +42,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -112,9 +111,7 @@ public class WhatsAppClone {
             instanciaGeral = getUsuario().getLogin().equals(loginWhatsAppGeral);
             objectMapper = new ObjectMapper();
             handlers = new ConcurrentHashMap<>();
-            Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
-            declaredConstructor.setAccessible(true);
-            declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
+            new Reflections().getTypesAnnotatedWith(HandlerWebSocketEvent.class).forEach(aClass -> {
                 try {
                     handlers.put(aClass.getAnnotation(HandlerWebSocketEvent.class).event(), ap.getBean((Class<HandlerWebSocket>) aClass));
                 } catch (Exception e) {
