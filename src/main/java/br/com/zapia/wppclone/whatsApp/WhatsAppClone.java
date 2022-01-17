@@ -241,11 +241,6 @@ public class WhatsAppClone {
             });
             builder.autoOpenDevTools(debug);
             builder.autoRebootOnStuck(!debug);
-            builder.addChromeSwitch("disable-threaded-scrolling", true);
-            builder.addChromeSwitch("disable-plugins-discovery", true);
-            builder.addChromeSwitch("disable-plugins", true);
-            builder.addChromeSwitch("disable-software-rasterizer", true);
-            builder.addChromeSwitch("use-gl", "swiftshader");
             driver = builder.build();
             whatsAppCloneService.adicionarInstancia(this);
         } catch (Exception e) {
