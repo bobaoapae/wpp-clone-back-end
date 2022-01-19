@@ -99,8 +99,8 @@
 
         <dependency>
             <groupId>br.com.zapia</groupId>
-            <artifactId>WebWhatsAppLib-ivelox</artifactId>
-            <version>4.0</version>
+            <artifactId>web-whatsapp-lib-ivelox</artifactId>
+            <version>4.1</version>
         </dependency>
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
