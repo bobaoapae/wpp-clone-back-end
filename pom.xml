@@ -100,7 +100,7 @@
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>web-whatsapp-lib</artifactId>
-            <version>24.6</version>
+            <version>24.7</version>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
