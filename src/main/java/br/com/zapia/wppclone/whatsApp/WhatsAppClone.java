@@ -425,7 +425,7 @@ public class WhatsAppClone {
     }
 
     @PreDestroy
-    public void preDestroy() {
+    public void preDestroy() throws InterruptedException {
         logger.info("Destroy WhatsAppClone");
         ((AbstractBeanFactory) ap.getAutowireCapableBeanFactory()).destroyScopedBean("serializadorWhatsApp");
         for (WebSocketSession webSocketSession : getSessions()) {
