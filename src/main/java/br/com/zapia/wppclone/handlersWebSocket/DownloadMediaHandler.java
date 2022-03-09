@@ -21,11 +21,11 @@ public class DownloadMediaHandler extends HandlerWebSocket {
             if (msg == null) {
                 return CompletableFuture.completedFuture(new WebSocketResponse(HttpStatus.NOT_FOUND));
             } else if (msg instanceof MediaMessage) {
-                return ((MediaMessage) msg).downloadMedia().orTimeout(5, TimeUnit.SECONDS).exceptionally(throwable -> {
+                return ((MediaMessage) msg).downloadMedia(30).orTimeout(30, TimeUnit.SECONDS).exceptionally(throwable -> {
                     return null;
                 }).thenCompose(file -> {
                     if (file == null) {
-                        return ((MediaMessage) msg).downloadMedia().orTimeout(1, TimeUnit.MINUTES).exceptionally(throwable -> {
+                        return ((MediaMessage) msg).downloadMedia(240).orTimeout(4, TimeUnit.MINUTES).exceptionally(throwable -> {
                             return null;
                         });
                     } else {
@@ -36,7 +36,7 @@ public class DownloadMediaHandler extends HandlerWebSocket {
                         String key = downloadFileService.addFileToFutureDownload(file);
                         return new WebSocketResponse(HttpStatus.OK, key);
                     } else {
-                        return new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Donwload Failed");
+                        return new WebSocketResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Download Failed");
                     }
                 });
             } else {
