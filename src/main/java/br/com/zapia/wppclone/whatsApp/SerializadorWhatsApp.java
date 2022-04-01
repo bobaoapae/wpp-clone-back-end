@@ -29,7 +29,7 @@ public class SerializadorWhatsApp {
     @Lazy
     private WhatsAppClone whatsAppClone;
     private ObjectMapper objectMapper;
-    private Logger log = Logger.getLogger(SerializadorWhatsApp.class.getName());
+    private final Logger log = Logger.getLogger(SerializadorWhatsApp.class.getName());
 
 
     @PostConstruct
@@ -78,6 +78,9 @@ public class SerializadorWhatsApp {
         if (withPicture) {
             return chat.getContact().getThumb().thenApply(s -> {
                 chatNode.put("picture", s);
+                return chatNode;
+            }).exceptionally(throwable -> {
+                chatNode.put("picture", "");
                 return chatNode;
             });
         }
