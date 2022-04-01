@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,7 +30,7 @@ public class SerializadorWhatsApp {
     @Lazy
     private WhatsAppClone whatsAppClone;
     private ObjectMapper objectMapper;
-    private Logger log = Logger.getLogger(SerializadorWhatsApp.class.getName());
+    private final Logger log = Logger.getLogger(SerializadorWhatsApp.class.getName());
 
 
     @PostConstruct
@@ -80,6 +79,9 @@ public class SerializadorWhatsApp {
         if (withPicture) {
             return chat.getContact().getThumb().thenApply(s -> {
                 chatNode.put("picture", s);
+                return chatNode;
+            }).exceptionally(throwable -> {
+                chatNode.put("picture", "");
                 return chatNode;
             });
         }
