@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 public class LogoutHandler extends HandlerWebSocket {
     @Override
     public CompletableFuture<WebSocketResponse> handle(Usuario usuario, Object payload) {
-        return whatsAppClone.logout().thenApply(aVoid -> {
+        return whatsAppClone.logout().handle((unused, throwable) -> {
             whatsAppClone.setForceShutdown(true);
             return new WebSocketResponse(HttpStatus.OK);
         });
