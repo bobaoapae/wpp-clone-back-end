@@ -55,7 +55,12 @@ public class SendMessageHandler extends HandlerWebSocket {
                     if (!Strings.isNullOrEmpty(sendMessageRequest.getFileUUID())) {
                         var file = uploadFileService.getAndRemoveFileUploaded(sendMessageRequest.getFileUUID());
                         if (file != null) {
-                            msgBuilder.withFile(file, fileBuilder -> fileBuilder.withName(file.getName().split("#")[0]));
+                            msgBuilder.withFile(file, fileBuilder -> {
+                                fileBuilder.withName(file.getName().split("#")[0]);
+                                if ("sticker".equalsIgnoreCase(sendMessageRequest.getMessage())) {
+                                    fileBuilder.withForceSticker("Sticker");
+                                }
+                            });
                         }
                     }
 
