@@ -3,6 +3,11 @@ package br.com.zapia.wppclone.utils;
 import br.com.zapia.wppclone.modelo.dto.DTO;
 import br.com.zapia.wppclone.modelo.dto.DTORelation;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.modelmapper.ModelMapper;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -21,11 +26,6 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.RequestResponseBodyMethodProcessor;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -37,7 +37,7 @@ import java.util.UUID;
 public class DTOModelMapper extends RequestResponseBodyMethodProcessor {
 
     private final ModelMapper modelMapper;
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
     public DTOModelMapper(ObjectMapper objectMapper, EntityManager entityManager, ModelMapper modelMapper) {
         super(Collections.singletonList(new MappingJackson2HttpMessageConverter(objectMapper)));

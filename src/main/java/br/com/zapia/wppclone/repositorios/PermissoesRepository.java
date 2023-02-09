@@ -2,12 +2,12 @@ package br.com.zapia.wppclone.repositorios;
 
 import br.com.zapia.wppclone.modelo.Permissao;
 import br.com.zapia.wppclone.modelo.Permissao_;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 
 @Repository
 public class PermissoesRepository extends CRUDRepository<Permissao> {

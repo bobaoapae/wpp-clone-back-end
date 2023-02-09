@@ -4,6 +4,8 @@ import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedC
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.servicos.UsuariosService;
 import io.jsonwebtoken.*;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +16,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class JwtTokenProvider {
@@ -55,7 +52,7 @@ public class JwtTokenProvider {
                 UUID uuid = getUserUUIDFromJWT(jwt);
                 Usuario userDetails = usuariosService.buscar(uuid);
                 if (userDetails != null && userDetails.isAtivo()) {
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, Arrays.asList(userDetails.getPermissao()));
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, Collections.singletonList(userDetails.getPermissao()));
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     UsuarioScopedContext.setUsuario(userDetails);

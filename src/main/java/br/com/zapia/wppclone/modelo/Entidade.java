@@ -1,11 +1,11 @@
 package br.com.zapia.wppclone.modelo;
 
 import br.com.zapia.wppclone.modelo.listenners.EntidadeListener;
+import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -78,8 +78,7 @@ public abstract class Entidade implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Entidade)) return false;
-        Entidade entidade = (Entidade) o;
+        if (!(o instanceof Entidade entidade)) return false;
         return Objects.equals(uuid, entidade.uuid);
     }
 

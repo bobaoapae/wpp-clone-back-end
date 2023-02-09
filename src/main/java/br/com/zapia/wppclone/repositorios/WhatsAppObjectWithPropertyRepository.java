@@ -3,12 +3,12 @@ package br.com.zapia.wppclone.repositorios;
 import br.com.zapia.wppclone.modelo.WhatsAppObjectWithIdProperty;
 import br.com.zapia.wppclone.modelo.WhatsAppObjectWithIdProperty_;
 import br.com.zapia.wppclone.modelo.enums.WhatsAppObjectWithIdType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.stereotype.Repository;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.util.List;
 
 @Repository

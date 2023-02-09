@@ -2,8 +2,8 @@ package br.com.zapia.wppclone.modelo.dto;
 
 import br.com.zapia.wppclone.modelo.Permissao;
 import br.com.zapia.wppclone.modelo.Permissao_;
+import jakarta.persistence.Id;
 
-import javax.persistence.Id;
 import java.util.UUID;
 
 public class UsuarioUpdateDTO {

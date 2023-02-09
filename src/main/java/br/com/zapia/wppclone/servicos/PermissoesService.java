@@ -3,10 +3,10 @@ package br.com.zapia.wppclone.servicos;
 import br.com.zapia.wppclone.modelo.Permissao;
 import br.com.zapia.wppclone.repositorios.CRUDRepository;
 import br.com.zapia.wppclone.repositorios.PermissoesRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 
 @Service
 @Transactional

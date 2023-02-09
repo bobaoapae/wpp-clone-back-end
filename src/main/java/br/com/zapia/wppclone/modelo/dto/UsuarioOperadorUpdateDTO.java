@@ -1,6 +1,7 @@
 package br.com.zapia.wppclone.modelo.dto;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
+
 import java.util.UUID;
 
 public class UsuarioOperadorUpdateDTO {

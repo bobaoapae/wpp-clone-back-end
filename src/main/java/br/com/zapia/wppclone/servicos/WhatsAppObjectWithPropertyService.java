@@ -4,10 +4,10 @@ import br.com.zapia.wppclone.modelo.WhatsAppObjectWithIdProperty;
 import br.com.zapia.wppclone.modelo.enums.WhatsAppObjectWithIdType;
 import br.com.zapia.wppclone.repositorios.CRUDRepository;
 import br.com.zapia.wppclone.repositorios.WhatsAppObjectWithPropertyRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.UUID;
 

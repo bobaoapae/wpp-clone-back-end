@@ -1,8 +1,8 @@
 package br.com.zapia.wppclone.modelo;
 
 import br.com.zapia.wppclone.modelo.enums.FormaPagamento;
+import jakarta.persistence.*;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;

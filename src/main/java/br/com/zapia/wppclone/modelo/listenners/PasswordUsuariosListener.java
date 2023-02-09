@@ -2,9 +2,9 @@ package br.com.zapia.wppclone.modelo.listenners;
 
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.utils.Util;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
 
 public class PasswordUsuariosListener {
 

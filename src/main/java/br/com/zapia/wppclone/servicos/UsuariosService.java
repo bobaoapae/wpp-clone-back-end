@@ -5,13 +5,13 @@ import br.com.zapia.wppclone.modelo.TrocaDeNumero;
 import br.com.zapia.wppclone.modelo.Usuario;
 import br.com.zapia.wppclone.repositorios.CRUDRepository;
 import br.com.zapia.wppclone.repositorios.UsuariosRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.List;
 
 @Service

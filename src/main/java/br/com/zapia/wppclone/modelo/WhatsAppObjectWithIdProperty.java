@@ -1,11 +1,11 @@
 package br.com.zapia.wppclone.modelo;
 
 import br.com.zapia.wppclone.modelo.enums.WhatsAppObjectWithIdType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
 
 @Entity

@@ -1,6 +1,7 @@
 package br.com.zapia.wppclone.modelo;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
+
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
