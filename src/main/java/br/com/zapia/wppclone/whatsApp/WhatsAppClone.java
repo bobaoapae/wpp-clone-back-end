@@ -14,7 +14,6 @@ import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContext
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioContextRunnable;
 import br.com.zapia.wppclone.authentication.scopeInjectionHandler.UsuarioScopedContext;
 import br.com.zapia.wppclone.modelo.Usuario;
-import br.com.zapia.wppclone.servicos.SendEmailService;
 import br.com.zapia.wppclone.servicos.WhatsAppCloneService;
 import br.com.zapia.wppclone.utils.Util;
 import br.com.zapia.wppclone.ws.WebSocketRequestSession;
@@ -40,7 +39,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -67,8 +65,6 @@ public class WhatsAppClone {
     @Autowired
     private WhatsAppCloneService whatsAppCloneService;
     @Autowired
-    private SendEmailService sendEmailService;
-    @Autowired
     private WebSocketSender webSocketSender;
     private List<WebSocketSession> sessions;
     private final Logger logger = Logger.getLogger(WhatsAppClone.class.getName());
@@ -82,6 +78,12 @@ public class WhatsAppClone {
     private String pathLogs;
     @Value("${dockerEndPoint}")
     private String dockerEndPoint;
+    @Value("${dockerImageName}")
+    private String dockerImageName;
+    @Value("${dockerUserName}")
+    private String dockerUserName;
+    @Value("${dockerPassword}")
+    private String dockerPassword;
     @Value("${updateDockerImage}")
     private boolean autoUpdateDockerImage;
     private boolean forceShutdown;
@@ -100,9 +102,7 @@ public class WhatsAppClone {
             }
             objectMapper = new ObjectMapper();
             handlers = new ConcurrentHashMap<>();
-            Constructor<Reflections> declaredConstructor = Reflections.class.getDeclaredConstructor();
-            declaredConstructor.setAccessible(true);
-            declaredConstructor.newInstance().collect(getClass().getResourceAsStream("/META-INF/reflections/reflections.xml")).getSubTypesOf(IHandlerWebSocket.class).forEach(aClass -> {
+            Reflections.collect().getSubTypesOf(IHandlerWebSocket.class).forEach(aClass -> {
                 if (!Modifier.isAbstract(aClass.getModifiers())) {
                     try {
                         String className = aClass.getSimpleName();
@@ -168,9 +168,11 @@ public class WhatsAppClone {
                 enviarEventoWpp(TypeEventWebSocket.DISCONNECT, "Falha ao Conectar ao Telefone");
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
-            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString() + "-" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin(), dockerEndPoint)
+            var dockerConfig = new DockerConfigBuilder(usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getUuid().toString() + "-" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin(), dockerImageName, dockerEndPoint)
                     .withAutoUpdateBaseImage(autoUpdateDockerImage)
                     .withMaxMemoryMB(usuarioResponsavelInstancia.getMaxMemory())
+                    .withDockerUserName(dockerUserName)
+                    .withDockerPassword(dockerPassword)
                     .build();
             WhatsAppClientBuilder builder = new WhatsAppClientBuilder(dockerConfig);
             builder

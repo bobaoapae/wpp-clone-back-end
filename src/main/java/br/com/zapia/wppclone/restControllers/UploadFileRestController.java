@@ -19,7 +19,7 @@ public class UploadFileRestController {
     private UploadFileService uploadFileService;
 
     @PostMapping
-    public ResponseEntity<?> downloadMedia(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadMedia(@RequestParam("file") MultipartFile file) {
         try {
             return ResponseEntity.ok(uploadFileService.addFileUploaded(file));
         } catch (Exception e) {

@@ -53,15 +53,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.9</version>
+            <version>42.3.8</version>
         </dependency>
 
         <dependency>
@@ -78,12 +74,12 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-jpamodelgen</artifactId>
-            <version>5.4.10.Final</version>
+            <version>5.6.2.Final</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.9</version>
+            <version>3.12.0</version>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -93,13 +89,13 @@
         <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
-            <version>2.3.7</version>
+            <version>2.4.5</version>
         </dependency>
 
         <dependency>
             <groupId>br.com.zapia</groupId>
             <artifactId>wpp-client-docker</artifactId>
-            <version>4.2</version>
+            <version>4.5</version>
         </dependency>
         <dependency>
             <groupId>commons-beanutils</groupId>
@@ -109,12 +105,12 @@
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.9.12</version>
+            <version>0.10.2</version>
         </dependency>
         <dependency>
             <groupId>org.passay</groupId>
             <artifactId>passay</artifactId>
-            <version>1.5.0</version>
+            <version>1.6.1</version>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -124,7 +120,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>28.2-jre</version>
+            <version>31.0.1-jre</version>
         </dependency>
         <dependency>
             <groupId>javax.validation</groupId>
@@ -176,7 +172,7 @@
             <plugin>
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
-                <version>1.5</version>
+                <version>2.1.0</version>
                 <executions>
                     <execution>
                         <phase>compile</phase>
@@ -198,13 +194,15 @@
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovy-all</artifactId>
-                        <version>2.4.3</version>
-                        <scope>runtime</scope>
+                        <version>3.0.14</version>
+                        <scope>compile</scope>
+                        <type>pom</type>
                     </dependency>
                     <dependency>
-                        <groupId>commons-lang</groupId>
-                        <artifactId>commons-lang</artifactId>
-                        <version>2.4</version>
+                        <groupId>org.dom4j</groupId>
+                        <artifactId>dom4j</artifactId>
+                        <version>2.1.4</version>
+                        <scope>compile</scope>
                     </dependency>
                 </dependencies>
             </plugin>

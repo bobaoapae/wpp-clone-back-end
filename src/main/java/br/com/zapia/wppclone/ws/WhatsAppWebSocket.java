@@ -9,7 +9,7 @@ import br.com.zapia.wppclone.servicos.OperadoresService;
 import br.com.zapia.wppclone.whatsApp.WhatsAppClone;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
