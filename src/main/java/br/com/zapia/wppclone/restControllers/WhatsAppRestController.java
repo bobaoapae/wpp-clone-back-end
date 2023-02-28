@@ -67,7 +67,7 @@ public class WhatsAppRestController {
     }
 
     @PostMapping("/sendMessage")
-    public CompletableFuture<ResponseEntity<?>> sendMessage(@Valid @ModelAttribute SendMessageRequest sendMessageRequest) {
+    public CompletableFuture<ResponseEntity<?>> sendMessage(@RequestBody @Valid SendMessageRequest sendMessageRequest) {
         return whatsAppClone.getWhatsAppClient().getDriverState().thenCompose(driverState -> {
             if (driverState != DriverState.LOGGED)
                 return CompletableFuture.completedFuture(ResponseEntity.badRequest().body("WhatsApp not logged"));
