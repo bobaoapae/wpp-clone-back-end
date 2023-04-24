@@ -73,6 +73,11 @@ public class WhatsAppRestController {
                 return CompletableFuture.completedFuture(ResponseEntity.badRequest().body("WhatsApp not logged"));
 
             return whatsAppClone.getWhatsAppClient().findChatByNumber(sendMessageRequest.getChatNumber()).thenCompose(chat -> {
+
+                if (chat == null) {
+                    return CompletableFuture.completedFuture(ResponseEntity.notFound().build());
+                }
+
                 var builder = new br.com.zapia.wpp.api.model.payloads.SendMessageRequest.Builder(chat.getId());
                 builder.withText(sendMessageRequest.getMessage());
                 CompletableFuture<String> futureUploadFile = null;
