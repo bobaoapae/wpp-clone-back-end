@@ -197,12 +197,7 @@ public class WhatsAppClone {
                 try {
                     if (whatsAppCloneService.canSendWarningVersion()) {
                         whatsAppCloneService.setSendWarningVersion();
-                        sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " +
-                                "" + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin() + " foi detectada uma alteração na versão do WhatsApp." +
-                                "\n" +
-                                "Versão Mínima da Lib: " + minVersion.toString() + "\n" +
-                                "Versão Máxima da Lib: " + maxVersion.toString() + "\n" +
-                                "Versão Atual do WhatsApp: " + actual.toString());
+                        sendEmailService.sendEmail("joao@zapia.com.br", "Driver API WhatsApp", "Durante a inicialização da sessão para: " + usuarioPrincipalAutoWired.getUsuario().getUsuarioResponsavelPelaInstancia().getLogin() + " foi detectada uma alteração na versão do WhatsApp." + "\n" + "Versão Mínima da Lib: " + minVersion.toString() + "\n" + "Versão Máxima da Lib: " + maxVersion.toString() + "\n" + "Versão Atual do WhatsApp: " + actual.toString());
                     }
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Envio de Email", e);
@@ -210,9 +205,7 @@ public class WhatsAppClone {
             };
             usuarioResponsavelInstancia = getUsuario().getUsuarioResponsavelPelaInstancia();
             executorServiceSupplier = () -> {
-                return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 100, 200,
-                        10L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<>(), new ThreadFactory() {
+                return new UsuarioContextThreadPoolExecutor(usuarioResponsavelInstancia, 100, 200, 10L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(), new ThreadFactory() {
 
                     private final AtomicInteger id = new AtomicInteger(0);
 
@@ -345,7 +338,30 @@ public class WhatsAppClone {
     public void enviarEventoWpp(TipoEventoWpp tipoEventoWpp, Object dado, WebSocketSession ws) {
         enviarParaWs(ws, new WsMessage(tipoEventoWpp.name().replace("_", "-"), dado));
         if (tipoEventoWpp == TipoEventoWpp.UPDATE_ESTADO && driver.getDriverState() == DriverState.LOGGED) {
+            try {
+                waitMyChatAvailable();
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, "WaitMyChatAvailable", e);
+            }
             sendInit(ws);
+        }
+    }
+
+    private void waitMyChatAvailable() throws InterruptedException {
+        var tries = 5;
+        while (tries > 0) {
+            try {
+                var myChat = driver.getFunctions().getMyChat().get(10, TimeUnit.SECONDS);
+                if (myChat != null) {
+                    return;
+                }
+            } catch (Exception e) {
+                tries--;
+                if (tries == 0) {
+                    logger.log(Level.SEVERE, "WaitMyChatAvailable", e);
+                }
+                Thread.sleep(1000);
+            }
         }
     }
 
@@ -466,21 +482,6 @@ public class WhatsAppClone {
     }
 
     public enum TipoEventoWpp {
-        UPDATE_CHAT,
-        REMOVE_CHAT,
-        NEW_CHAT,
-        NEW_MSG,
-        NEW_MSG_V3,
-        UPDATE_MSG,
-        REMOVE_MSG,
-        REMOVE_MSG_V3,
-        UPDATE_MSG_V3,
-        LOW_BATTERY,
-        NEED_QRCODE,
-        UPDATE_ESTADO,
-        DISCONNECT,
-        ERROR,
-        CHAT_PICTURE,
-        INIT
+        UPDATE_CHAT, REMOVE_CHAT, NEW_CHAT, NEW_MSG, NEW_MSG_V3, UPDATE_MSG, REMOVE_MSG, REMOVE_MSG_V3, UPDATE_MSG_V3, LOW_BATTERY, NEED_QRCODE, UPDATE_ESTADO, DISCONNECT, ERROR, CHAT_PICTURE, INIT
     }
 }
