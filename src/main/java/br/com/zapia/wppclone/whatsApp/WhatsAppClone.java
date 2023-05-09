@@ -162,6 +162,7 @@ public class WhatsAppClone {
                 enviarEventoWpp(TypeEventWebSocket.NEED_QRCODE, e);
             };
             onChangeEstadoDriver = (e) -> {
+                logger.log(Level.INFO, "WhatsAppClient Update State::" + e.name());
                 enviarEventoWpp(TypeEventWebSocket.UPDATE_STATE, e.name());
             };
             onDisconnect = () -> {
