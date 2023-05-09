@@ -38,6 +38,7 @@ public class WhatsAppRestController {
     @GetMapping("/stats")
     @Async
     public CompletableFuture<ResponseEntity<?>> getStatus() {
+        whatsAppClone.ping();
         return whatsAppClone.getWhatsAppClient().getDriverState().thenCompose(driverState -> {
             var jsonData = objectMapper.createObjectNode();
             jsonData.put("status", driverState.name());
