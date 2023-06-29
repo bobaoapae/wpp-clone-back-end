@@ -26,10 +26,10 @@ public class UploadFileService {
 
         String fileName = StringUtils.cleanPath(multipartFile.getOriginalFilename());
         if (fileName.contains("..")) {
-            throw new IllegalArgumentException("Sorry! Filename contains invalid path sequence " + fileName);
+            fileName = fileName.replace("..", ".");
         }
 
-        File file = File.createTempFile(multipartFile.getOriginalFilename() + "#", ".tmp");
+        File file = File.createTempFile(fileName + "#", ".tmp");
 
         Files.copy(multipartFile.getInputStream(), file.toPath(), StandardCopyOption.REPLACE_EXISTING);
 

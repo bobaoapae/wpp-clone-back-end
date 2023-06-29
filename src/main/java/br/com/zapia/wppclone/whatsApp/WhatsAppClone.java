@@ -234,6 +234,7 @@ public class WhatsAppClone {
             });
             builder.autoOpenDevTools(debug);
             builder.autoRebootOnStuck(!debug);
+            builder.useAutoUnloadLoadMsgs(true);
             driver = builder.build();
             whatsAppCloneService.adicionarInstancia(this);
         } catch (Exception e) {

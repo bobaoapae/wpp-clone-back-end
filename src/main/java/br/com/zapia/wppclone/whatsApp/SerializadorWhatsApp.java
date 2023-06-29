@@ -61,7 +61,7 @@ public class SerializadorWhatsApp {
     @Async
     public CompletableFuture<ArrayNode> serializarAllContacts() {
         try {
-            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Store.Contact.filter(e=> e.isWAContact && e.isMyContact).map(e=> e.toJSON())"))));
+            return CompletableFuture.completedFuture((ArrayNode) objectMapper.readTree(whatsAppClone.getDriver().convertToJson(whatsAppClone.getDriver().executeJavaScript("Store.Contact.filter(e=> e. isAddressBookContact || e.isWAContact && e.isMyContact).map(e=> e.toJSON())"))));
         } catch (JsonProcessingException e) {
             log.log(Level.SEVERE, "SerializarAllContacts", e);
             return CompletableFuture.failedFuture(e);
